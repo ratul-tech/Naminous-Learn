@@ -43,7 +43,17 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err: any) {
       console.error("Auth error:", err);
-      setError(err.message || "Authentication failed");
+      if (err.code === 'auth/email-already-in-use') {
+        setError("This email is already registered. Please login instead.");
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError("Invalid email or password. Please try again.");
+      } else if (err.code === 'auth/weak-password') {
+        setError("Password should be at least 6 characters.");
+      } else if (err.code === 'auth/invalid-email') {
+        setError("Please enter a valid email address.");
+      } else {
+        setError(err.message || "Authentication failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

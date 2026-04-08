@@ -99,7 +99,7 @@ service cloud.firestore {
     }
 
     match /results/{resultId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create: if isAuthenticated() && isValidResult(request.resource.data);
       allow update, delete: if isAdmin();
     }
