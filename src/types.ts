@@ -95,3 +95,13 @@ export interface Payment {
   status: PaymentStatus;
   createdAt: string;
 }
+
+export interface Feedback {
+  id: string;
+  uid: string;
+  displayName: string;
+  email: string;
+  type: 'Suggestion' | 'Issue';
+  message: string;
+  createdAt: string;
+}

@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Question, UserProfile, Payment, ExamEvent } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, BookOpen, CreditCard, Calendar, Settings } from 'lucide-react';
+import { Question, UserProfile, Payment, ExamEvent, Feedback } from '../types';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'questions' | 'users' | 'payments' | 'events'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'users' | 'payments' | 'events' | 'feedback'>('questions');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [events, setEvents] = useState<ExamEvent[]>([]);
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +29,9 @@ export default function Admin() {
     const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('createdAt', 'desc')), (snapshot) => {
       setEvents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
     });
+    const unsubFeedback = onSnapshot(query(collection(db, 'feedback'), orderBy('createdAt', 'desc')), (snapshot) => {
+      setFeedback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
+    });
 
     setLoading(false);
     return () => {
@@ -35,6 +39,7 @@ export default function Admin() {
       unsubUsers();
       unsubPayments();
       unsubEvents();
+      unsubFeedback();
     };
   }, []);
 
@@ -75,6 +80,7 @@ export default function Admin() {
           <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Users" />
           <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
           <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Events" />
+          <TabButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Feedback" />
         </div>
       </div>
 
@@ -83,8 +89,51 @@ export default function Admin() {
         {activeTab === 'users' && <UserManager users={users} />}
         {activeTab === 'payments' && <PaymentManager payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
         {activeTab === 'events' && <EventManager events={events} />}
+        {activeTab === 'feedback' && <FeedbackManager feedback={feedback} />}
       </AnimatePresence>
     </div>
+  );
+}
+
+function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <h2 className="text-xl font-bold text-[#7A4900]">User Feedback ({feedback.length})</h2>
+      <div className="grid grid-cols-1 gap-4">
+        {feedback.map((f) => (
+          <div key={f.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${f.type === 'Issue' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                  {f.type === 'Issue' ? <AlertCircle className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#7A4900]">{f.displayName}</h3>
+                  <p className="text-xs text-gray-400">{f.email}</p>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${f.type === 'Issue' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                {f.type}
+              </span>
+            </div>
+            <p className="text-[#545454] bg-gray-50 p-4 rounded-xl text-sm leading-relaxed">
+              {f.message}
+            </p>
+            <div className="mt-4 text-right">
+              <span className="text-[10px] text-gray-400 font-mono">
+                {new Date(f.createdAt).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        ))}
+        {feedback.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+            <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-400">No feedback submitted yet.</p>
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 }
 

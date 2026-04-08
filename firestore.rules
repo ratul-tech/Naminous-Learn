@@ -76,6 +76,13 @@ service cloud.firestore {
              data.status == 'pending';
     }
 
+    function isValidFeedback(data) {
+      return data.keys().hasAll(['uid', 'type', 'message']) &&
+             data.uid == request.auth.uid &&
+             data.type in ['Suggestion', 'Issue'] &&
+             data.message is string && data.message.size() < 2000;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -107,6 +114,12 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidPayment(request.resource.data);
       allow update: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && isValidFeedback(request.resource.data);
+      allow update, delete: if isAdmin();
     }
   }
 }

@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen, School, GraduationCap, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export default function Practice() {
+import { UserProfile } from '../types';
+
+interface PracticeProps {
+  profile: UserProfile | null;
+}
+
+export default function Practice({ profile }: PracticeProps) {
   const navigate = useNavigate();
   const [category, setCategory] = useState<'Board' | 'College Admission' | null>(null);
   const [config, setConfig] = useState({

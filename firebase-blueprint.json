@@ -85,6 +85,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "eventId", "trxId", "status"]
+    },
+    "Feedback": {
+      "title": "User Feedback",
+      "description": "Stores user suggestions and issue reports.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "type": { "type": "string", "enum": ["Suggestion", "Issue"] },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "type", "message"]
     }
   },
   "firestore": {
@@ -107,6 +121,10 @@
     "/payments/{paymentId}": {
       "schema": "Payment",
       "description": "Payment verification requests"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "User feedback submissions"
     }
   }
 }
