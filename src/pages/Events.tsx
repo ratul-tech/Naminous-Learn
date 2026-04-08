@@ -4,6 +4,8 @@ import { db } from '../firebase';
 import { ExamEvent, UserProfile, Payment } from '../types';
 import { Calendar, Clock, Trophy, Users, CreditCard, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { handleFirestoreError } from '../lib/error-handler';
+import { OperationType } from '../types';
 
 interface EventsProps {
   profile: UserProfile | null;
@@ -70,7 +72,7 @@ export default function Events({ profile }: EventsProps) {
         setPaymentData({ method: 'Bkash', trxId: '' });
       }, 3000);
     } catch (error) {
-      console.error("Payment submission error:", error);
+      handleFirestoreError(error, OperationType.CREATE, 'payments');
     } finally {
       setSubmitting(false);
     }

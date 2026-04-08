@@ -5,6 +5,8 @@ import { db } from '../firebase';
 import { UserProfile, Question, ExamResult } from '../types';
 import { Timer, CheckCircle2, XCircle, AlertCircle, ArrowRight, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { handleFirestoreError } from '../lib/error-handler';
+import { OperationType } from '../types';
 
 interface ExamProps {
   profile: UserProfile | null;
@@ -107,7 +109,7 @@ export default function Exam({ profile }: ExamProps) {
       const docRef = await addDoc(collection(db, 'results'), newResult);
       setResult({ id: docRef.id, ...newResult });
     } catch (error) {
-      console.error("Error saving result:", error);
+      handleFirestoreError(error, OperationType.CREATE, 'results');
     }
   }, [answers, questions, profile, examFinished]);
 

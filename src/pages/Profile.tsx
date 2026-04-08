@@ -4,6 +4,8 @@ import { db } from '../firebase';
 import { UserProfile, Gender, Group } from '../types';
 import { User, Phone, School, GraduationCap, Users, Save } from 'lucide-react';
 import { motion } from 'motion/react';
+import { handleFirestoreError } from '../lib/error-handler';
+import { OperationType } from '../types';
 
 interface ProfileProps {
   profile: UserProfile | null;
@@ -33,8 +35,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      console.error("Error updating profile:", error);
-      setMessage('Failed to update profile.');
+      handleFirestoreError(error, OperationType.UPDATE, `users/${profile.uid}`);
     } finally {
       setSaving(false);
     }

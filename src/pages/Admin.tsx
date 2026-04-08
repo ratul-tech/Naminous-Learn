@@ -4,6 +4,8 @@ import { db } from '../firebase';
 import { Question, UserProfile, Payment, ExamEvent } from '../types';
 import { Plus, Trash2, CheckCircle2, XCircle, Users, BookOpen, CreditCard, Calendar, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { handleFirestoreError } from '../lib/error-handler';
+import { OperationType } from '../types';
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState<'questions' | 'users' | 'payments' | 'events'>('questions');
@@ -37,16 +39,28 @@ export default function Admin() {
   }, []);
 
   const handleApprovePayment = async (id: string) => {
-    await updateDoc(doc(db, 'payments', id), { status: 'approved' });
+    try {
+      await updateDoc(doc(db, 'payments', id), { status: 'approved' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `payments/${id}`);
+    }
   };
 
   const handleRejectPayment = async (id: string) => {
-    await updateDoc(doc(db, 'payments', id), { status: 'rejected' });
+    try {
+      await updateDoc(doc(db, 'payments', id), { status: 'rejected' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `payments/${id}`);
+    }
   };
 
   const handleDeleteQuestion = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
-      await deleteDoc(doc(db, 'questions', id));
+      try {
+        await deleteDoc(doc(db, 'questions', id));
+      } catch (error) {
+        handleFirestoreError(error, OperationType.DELETE, `questions/${id}`);
+      }
     }
   };
 
@@ -99,12 +113,16 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addDoc(collection(db, 'questions'), {
-      ...newQ,
-      createdAt: new Date().toISOString(),
-    });
-    setShowAdd(false);
-    setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC' });
+    try {
+      await addDoc(collection(db, 'questions'), {
+        ...newQ,
+        createdAt: new Date().toISOString(),
+      });
+      setShowAdd(false);
+      setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'questions');
+    }
   };
 
   return (
@@ -316,12 +334,16 @@ function EventManager({ events }: { events: ExamEvent[] }) {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addDoc(collection(db, 'events'), {
-      ...newE,
-      status: 'upcoming',
-      createdAt: new Date().toISOString(),
-    });
-    setShowAdd(false);
+    try {
+      await addDoc(collection(db, 'events'), {
+        ...newE,
+        status: 'upcoming',
+        createdAt: new Date().toISOString(),
+      });
+      setShowAdd(false);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'events');
+    }
   };
 
   return (
