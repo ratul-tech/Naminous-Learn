@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, displayName, photoURL, gender, phone, class, school, group, role, createdAt
+    //
+    // Collection: questions
+    // Fields: id, text, options, correctAnswer, category, subCategory, board, college, createdAt
+    //
+    // Collection: results
+    // Fields: uid, displayName, school, score, correctCount, wrongCount, totalQuestions, type, eventId, createdAt
+    //
+    // Collection: events
+    // Fields: id, title, description, entryFee, startTime, duration, maxCandidates, prize, status, createdAt
+    //
+    // Collection: payments
+    // Fields: uid, eventId, method, trxId, status, createdAt
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "shahriarislam275@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['student', 'admin'];
+    }
+
+    function isValidQuestion(data) {
+      return data.keys().hasAll(['text', 'options', 'correctAnswer', 'category']) &&
+             data.text is string && data.text.size() < 1000 &&
+             data.options is list && data.options.size() >= 2 &&
+             data.correctAnswer is int &&
+             data.category is string;
+    }
+
+    function isValidResult(data) {
+      return data.keys().hasAll(['uid', 'score', 'type']) &&
+             data.uid == request.auth.uid &&
+             data.score is number &&
+             data.type in ['Practice', 'Event'];
+    }
+
+    function isValidEvent(data) {
+      return data.keys().hasAll(['title', 'entryFee', 'startTime', 'duration']) &&
+             data.title is string && data.title.size() < 200 &&
+             data.entryFee is number &&
+             data.duration is int;
+    }
+
+    function isValidPayment(data) {
+      return data.keys().hasAll(['uid', 'eventId', 'trxId', 'status']) &&
+             data.uid == request.auth.uid &&
+             data.eventId is string &&
+             data.trxId is string && data.trxId.size() < 50 &&
+             data.status == 'pending';
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
+    }
+
+    match /questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /results/{resultId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidResult(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isValidPayment(request.resource.data);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

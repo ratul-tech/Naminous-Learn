@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores student and admin profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "gender": { "type": "string", "enum": ["Male", "Female", "Other"] },
+        "phone": { "type": "string" },
+        "class": { "type": "string" },
+        "school": { "type": "string" },
+        "group": { "type": "string", "enum": ["Science", "Commerce", "Arts"] },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Question": {
+      "title": "MCQ Question",
+      "description": "Stores practice and exam questions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "correctAnswer": { "type": "number" },
+        "category": { "type": "string", "enum": ["Board", "College Admission"] },
+        "subCategory": { "type": "string" },
+        "board": { "type": "string" },
+        "college": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "options", "correctAnswer", "category"]
+    },
+    "ExamResult": {
+      "title": "Exam Result",
+      "description": "Stores student performance in practice or events.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "school": { "type": "string" },
+        "score": { "type": "number" },
+        "correctCount": { "type": "number" },
+        "wrongCount": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "type": { "type": "string", "enum": ["Practice", "Event"] },
+        "eventId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "score", "type"]
+    },
+    "ExamEvent": {
+      "title": "Online Exam Event",
+      "description": "Stores scheduled paid exam events.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "entryFee": { "type": "number" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "duration": { "type": "number" },
+        "maxCandidates": { "type": "number" },
+        "prize": { "type": "string" },
+        "status": { "type": "string", "enum": ["upcoming", "ongoing", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "entryFee", "startTime", "duration"]
+    },
+    "Payment": {
+      "title": "Payment Verification",
+      "description": "Stores transaction details for event registration.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "eventId": { "type": "string" },
+        "method": { "type": "string", "enum": ["Bkash", "Nagad", "Rocket", "Upay"] },
+        "trxId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "eventId", "trxId", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "MCQ questions"
+    },
+    "/results/{resultId}": {
+      "schema": "ExamResult",
+      "description": "Exam results"
+    },
+    "/events/{eventId}": {
+      "schema": "ExamEvent",
+      "description": "Online exam events"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Payment verification requests"
+    }
+  }
+}
