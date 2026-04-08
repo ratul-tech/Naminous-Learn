@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Question, UserProfile, Payment, ExamEvent, Feedback } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
@@ -300,7 +300,13 @@ function UserManager({ users }: { users: UserProfile[] }) {
             <tr key={u.uid} className="hover:bg-gray-50 transition-colors">
               <td className="px-6 py-4">
                 <div className="flex items-center space-x-3">
-                  <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
+                  {u.photoURL ? (
+                    <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
                   <div>
                     <p className="font-bold text-[#7A4900]">{u.displayName}</p>
                     <p className="text-xs text-[#545454]">{u.email}</p>

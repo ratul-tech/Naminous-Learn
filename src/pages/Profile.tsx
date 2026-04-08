@@ -51,7 +51,13 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
         className="bg-white rounded-2xl shadow-xl p-8"
       >
         <div className="flex items-center space-x-4 mb-8">
-          <img src={profile?.photoURL} alt="Profile" className="w-20 h-20 rounded-full border-4 border-[#D4AF37]" referrerPolicy="no-referrer" />
+          {profile?.photoURL ? (
+            <img src={profile.photoURL} alt="Profile" className="w-20 h-20 rounded-full border-4 border-[#D4AF37]" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-20 h-20 rounded-full border-4 border-[#D4AF37] bg-gray-100 flex items-center justify-center">
+              <User className="w-10 h-10 text-gray-400" />
+            </div>
+          )}
           <div>
             <h2 className="text-2xl font-bold text-[#7A4900]">{profile?.displayName}</h2>
             <p className="text-[#545454]">{profile?.email}</p>

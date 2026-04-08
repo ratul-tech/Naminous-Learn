@@ -144,7 +144,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
             {user ? (
               <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-gray-100">
                 <Link to="/profile" className="flex items-center space-x-2">
-                  <img src={profile?.photoURL || ''} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
+                  <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
                 </Link>
                 <button onClick={onLogout} className="p-2 text-gray-400 hover:text-red-500 transition-all">
                   <LogOut className="w-6 h-6" />
@@ -179,7 +179,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
               {user ? (
                 <>
                   <div className="flex items-center space-x-4 p-4 mb-4 bg-gray-50 rounded-2xl">
-                    <img src={profile?.photoURL || ''} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
+                    <img src={profile?.photoURL || undefined} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
                     <div>
                       <p className="font-bold text-[#7A4900]">{profile?.displayName}</p>
                       <p className="text-xs text-gray-400">{profile?.email}</p>
