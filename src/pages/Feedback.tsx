@@ -6,6 +6,7 @@ import { MessageSquare, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
+import { sendFeedback } from '../services/emailService';
 
 interface FeedbackProps {
   profile: UserProfile | null;
@@ -16,12 +17,14 @@ export default function FeedbackForm({ profile }: FeedbackProps) {
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
     
     setSubmitting(true);
+    setError('');
     try {
       const feedback: Omit<Feedback, 'id'> = {
         uid: profile.uid,
@@ -32,12 +35,23 @@ export default function FeedbackForm({ profile }: FeedbackProps) {
         createdAt: new Date().toISOString(),
       };
       
+      // Save to Firestore
       await addDoc(collection(db, 'feedback'), feedback);
+
+      // Send via EmailJS
+      await sendFeedback({
+        from_name: profile.displayName,
+        from_email: profile.email,
+        message: `[${type}] ${message}`,
+      });
+
       setSuccess(true);
       setMessage('');
       setTimeout(() => setSuccess(false), 5000);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'feedback');
+    } catch (err: any) {
+      console.error('Feedback submission error:', err);
+      setError('Failed to submit feedback. Please try again later.');
+      handleFirestoreError(err, OperationType.CREATE, 'feedback');
     } finally {
       setSubmitting(false);
     }
@@ -119,6 +133,13 @@ export default function FeedbackForm({ profile }: FeedbackProps) {
                   required
                 />
               </div>
+
+              {error && (
+                <div className="flex items-center space-x-2 text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg border border-red-100">
+                  <AlertCircle className="w-5 h-5" />
+                  <span>{error}</span>
+                </div>
+              )}
 
               <button
                 type="submit"

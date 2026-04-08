@@ -6,6 +6,7 @@ import { Calendar, Clock, Trophy, Users, CreditCard, CheckCircle2, AlertCircle }
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
+import { sendPurchaseRequest } from '../services/emailService';
 
 interface EventsProps {
   profile: UserProfile | null;
@@ -21,6 +22,7 @@ export default function Events({ profile }: EventsProps) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const q = query(collection(db, 'events'), orderBy('startTime', 'asc'));
@@ -55,6 +57,7 @@ export default function Events({ profile }: EventsProps) {
     if (!profile || !selectedEvent) return;
 
     setSubmitting(true);
+    setError('');
     try {
       const newPayment: Omit<Payment, 'id'> = {
         uid: profile.uid,
@@ -64,15 +67,29 @@ export default function Events({ profile }: EventsProps) {
         status: 'pending',
         createdAt: new Date().toISOString(),
       };
+      
+      // Save to Firestore
       await addDoc(collection(db, 'payments'), newPayment);
+
+      // Send via EmailJS
+      await sendPurchaseRequest({
+        student_name: profile.displayName,
+        exam_name: selectedEvent.title,
+        method: paymentData.method,
+        amount: selectedEvent.entryFee,
+        trxid: paymentData.trxId,
+      });
+
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setSelectedEvent(null);
         setPaymentData({ method: 'Bkash', trxId: '' });
       }, 3000);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'payments');
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError('Failed to submit registration. Please try again.');
+      handleFirestoreError(err, OperationType.CREATE, 'payments');
     } finally {
       setSubmitting(false);
     }
@@ -203,6 +220,13 @@ export default function Events({ profile }: EventsProps) {
                         />
                       </div>
                     </div>
+
+                    {error && (
+                      <div className="flex items-center space-x-2 text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg border border-red-100">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>{error}</span>
+                      </div>
+                    )}
 
                     <button
                       type="submit"
