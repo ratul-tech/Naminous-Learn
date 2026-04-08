@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserRole, UserProfile } from '../types';
-import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Login() {
@@ -12,14 +12,16 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [role, setRole] = useState<UserRole>('student');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setMessage('');
     setLoading(true);
 
     try {
@@ -27,20 +29,56 @@ export default function Login() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
+        // Send verification email
+        await sendEmailVerification(user);
+        
         const newProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           displayName: displayName || user.email?.split('@')[0] || 'User',
           photoURL: `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
-          role: role,
+          role: 'student', // Always student on registration
           createdAt: new Date().toISOString(),
         };
         
-        await setDoc(doc(db, 'users', user.uid), newProfile);
+        // Save to students collection
+        await setDoc(doc(db, 'students', user.uid), newProfile);
+        
+        setMessage("Registration successful! A verification email has been sent to your address. Please verify your email before logging in.");
+        setIsRegistering(false);
+        await signOut(auth); // Sign out until verified
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        if (!user.emailVerified) {
+          setError("Please verify your email address before logging in. Check your inbox for the verification link.");
+          await signOut(auth);
+          setLoading(false);
+          return;
+        }
+
+        // Check role in corresponding collection
+        const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
+        const userDoc = await getDoc(doc(db, collectionName, user.uid));
+
+        if (!userDoc.exists()) {
+          setError(`Account not found in ${selectedRole} records. Please ensure you selected the correct account type.`);
+          await signOut(auth);
+          setLoading(false);
+          return;
+        }
+
+        const profileData = userDoc.data() as UserProfile;
+        if (profileData.role !== selectedRole) {
+          setError(`Unauthorized access. Your account is not registered as an ${selectedRole}.`);
+          await signOut(auth);
+          setLoading(false);
+          return;
+        }
+
+        navigate('/dashboard');
       }
-      navigate('/dashboard');
     } catch (err: any) {
       console.error("Auth error:", err);
       if (err.code === 'auth/email-already-in-use') {
@@ -76,46 +114,46 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {isRegistering && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
-                  <UserIcon className="w-4 h-4" />
-                  <span>Full Name</span>
-                </label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="John Doe"
-                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#D4AF37] outline-none"
-                  required
-                />
+          {!isRegistering && (
+            <div>
+              <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Login As</span>
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('student')}
+                  className={`py-3 rounded-xl border-2 transition-all font-bold ${selectedRole === 'student' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
+                >
+                  Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('admin')}
+                  className={`py-3 rounded-xl border-2 transition-all font-bold ${selectedRole === 'admin' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
+                >
+                  Admin
+                </button>
               </div>
+            </div>
+          )}
 
-              <div>
-                <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Account Type</span>
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setRole('student')}
-                    className={`py-3 rounded-xl border-2 transition-all font-bold ${role === 'student' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
-                  >
-                    Student
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole('admin')}
-                    className={`py-3 rounded-xl border-2 transition-all font-bold ${role === 'admin' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
-                  >
-                    Admin
-                  </button>
-                </div>
-              </div>
-            </>
+          {isRegistering && (
+            <div>
+              <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
+                <UserIcon className="w-4 h-4" />
+                <span>Full Name</span>
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="John Doe"
+                className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#D4AF37] outline-none"
+                required
+              />
+            </div>
           )}
 
           <div>
@@ -149,9 +187,16 @@ export default function Login() {
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg border border-red-100">
-              {error}
-            </p>
+            <div className="flex items-start space-x-2 text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg border border-red-100">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {message && (
+            <div className="text-green-600 text-sm font-medium bg-green-50 p-3 rounded-lg border border-green-100">
+              {message}
+            </div>
           )}
 
           <button
@@ -172,7 +217,11 @@ export default function Login() {
 
         <div className="mt-8 text-center">
           <button
-            onClick={() => setIsRegistering(!isRegistering)}
+            onClick={() => {
+              setIsRegistering(!isRegistering);
+              setError('');
+              setMessage('');
+            }}
             className="text-[#D4AF37] font-bold hover:underline"
           >
             {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}

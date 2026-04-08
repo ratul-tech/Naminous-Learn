@@ -1,8 +1,8 @@
 {
   "entities": {
-    "User": {
-      "title": "User Profile",
-      "description": "Stores student and admin profile information.",
+    "Student": {
+      "title": "Student Profile",
+      "description": "Stores student profile information.",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
@@ -14,7 +14,20 @@
         "class": { "type": "string" },
         "school": { "type": "string" },
         "group": { "type": "string", "enum": ["Science", "Commerce", "Arts"] },
-        "role": { "type": "string", "enum": ["student", "admin"] },
+        "role": { "type": "string", "enum": ["student"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Admin": {
+      "title": "Admin Profile",
+      "description": "Stores admin profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role"]
@@ -102,9 +115,13 @@
     }
   },
   "firestore": {
-    "/users/{uid}": {
-      "schema": "User",
-      "description": "User profiles"
+    "/students/{uid}": {
+      "schema": "Student",
+      "description": "Student profiles"
+    },
+    "/admins/{uid}": {
+      "schema": "Admin",
+      "description": "Admin profiles"
     },
     "/questions/{questionId}": {
       "schema": "Question",

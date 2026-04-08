@@ -29,13 +29,15 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
 
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'users', profile.uid), formData);
+      const collectionName = profile.role === 'admin' ? 'admins' : 'students';
+      await updateDoc(doc(db, collectionName, profile.uid), formData);
       const updatedProfile = { ...profile, ...formData };
       setProfile(updatedProfile);
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${profile.uid}`);
+      const collectionName = profile.role === 'admin' ? 'admins' : 'students';
+      handleFirestoreError(error, OperationType.UPDATE, `${collectionName}/${profile.uid}`);
     } finally {
       setSaving(false);
     }

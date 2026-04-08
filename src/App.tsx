@@ -28,8 +28,15 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      if (firebaseUser && firebaseUser.emailVerified) {
+        // Try students collection first
+        let userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
+        
+        // If not in students, try admins
+        if (!userDoc.exists()) {
+          userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
+        }
+
         if (userDoc.exists()) {
           setProfile(userDoc.data() as UserProfile);
         } else {
