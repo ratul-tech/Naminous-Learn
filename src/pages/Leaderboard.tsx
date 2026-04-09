@@ -124,29 +124,57 @@ export default function Leaderboard() {
 }
 
 function PodiumItem({ result, rank, height, color, medalColor, delay }: { result: ExamResult, rank: number, height: string, color: string, medalColor: string, delay: number }) {
+  const isFirst = rank === 1;
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5 }}
-      className={`flex flex-col items-center w-full md:w-48 ${rank === 1 ? 'z-10' : ''}`}
+      transition={{ delay, duration: 0.6, type: 'spring' }}
+      className={`flex flex-col items-center w-full md:w-56 ${isFirst ? 'z-10 -mt-8' : ''}`}
     >
-      <div className="mb-4 text-center">
+      <div className="mb-6 text-center relative">
+        {isFirst && (
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: delay + 0.5, repeat: Infinity, repeatType: 'reverse', duration: 2 }}
+            className="absolute -top-10 left-1/2 -translate-x-1/2 text-[#D4AF37]"
+          >
+            <Trophy className="w-10 h-10 fill-current" />
+          </motion.div>
+        )}
         <div className="relative inline-block">
-          <div className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-white overflow-hidden">
-             <User className="w-8 h-8 text-gray-400" />
-          </div>
-          <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center ${medalColor}`}>
-            <Medal className="w-5 h-5" />
+          <motion.div 
+            whileHover={{ scale: 1.1 }}
+            className={`w-20 h-20 md:w-24 md:h-24 rounded-full bg-white shadow-2xl flex items-center justify-center border-4 ${isFirst ? 'border-[#D4AF37]' : 'border-white'} overflow-hidden`}
+          >
+             <User className="w-10 h-10 text-gray-300" />
+          </motion.div>
+          <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center ${medalColor} border-2 border-white`}>
+            <Medal className="w-6 h-6" />
           </div>
         </div>
-        <h3 className="mt-4 font-bold text-[#7A4900] truncate w-40">{result.displayName}</h3>
-        <p className="text-xs text-[#545454] truncate w-40">{result.school}</p>
+        <div className="mt-4">
+          <h3 className="font-bold text-[#7A4900] truncate w-40 mx-auto text-lg">{result.displayName}</h3>
+          <p className="text-xs text-[#545454] font-medium truncate w-40 mx-auto opacity-70">{result.school}</p>
+        </div>
       </div>
-      <div className={`${height} w-full ${color} rounded-t-3xl flex flex-col items-center justify-center shadow-sm`}>
-        <span className="text-4xl font-black text-[#7A4900] opacity-20 mb-2">{rank}</span>
-        <span className="text-2xl font-bold text-[#D4AF37]">{result.score}%</span>
-      </div>
+      
+      <motion.div 
+        whileHover={{ y: -5 }}
+        className={`${height} w-full rounded-t-[2.5rem] flex flex-col items-center justify-center shadow-2xl relative overflow-hidden ${
+          rank === 1 ? 'bg-gradient-to-b from-[#D4AF37] to-[#B8860B]' :
+          rank === 2 ? 'bg-gradient-to-b from-gray-200 to-gray-400' :
+          'bg-gradient-to-b from-orange-200 to-orange-400'
+        }`}
+      >
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+        <span className={`text-6xl font-black mb-2 ${isFirst ? 'text-white/30' : 'text-black/10'}`}>{rank}</span>
+        <div className={`px-4 py-1 rounded-full text-sm font-bold shadow-sm ${isFirst ? 'bg-white text-[#7A4900]' : 'bg-black/10 text-white'}`}>
+          {result.score}%
+        </div>
+      </motion.div>
     </motion.div>
   );
 }

@@ -124,134 +124,145 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
             </Link>
           </div>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-2">
-            {user && user.emailVerified && navLinks.map((link) => (
-              <Link 
-                key={link.path} 
-                to={link.path} 
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
-                  location.pathname === link.path 
-                    ? 'bg-[#D4AF37] text-white shadow-md' 
-                    : 'text-[#545454] hover:bg-gray-100'
-                }`}
-              >
-                <link.icon className="w-4 h-4" />
-                <span>{link.name}</span>
-              </Link>
-            ))}
-            {user && user.emailVerified && profile?.role === 'admin' && (
-              <Link
-                to="/admin"
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
-                  location.pathname === '/admin' 
-                    ? 'bg-[#7A4900] text-white shadow-md' 
-                    : 'text-[#7A4900] hover:bg-[#7A4900]/10'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin</span>
-              </Link>
-            )}
-            {user ? (
-              <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-gray-100">
-                {user.emailVerified && (
-                  <Link to="/profile" className="flex items-center space-x-2">
-                    <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
-                  </Link>
-                )}
-                <button onClick={onLogout} className="p-2 text-gray-400 hover:text-red-500 transition-all">
-                  <LogOut className="w-6 h-6" />
-                </button>
+          <div className="flex items-center space-x-4">
+            {user && user.emailVerified && (
+              <div className="hidden sm:flex items-center space-x-4 mr-4 pr-4 border-r border-gray-100">
+                <Link to="/profile" className="flex items-center space-x-2">
+                  <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
+                  <span className="text-sm font-bold text-[#7A4900]">{profile?.displayName}</span>
+                </Link>
               </div>
-            ) : (
-              <Link to="/login" className="bg-[#D4AF37] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#B8860B] shadow-lg transition-all">
-                Login
-              </Link>
             )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100">
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            
+            <button 
+              onClick={() => setIsOpen(true)} 
+              className="p-3 rounded-xl text-[#7A4900] hover:bg-[#D4AF37]/10 transition-all flex items-center space-x-2 border-2 border-transparent hover:border-[#D4AF37]/30"
+            >
+              <Menu className="w-6 h-6" />
+              <span className="font-bold hidden sm:block">Menu</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Sidebar Overlay */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t overflow-hidden"
-          >
-            <div className="px-4 pt-2 pb-6 space-y-2">
-              {user ? (
-                <>
-                  {user.emailVerified && (
-                    <div className="flex items-center space-x-4 p-4 mb-4 bg-gray-50 rounded-2xl">
-                      <img src={profile?.photoURL || undefined} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
-                      <div>
-                        <p className="font-bold text-[#7A4900]">{profile?.displayName}</p>
-                        <p className="text-xs text-gray-400">{profile?.email}</p>
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-xs bg-white z-[70] shadow-2xl flex flex-col"
+            >
+              <div className="p-6 flex justify-between items-center border-b">
+                <div className="flex items-center space-x-3">
+                  <img src={LOGO_URL} alt="Logo" className="h-8 w-8 rounded-lg" referrerPolicy="no-referrer" />
+                  <span className="font-bold text-[#7A4900]">Navigation</span>
+                </div>
+                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="flex-grow overflow-y-auto p-6 space-y-2">
+                {user ? (
+                  <>
+                    {user.emailVerified && (
+                      <div className="mb-8 p-4 bg-[#f5f5f0] rounded-2xl flex items-center space-x-4">
+                        <img src={profile?.photoURL || undefined} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
+                        <div className="overflow-hidden">
+                          <p className="font-bold text-[#7A4900] truncate">{profile?.displayName}</p>
+                          <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
+                        </div>
                       </div>
+                    )}
+                    
+                    {user.emailVerified && navLinks.map((link) => (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all ${
+                          location.pathname === link.path 
+                            ? 'bg-[#D4AF37] text-white shadow-md' 
+                            : 'text-[#545454] hover:bg-gray-50'
+                        }`}
+                      >
+                        <link.icon className="w-5 h-5" />
+                        <span>{link.name}</span>
+                      </Link>
+                    ))}
+
+                    {user.emailVerified && profile?.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all mt-4 ${
+                          location.pathname === '/admin' 
+                            ? 'bg-[#7A4900] text-white shadow-md' 
+                            : 'text-[#7A4900] bg-[#7A4900]/5 hover:bg-[#7A4900]/10'
+                        }`}
+                      >
+                        <Shield className="w-5 h-5" />
+                        <span>Admin Panel</span>
+                      </Link>
+                    )}
+
+                    <div className="pt-8 mt-8 border-t space-y-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all ${
+                          location.pathname === '/profile' 
+                            ? 'bg-[#D4AF37] text-white' 
+                            : 'text-[#545454] hover:bg-gray-50'
+                        }`}
+                      >
+                        <UserIcon className="w-5 h-5" />
+                        <span>My Profile</span>
+                      </Link>
+                      <button 
+                        onClick={() => {
+                          onLogout();
+                          setIsOpen(false);
+                        }} 
+                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span>Logout</span>
+                      </button>
                     </div>
-                  )}
-                  {user.emailVerified && navLinks.map((link) => (
+                  </>
+                ) : (
+                  <div className="space-y-4 pt-4">
+                    <p className="text-sm text-gray-400 text-center mb-6">Join Naminous Learn to start your journey.</p>
                     <Link
-                      key={link.path}
-                      to={link.path}
+                      to="/login"
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold ${
-                        location.pathname === link.path 
-                          ? 'bg-[#D4AF37] text-white' 
-                          : 'text-[#545454] hover:bg-gray-100'
-                      }`}
+                      className="block w-full text-center bg-[#D4AF37] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-[#B8860B] transition-all"
                     >
-                      <link.icon className="w-5 h-5" />
-                      <span>{link.name}</span>
+                      Login / Register
                     </Link>
-                  ))}
-                  {user.emailVerified && profile?.role === 'admin' && (
-                    <Link
-                      to="/admin"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-[#7A4900] hover:bg-[#7A4900]/10"
-                    >
-                      <Shield className="w-5 h-5" />
-                      <span>Admin Panel</span>
-                    </Link>
-                  )}
-                  {user.emailVerified && (
-                    <Link
-                      to="/profile"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-[#545454] hover:bg-gray-100"
-                    >
-                      <UserIcon className="w-5 h-5" />
-                      <span>My Profile</span>
-                    </Link>
-                  )}
-                  <button onClick={onLogout} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50">
-                    <LogOut className="w-5 h-5" />
-                    <span>Logout</span>
-                  </button>
-                </>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="block w-full text-center bg-[#D4AF37] text-white py-4 rounded-xl font-bold"
-                >
-                  Login
-                </Link>
-              )}
-            </div>
-          </motion.div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 border-t bg-gray-50">
+                <p className="text-[10px] text-gray-400 text-center uppercase tracking-widest font-bold">
+                  © {new Date().getFullYear()} Naminous Learn
+                </p>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </nav>
