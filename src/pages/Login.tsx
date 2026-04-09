@@ -35,32 +35,34 @@ export default function Login() {
         // Send verification email
         await sendEmailVerification(user);
         
+        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
+        const isDefaultAdmin = defaultAdmins.includes(email.toLowerCase());
+        
         const newProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           displayName: displayName || user.email?.split('@')[0] || 'User',
           photoURL: `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
-          role: 'student', // Always student on registration
+          role: isDefaultAdmin ? 'admin' : 'student',
           createdAt: new Date().toISOString(),
         };
         
-        // Save to students collection
+        // Save to correct collection
+        const collectionName = isDefaultAdmin ? 'admins' : 'students';
         try {
-          await setDoc(doc(db, 'students', user.uid), newProfile);
+          await setDoc(doc(db, collectionName, user.uid), newProfile);
         } catch (err) {
-          handleFirestoreError(err, OperationType.CREATE, `students/${user.uid}`);
+          handleFirestoreError(err, OperationType.CREATE, `${collectionName}/${user.uid}`);
         }
         
-        navigate('/verify-email');
+        if (isDefaultAdmin) {
+          navigate('/dashboard');
+        } else {
+          navigate('/verify-email');
+        }
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
-        if (!user.emailVerified) {
-          navigate('/verify-email');
-          setLoading(false);
-          return;
-        }
 
         // Check role in corresponding collection
         const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
@@ -68,7 +70,9 @@ export default function Login() {
 
         // Special handling for default admins
         const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
-        if (selectedRole === 'admin' && !userDoc.exists() && defaultAdmins.includes(user.email || '')) {
+        const isDefaultAdmin = defaultAdmins.includes(user.email?.toLowerCase() || '');
+
+        if (selectedRole === 'admin' && !userDoc.exists() && isDefaultAdmin) {
           const newAdmin: UserProfile = {
             uid: user.uid,
             email: user.email || '',
@@ -89,6 +93,14 @@ export default function Login() {
         }
 
         const profileData = userDoc.data() as UserProfile;
+
+        // Check verification for non-admins
+        if (!user.emailVerified && profileData.role !== 'admin') {
+          navigate('/verify-email');
+          setLoading(false);
+          return;
+        }
+
         if (profileData.role !== selectedRole) {
           setError(`Unauthorized access. Your account is not registered as an ${selectedRole}.`);
           await signOut(auth);
@@ -103,7 +115,12 @@ export default function Login() {
       if (err.code === 'auth/email-already-in-use') {
         setError("This email is already registered. Please login instead.");
       } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError("Invalid email or password. Please try again.");
+        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
+        if (defaultAdmins.includes(email.toLowerCase())) {
+          setError("Admin account not found. Please register first using the 'Register' link below.");
+        } else {
+          setError("Invalid email or password. Please try again.");
+        }
       } else if (err.code === 'auth/weak-password') {
         setError("Password should be at least 6 characters.");
       } else if (err.code === 'auth/invalid-email') {
