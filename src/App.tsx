@@ -17,6 +17,7 @@ import Events from './pages/Events';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import FeedbackForm from './pages/Feedback';
+import VerifyEmail from './pages/VerifyEmail';
 
 const LOGO_URL = "https://i.postimg.cc/0241N65R/received-982626700958526.jpg";
 
@@ -25,9 +26,16 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      setUser({ ...auth.currentUser });
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
+      setUser(firebaseUser ? { ...firebaseUser } : null);
       if (firebaseUser && firebaseUser.emailVerified) {
         // Try students collection first
         let userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
@@ -74,14 +82,16 @@ export default function App() {
           <Routes>
             <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
-            <Route path="/dashboard" element={user ? <Dashboard profile={profile} /> : <Navigate to="/login" />} />
-            <Route path="/profile" element={user ? <Profile profile={profile} setProfile={setProfile} /> : <Navigate to="/login" />} />
-            <Route path="/practice" element={user ? <Practice profile={profile} /> : <Navigate to="/login" />} />
-            <Route path="/exam" element={user ? <Exam profile={profile} /> : <Navigate to="/login" />} />
+            <Route path="/verify-email" element={user ? <VerifyEmail onVerified={refreshUser} /> : <Navigate to="/login" />} />
+            <Route path="/dashboard" element={user ? (user.emailVerified ? <Dashboard profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/profile" element={user ? (user.emailVerified ? <Profile profile={profile} setProfile={setProfile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/practice" element={user ? (user.emailVerified ? <Practice profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/exam" element={user ? (user.emailVerified ? <Exam profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/events" element={user ? <Events profile={profile} /> : <Navigate to="/login" />} />
-            <Route path="/feedback" element={user ? <FeedbackForm profile={profile} /> : <Navigate to="/login" />} />
+            <Route path="/events" element={user ? (user.emailVerified ? <Events profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/feedback" element={user ? (user.emailVerified ? <FeedbackForm profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/admin" element={profile?.role === 'admin' ? <Admin /> : <Navigate to="/dashboard" />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
 
@@ -107,14 +117,16 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-20">
-          <Link to="/" className="flex items-center space-x-3">
-            <img src={LOGO_URL} alt="Naminous Learn" className="h-12 w-12 rounded-xl shadow-md object-cover" referrerPolicy="no-referrer" />
-            <span className="text-2xl font-bold text-[#7A4900] hidden sm:block">Naminous Learn</span>
-          </Link>
+          <div className="flex items-center space-x-4">
+            <Link to="/" className="flex items-center space-x-3">
+              <img src={LOGO_URL} alt="Naminous Learn" className="h-12 w-12 rounded-xl shadow-md object-cover" referrerPolicy="no-referrer" />
+              <span className="text-2xl font-bold text-[#7A4900]">Naminous Learn</span>
+            </Link>
+          </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-2">
-            {user && navLinks.map((link) => (
+            {user && user.emailVerified && navLinks.map((link) => (
               <Link 
                 key={link.path} 
                 to={link.path} 
@@ -128,7 +140,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                 <span>{link.name}</span>
               </Link>
             ))}
-            {profile?.role === 'admin' && (
+            {user && user.emailVerified && profile?.role === 'admin' && (
               <Link
                 to="/admin"
                 className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
@@ -143,9 +155,11 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
             )}
             {user ? (
               <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-gray-100">
-                <Link to="/profile" className="flex items-center space-x-2">
-                  <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
-                </Link>
+                {user.emailVerified && (
+                  <Link to="/profile" className="flex items-center space-x-2">
+                    <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
+                  </Link>
+                )}
                 <button onClick={onLogout} className="p-2 text-gray-400 hover:text-red-500 transition-all">
                   <LogOut className="w-6 h-6" />
                 </button>
@@ -178,14 +192,16 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
             <div className="px-4 pt-2 pb-6 space-y-2">
               {user ? (
                 <>
-                  <div className="flex items-center space-x-4 p-4 mb-4 bg-gray-50 rounded-2xl">
-                    <img src={profile?.photoURL || undefined} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
-                    <div>
-                      <p className="font-bold text-[#7A4900]">{profile?.displayName}</p>
-                      <p className="text-xs text-gray-400">{profile?.email}</p>
+                  {user.emailVerified && (
+                    <div className="flex items-center space-x-4 p-4 mb-4 bg-gray-50 rounded-2xl">
+                      <img src={profile?.photoURL || undefined} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
+                      <div>
+                        <p className="font-bold text-[#7A4900]">{profile?.displayName}</p>
+                        <p className="text-xs text-gray-400">{profile?.email}</p>
+                      </div>
                     </div>
-                  </div>
-                  {navLinks.map((link) => (
+                  )}
+                  {user.emailVerified && navLinks.map((link) => (
                     <Link
                       key={link.path}
                       to={link.path}
@@ -200,7 +216,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       <span>{link.name}</span>
                     </Link>
                   ))}
-                  {profile?.role === 'admin' && (
+                  {user.emailVerified && profile?.role === 'admin' && (
                     <Link
                       to="/admin"
                       onClick={() => setIsOpen(false)}
@@ -210,14 +226,16 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       <span>Admin Panel</span>
                     </Link>
                   )}
-                  <Link
-                    to="/profile"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-[#545454] hover:bg-gray-100"
-                  >
-                    <UserIcon className="w-5 h-5" />
-                    <span>My Profile</span>
-                  </Link>
+                  {user.emailVerified && (
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-[#545454] hover:bg-gray-100"
+                    >
+                      <UserIcon className="w-5 h-5" />
+                      <span>My Profile</span>
+                    </Link>
+                  )}
                   <button onClick={onLogout} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50">
                     <LogOut className="w-5 h-5" />
                     <span>Logout</span>
@@ -257,7 +275,7 @@ function Landing() {
         transition={{ delay: 0.2 }}
         className="text-5xl md:text-7xl font-bold text-[#7A4900] mb-8 leading-tight"
       >
-        Master Your Exams with <span className="text-[#D4AF37]">Naminous Learn</span>
+        Achieve Academic Excellence with <span className="text-[#D4AF37]">Naminous Learn</span>
       </motion.h1>
       <motion.p
         initial={{ y: 20, opacity: 0 }}
@@ -265,8 +283,8 @@ function Landing() {
         transition={{ delay: 0.3 }}
         className="text-xl text-[#545454] max-w-2xl mb-12 leading-relaxed"
       >
-        The ultimate practice platform for Board Exams and College Admissions. 
-        Join thousands of students and track your progress in real-time.
+        A dedicated space for students to prepare for their future through structured learning, 
+        comprehensive practice, and real-time evaluation.
       </motion.p>
       <motion.div
         initial={{ y: 20, opacity: 0 }}

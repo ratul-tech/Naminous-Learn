@@ -7,6 +7,9 @@ import { UserRole, UserProfile } from '../types';
 import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import { handleFirestoreError } from '../lib/error-handler';
+import { OperationType } from '../types';
+
 export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
@@ -42,18 +45,19 @@ export default function Login() {
         };
         
         // Save to students collection
-        await setDoc(doc(db, 'students', user.uid), newProfile);
+        try {
+          await setDoc(doc(db, 'students', user.uid), newProfile);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.CREATE, `students/${user.uid}`);
+        }
         
-        setMessage("Registration successful! A verification email has been sent to your address. Please verify your email before logging in.");
-        setIsRegistering(false);
-        await signOut(auth); // Sign out until verified
+        navigate('/verify-email');
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
         if (!user.emailVerified) {
-          setError("Please verify your email address before logging in. Check your inbox for the verification link.");
-          await signOut(auth);
+          navigate('/verify-email');
           setLoading(false);
           return;
         }
