@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserRole, UserProfile } from '../types';
@@ -20,6 +20,23 @@ export default function Login() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please enter your email address first.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setMessage("Password reset email sent! Please check your inbox.");
+      setError('');
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset email.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,6 +241,17 @@ export default function Login() {
               className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#D4AF37] outline-none"
               required
             />
+            {!isRegistering && (
+              <div className="text-right mt-1">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-[#D4AF37] hover:underline font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
           </div>
 
           {error && (
