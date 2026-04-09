@@ -64,7 +64,22 @@ export default function Login() {
 
         // Check role in corresponding collection
         const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
-        const userDoc = await getDoc(doc(db, collectionName, user.uid));
+        let userDoc = await getDoc(doc(db, collectionName, user.uid));
+
+        // Special handling for default admins
+        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
+        if (selectedRole === 'admin' && !userDoc.exists() && defaultAdmins.includes(user.email || '')) {
+          const newAdmin: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || user.email?.split('@')[0] || 'Admin',
+            photoURL: user.photoURL || `https://ui-avatars.com/api/?name=Admin&background=random`,
+            role: 'admin',
+            createdAt: new Date().toISOString(),
+          };
+          await setDoc(doc(db, 'admins', user.uid), newAdmin);
+          userDoc = await getDoc(doc(db, 'admins', user.uid));
+        }
 
         if (!userDoc.exists()) {
           setError(`Account not found in ${selectedRole} records. Please ensure you selected the correct account type.`);

@@ -83,13 +83,13 @@ export default function App() {
             <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
             <Route path="/verify-email" element={user ? <VerifyEmail onVerified={refreshUser} /> : <Navigate to="/login" />} />
-            <Route path="/dashboard" element={user ? (user.emailVerified ? <Dashboard profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
-            <Route path="/profile" element={user ? (user.emailVerified ? <Profile profile={profile} setProfile={setProfile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
-            <Route path="/practice" element={user ? (user.emailVerified ? <Practice profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
-            <Route path="/exam" element={user ? (user.emailVerified ? <Exam profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/dashboard" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Dashboard profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/profile" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Profile profile={profile} setProfile={setProfile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/practice" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Practice profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/exam" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Exam profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/events" element={user ? (user.emailVerified ? <Events profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
-            <Route path="/feedback" element={user ? (user.emailVerified ? <FeedbackForm profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/events" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Events profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/feedback" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <FeedbackForm profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/admin" element={profile?.role === 'admin' ? <Admin /> : <Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

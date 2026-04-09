@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { initializeApp, getApp, getApps } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { db, auth } from '../firebase';
+import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'questions' | 'users' | 'payments' | 'events' | 'feedback'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'users' | 'payments' | 'events' | 'feedback' | 'admins'>('questions');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [admins, setAdmins] = useState<UserProfile[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [events, setEvents] = useState<ExamEvent[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
@@ -22,6 +27,9 @@ export default function Admin() {
     });
     const unsubUsers = onSnapshot(query(collection(db, 'students'), orderBy('createdAt', 'desc')), (snapshot) => {
       setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any)));
+    });
+    const unsubAdmins = onSnapshot(query(collection(db, 'admins'), orderBy('createdAt', 'desc')), (snapshot) => {
+      setAdmins(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any)));
     });
     const unsubPayments = onSnapshot(query(collection(db, 'payments'), orderBy('createdAt', 'desc')), (snapshot) => {
       setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
@@ -37,6 +45,7 @@ export default function Admin() {
     return () => {
       unsubQuestions();
       unsubUsers();
+      unsubAdmins();
       unsubPayments();
       unsubEvents();
       unsubFeedback();
@@ -75,9 +84,10 @@ export default function Admin() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-[#7A4900]">Admin Control Center</h1>
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border">
+        <div className="flex bg-white p-1 rounded-xl shadow-sm border overflow-x-auto max-w-full">
           <TabButton active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} icon={BookOpen} label="Questions" />
-          <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Users" />
+          <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Students" />
+          <TabButton active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admins" />
           <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
           <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Events" />
           <TabButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Feedback" />
@@ -85,55 +95,14 @@ export default function Admin() {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'questions' && <QuestionManager questions={questions} onDelete={handleDeleteQuestion} />}
-        {activeTab === 'users' && <UserManager users={users} />}
-        {activeTab === 'payments' && <PaymentManager payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager events={events} />}
-        {activeTab === 'feedback' && <FeedbackManager feedback={feedback} />}
+        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} />}
+        {activeTab === 'users' && <UserManager key="users" users={users} />}
+        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} />}
+        {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
+        {activeTab === 'events' && <EventManager key="events" events={events} />}
+        {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
     </div>
-  );
-}
-
-function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <h2 className="text-xl font-bold text-[#7A4900]">User Feedback ({feedback.length})</h2>
-      <div className="grid grid-cols-1 gap-4">
-        {feedback.map((f) => (
-          <div key={f.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${f.type === 'Issue' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                  {f.type === 'Issue' ? <AlertCircle className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#7A4900]">{f.displayName}</h3>
-                  <p className="text-xs text-gray-400">{f.email}</p>
-                </div>
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${f.type === 'Issue' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                {f.type}
-              </span>
-            </div>
-            <p className="text-[#545454] bg-gray-50 p-4 rounded-xl text-sm leading-relaxed">
-              {f.message}
-            </p>
-            <div className="mt-4 text-right">
-              <span className="text-[10px] text-gray-400 font-mono">
-                {new Date(f.createdAt).toLocaleString()}
-              </span>
-            </div>
-          </div>
-        ))}
-        {feedback.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-            <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-400">No feedback submitted yet.</p>
-          </div>
-        )}
-      </div>
-    </motion.div>
   );
 }
 
@@ -141,7 +110,7 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, on
   return (
     <button
       onClick={onClick}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${active ? 'bg-[#D4AF37] text-white shadow-md' : 'text-[#545454] hover:bg-gray-50'}`}
+      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap ${active ? 'bg-[#D4AF37] text-white shadow-md' : 'text-[#545454] hover:bg-gray-50'}`}
     >
       <Icon className="w-4 h-4" />
       <span className="font-bold text-sm">{label}</span>
@@ -283,50 +252,320 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
   );
 }
 
-function UserManager({ users }: { users: UserProfile[] }) {
+function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <table className="w-full text-left">
-        <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
-          <tr>
-            <th className="px-6 py-4">User</th>
-            <th className="px-6 py-4">Class/Group</th>
-            <th className="px-6 py-4">Institution</th>
-            <th className="px-6 py-4">Role</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {users.map((u) => (
-            <tr key={u.uid} className="hover:bg-gray-50 transition-colors">
-              <td className="px-6 py-4">
-                <div className="flex items-center space-x-3">
-                  {u.photoURL ? (
-                    <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                      <User className="w-4 h-4 text-gray-400" />
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <h2 className="text-xl font-bold text-[#7A4900]">User Feedback ({feedback.length})</h2>
+      <div className="grid grid-cols-1 gap-4">
+        {feedback.map((f) => (
+          <div key={f.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${f.type === 'Issue' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                  {f.type === 'Issue' ? <AlertCircle className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#7A4900]">{f.displayName}</h3>
+                  <p className="text-xs text-gray-400">{f.email}</p>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${f.type === 'Issue' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                {f.type}
+              </span>
+            </div>
+            <p className="text-[#545454] bg-gray-50 p-4 rounded-xl text-sm leading-relaxed">
+              {f.message}
+            </p>
+            <div className="mt-4 text-right">
+              <span className="text-[10px] text-gray-400 font-mono">
+                {new Date(f.createdAt).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        ))}
+        {feedback.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+            <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-400">No feedback submitted yet.</p>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function AdminManager({ admins }: { admins: UserProfile[] }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // Use a secondary app instance to create user without signing out current admin
+      const secondaryApp = getApps().find(app => app.name === 'secondary') || initializeApp(firebaseConfig, 'secondary');
+      const secondaryAuth = getAuth(secondaryApp);
+      
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const user = userCredential.user;
+
+      const newAdmin: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: name,
+        photoURL: `https://ui-avatars.com/api/?name=${name}&background=random`,
+        role: 'admin',
+        createdAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, 'admins', user.uid), newAdmin);
+      
+      // Sign out from secondary app to clean up
+      await signOut(secondaryAuth);
+      
+      setShowAdd(false);
+      setEmail('');
+      setPassword('');
+      setName('');
+    } catch (err: any) {
+      console.error("Admin creation error:", err);
+      setError(err.message || "Failed to create admin account.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-[#7A4900]">Manage Admins ({admins.length})</h2>
+        <button onClick={() => setShowAdd(true)} className="bg-[#7A4900] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-black transition-all">
+          <Plus className="w-4 h-4" />
+          <span>Add New Admin</span>
+        </button>
+      </div>
+
+      {showAdd && (
+        <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-[#7A4900]">
+          <form onSubmit={handleCreateAdmin} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="px-4 py-2 rounded-lg border outline-none" required />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="px-4 py-2 rounded-lg border outline-none" required />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="px-4 py-2 rounded-lg border outline-none" required minLength={6} />
+            </div>
+            {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+            <div className="flex justify-end space-x-4">
+              <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-gray-500 font-bold">Cancel</button>
+              <button type="submit" disabled={loading} className="bg-[#7A4900] text-white px-6 py-2 rounded-lg font-bold disabled:opacity-50">
+                {loading ? 'Creating...' : 'Create Admin Account'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
+        <table className="w-full text-left">
+          <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+            <tr>
+              <th className="px-6 py-4">Admin</th>
+              <th className="px-6 py-4">Email</th>
+              <th className="px-6 py-4">Joined</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {admins.map((a) => (
+              <tr key={a.uid} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="flex items-center space-x-3">
+                    <img src={a.photoURL || undefined} alt="" className="w-8 h-8 rounded-full border border-gray-200" referrerPolicy="no-referrer" />
+                    <span className="font-bold text-[#7A4900]">{a.displayName}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-[#545454]">{a.email}</td>
+                <td className="px-6 py-4 text-xs text-gray-400">{new Date(a.createdAt).toLocaleDateString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </motion.div>
+  );
+}
+
+function UserManager({ users }: { users: UserProfile[] }) {
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editData, setEditData] = useState<Partial<UserProfile>>({});
+  const [saving, setSaving] = useState(false);
+
+  const handleEdit = (user: UserProfile) => {
+    setEditingUser(user);
+    setEditData({
+      displayName: user.displayName,
+      class: user.class,
+      group: user.group,
+      school: user.school,
+      phone: user.phone,
+    });
+  };
+
+  const handleSave = async () => {
+    if (!editingUser) return;
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, 'students', editingUser.uid), editData);
+      setEditingUser(null);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `students/${editingUser.uid}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <h2 className="text-xl font-bold text-[#7A4900]">Student Management ({users.length})</h2>
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+              <tr>
+                <th className="px-6 py-4">Student</th>
+                <th className="px-6 py-4">Class/Group</th>
+                <th className="px-6 py-4">Institution</th>
+                <th className="px-6 py-4">Phone</th>
+                <th className="px-6 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {users.map((u) => (
+                <tr key={u.uid} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      {u.photoURL ? (
+                        <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full border border-gray-100" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                          <User className="w-4 h-4 text-gray-400" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-bold text-[#7A4900]">{u.displayName}</p>
+                        <p className="text-xs text-[#545454]">{u.email}</p>
+                      </div>
                     </div>
-                  )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-medium">{u.class}</p>
+                    <p className="text-xs text-[#545454]">{u.group}</p>
+                  </td>
+                  <td className="px-6 py-4 text-sm">{u.school}</td>
+                  <td className="px-6 py-4 text-sm">{u.phone || 'N/A'}</td>
+                  <td className="px-6 py-4">
+                    <button onClick={() => handleEdit(u)} className="p-2 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all">
+                      <Edit className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Edit User Modal */}
+      <AnimatePresence>
+        {editingUser && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-[#7A4900]">Edit Student</h2>
+                <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-gray-100 rounded-full">
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-[#7A4900] mb-2">Display Name</label>
+                  <input
+                    type="text"
+                    value={editData.displayName}
+                    onChange={(e) => setEditData({ ...editData, displayName: e.target.value })}
+                    className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="font-bold text-[#7A4900]">{u.displayName}</p>
-                    <p className="text-xs text-[#545454]">{u.email}</p>
+                    <label className="block text-sm font-bold text-[#7A4900] mb-2">Class</label>
+                    <input
+                      type="text"
+                      value={editData.class}
+                      onChange={(e) => setEditData({ ...editData, class: e.target.value })}
+                      className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#7A4900] mb-2">Group</label>
+                    <input
+                      type="text"
+                      value={editData.group}
+                      onChange={(e) => setEditData({ ...editData, group: e.target.value as any })}
+                      className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                    />
                   </div>
                 </div>
-              </td>
-              <td className="px-6 py-4">
-                <p className="text-sm font-medium">{u.class}</p>
-                <p className="text-xs text-[#545454]">{u.group}</p>
-              </td>
-              <td className="px-6 py-4 text-sm">{u.school}</td>
-              <td className="px-6 py-4">
-                <span className={`text-xs font-bold px-2 py-1 rounded-full ${u.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
-                  {u.role}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                <div>
+                  <label className="block text-sm font-bold text-[#7A4900] mb-2">School/College</label>
+                  <input
+                    type="text"
+                    value={editData.school}
+                    onChange={(e) => setEditData({ ...editData, school: e.target.value })}
+                    className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#7A4900] mb-2">Phone</label>
+                  <input
+                    type="text"
+                    value={editData.phone}
+                    onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                    className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                  />
+                </div>
+
+                <div className="pt-6 flex space-x-4">
+                  <button
+                    onClick={() => setEditingUser(null)}
+                    className="flex-1 px-6 py-3 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 rounded-xl font-bold text-white bg-[#D4AF37] hover:bg-[#B8860B] transition-all flex items-center justify-center space-x-2"
+                  >
+                    <Save className="w-5 h-5" />
+                    <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

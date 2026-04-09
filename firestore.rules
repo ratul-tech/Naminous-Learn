@@ -39,7 +39,8 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() &&
         (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-         (request.auth.token.email == "shahriarislam275@gmail.com" && request.auth.token.email_verified == true));
+         (request.auth.token.email == "shahriarislam275@gmail.com" && request.auth.token.email_verified == true) ||
+         (request.auth.token.email == "shahriarislamratul065@gmail.com" && request.auth.token.email_verified == true));
     }
 
     function isValidStudent(data) {
@@ -100,7 +101,7 @@ service cloud.firestore {
     match /students/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId) && isValidStudent(request.resource.data);
-      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role;
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
     }
 
     match /admins/{userId} {
