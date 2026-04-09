@@ -29,33 +29,39 @@ export default function Login() {
 
     try {
       if (isRegistering) {
+        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
+        const isDefaultAdmin = defaultAdmins.includes(email.toLowerCase());
+
+        if (selectedRole === 'admin' && !isDefaultAdmin) {
+          setError("Only authorized administrators can register as Admin. Please register as a Student or contact the system owner.");
+          setLoading(false);
+          return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
         // Send verification email
         await sendEmailVerification(user);
         
-        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
-        const isDefaultAdmin = defaultAdmins.includes(email.toLowerCase());
-        
         const newProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           displayName: displayName || user.email?.split('@')[0] || 'User',
           photoURL: `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
-          role: isDefaultAdmin ? 'admin' : 'student',
+          role: selectedRole,
           createdAt: new Date().toISOString(),
         };
         
         // Save to correct collection
-        const collectionName = isDefaultAdmin ? 'admins' : 'students';
+        const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
         try {
           await setDoc(doc(db, collectionName, user.uid), newProfile);
         } catch (err) {
           handleFirestoreError(err, OperationType.CREATE, `${collectionName}/${user.uid}`);
         }
         
-        if (isDefaultAdmin) {
+        if (selectedRole === 'admin') {
           navigate('/dashboard');
         } else {
           navigate('/verify-email');
@@ -150,30 +156,28 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {!isRegistering && (
-            <div>
-              <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Login As</span>
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole('student')}
-                  className={`py-3 rounded-xl border-2 transition-all font-bold ${selectedRole === 'student' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
-                >
-                  Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole('admin')}
-                  className={`py-3 rounded-xl border-2 transition-all font-bold ${selectedRole === 'admin' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
-                >
-                  Admin
-                </button>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
+              <ShieldCheck className="w-4 h-4" />
+              <span>I am a</span>
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setSelectedRole('student')}
+                className={`py-3 rounded-xl border-2 transition-all font-bold ${selectedRole === 'student' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
+              >
+                Student
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRole('admin')}
+                className={`py-3 rounded-xl border-2 transition-all font-bold ${selectedRole === 'admin' ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
+              >
+                Admin
+              </button>
             </div>
-          )}
+          </div>
 
           {isRegistering && (
             <div>
