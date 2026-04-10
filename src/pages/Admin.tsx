@@ -20,6 +20,7 @@ export default function Admin() {
   const [events, setEvents] = useState<ExamEvent[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     const unsubQuestions = onSnapshot(query(collection(db, 'questions'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -69,13 +70,60 @@ export default function Admin() {
   };
 
   const handleDeleteQuestion = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this question?')) {
-      try {
-        await deleteDoc(doc(db, 'questions', id));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `questions/${id}`);
+    setConfirmModal({
+      show: true,
+      title: 'Delete Question',
+      message: 'Are you sure you want to delete this question? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'questions', id));
+          setConfirmModal(null);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `questions/${id}`);
+        }
       }
+    });
+  };
+
+  const handleDeleteStudent = async (uid: string) => {
+    setConfirmModal({
+      show: true,
+      title: 'Delete Student',
+      message: 'Are you sure you want to delete this student record? Their exam history will remain but they will lose access.',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'students', uid));
+          setConfirmModal(null);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `students/${uid}`);
+        }
+      }
+    });
+  };
+
+  const handleDeleteAdmin = async (uid: string) => {
+    if (uid === auth.currentUser?.uid) {
+      setConfirmModal({
+        show: true,
+        title: 'Action Prohibited',
+        message: 'You cannot delete your own administrator account while logged in.',
+        onConfirm: () => setConfirmModal(null)
+      });
+      return;
     }
+    setConfirmModal({
+      show: true,
+      title: 'Delete Admin',
+      message: 'Are you sure you want to remove this administrator? They will lose all administrative privileges.',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'admins', uid));
+          setConfirmModal(null);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `admins/${uid}`);
+        }
+      }
+    });
   };
 
   if (loading) return <div className="text-center py-20">Loading admin panel...</div>;
@@ -96,11 +144,51 @@ export default function Admin() {
 
       <AnimatePresence mode="wait">
         {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} />}
-        {activeTab === 'users' && <UserManager key="users" users={users} />}
-        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} />}
+        {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
+        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
         {activeTab === 'events' && <EventManager key="events" events={events} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
+      </AnimatePresence>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {confirmModal && confirmModal.show && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8"
+            >
+              <div className="flex items-center space-x-3 text-red-600 mb-4">
+                <AlertCircle className="w-6 h-6" />
+                <h2 className="text-xl font-bold">{confirmModal.title}</h2>
+              </div>
+              <p className="text-[#545454] mb-8">{confirmModal.message}</p>
+              <div className="flex space-x-4">
+                {confirmModal.title !== 'Action Prohibited' && (
+                  <button
+                    onClick={() => setConfirmModal(null)}
+                    className="flex-1 px-6 py-3 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  onClick={confirmModal.onConfirm}
+                  className={`flex-1 px-6 py-3 rounded-xl font-bold text-white transition-all shadow-lg ${
+                    confirmModal.title === 'Action Prohibited' 
+                      ? 'bg-[#D4AF37] hover:bg-[#B8860B] shadow-yellow-100' 
+                      : 'bg-red-500 hover:bg-red-600 shadow-red-200'
+                  }`}
+                >
+                  {confirmModal.title === 'Action Prohibited' ? 'OK' : 'Confirm Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
     </div>
   );
@@ -294,7 +382,7 @@ function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
   );
 }
 
-function AdminManager({ admins }: { admins: UserProfile[] }) {
+function AdminManager({ admins, onDelete }: { admins: UserProfile[], onDelete: (uid: string) => void }) {
   const [showAdd, setShowAdd] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -377,6 +465,7 @@ function AdminManager({ admins }: { admins: UserProfile[] }) {
               <th className="px-6 py-4">Admin</th>
               <th className="px-6 py-4">Email</th>
               <th className="px-6 py-4">Joined</th>
+              <th className="px-6 py-4">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -390,6 +479,11 @@ function AdminManager({ admins }: { admins: UserProfile[] }) {
                 </td>
                 <td className="px-6 py-4 text-sm text-[#545454]">{a.email}</td>
                 <td className="px-6 py-4 text-xs text-gray-400">{new Date(a.createdAt).toLocaleDateString()}</td>
+                <td className="px-6 py-4">
+                  <button onClick={() => onDelete(a.uid)} className="p-2 text-red-400 hover:text-red-600 rounded-lg transition-all">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -399,7 +493,7 @@ function AdminManager({ admins }: { admins: UserProfile[] }) {
   );
 }
 
-function UserManager({ users }: { users: UserProfile[] }) {
+function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid: string) => void }) {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
   const [saving, setSaving] = useState(false);
@@ -468,9 +562,14 @@ function UserManager({ users }: { users: UserProfile[] }) {
                   <td className="px-6 py-4 text-sm">{u.school}</td>
                   <td className="px-6 py-4 text-sm">{u.phone || 'N/A'}</td>
                   <td className="px-6 py-4">
-                    <button onClick={() => handleEdit(u)} className="p-2 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all">
-                      <Edit className="w-5 h-5" />
-                    </button>
+                    <div className="flex space-x-2">
+                      <button onClick={() => handleEdit(u)} className="p-2 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all">
+                        <Edit className="w-5 h-5" />
+                      </button>
+                      <button onClick={() => onDelete(u.uid)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
