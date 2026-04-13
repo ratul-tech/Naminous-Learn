@@ -6,7 +6,6 @@ import { Calendar, Clock, Trophy, Users, CreditCard, CheckCircle2, AlertCircle }
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
-import { sendPurchaseRequest } from '../services/emailService';
 
 interface EventsProps {
   profile: UserProfile | null;
@@ -70,15 +69,6 @@ export default function Events({ profile }: EventsProps) {
       
       // Save to Firestore
       await addDoc(collection(db, 'payments'), newPayment);
-
-      // Send via EmailJS
-      await sendPurchaseRequest({
-        student_name: profile.displayName,
-        exam_name: selectedEvent.title,
-        method: paymentData.method,
-        amount: selectedEvent.entryFee,
-        trxid: paymentData.trxId,
-      });
 
       setSuccess(true);
       setTimeout(() => {

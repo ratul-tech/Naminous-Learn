@@ -6,7 +6,6 @@ import { MessageSquare, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
-import { sendFeedback } from '../services/emailService';
 
 interface FeedbackProps {
   profile: UserProfile | null;
@@ -37,13 +36,6 @@ export default function FeedbackForm({ profile }: FeedbackProps) {
       
       // Save to Firestore
       await addDoc(collection(db, 'feedback'), feedback);
-
-      // Send via EmailJS
-      await sendFeedback({
-        from_name: profile.displayName,
-        from_email: profile.email,
-        message: `[${type}] ${message}`,
-      });
 
       setSuccess(true);
       setMessage('');

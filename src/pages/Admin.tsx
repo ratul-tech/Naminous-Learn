@@ -77,6 +77,22 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteEvent = async (id: string) => {
+    setConfirmModal({
+      show: true,
+      title: 'Delete Event',
+      message: 'Are you sure you want to delete this event? This will remove all associated data.',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'events', id));
+          setConfirmModal(null);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `events/${id}`);
+        }
+      }
+    });
+  };
+
   const handleDeleteQuestion = async (id: string) => {
     setConfirmModal({
       show: true,
@@ -155,7 +171,7 @@ export default function Admin() {
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager key="events" events={events} />}
+        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
 
@@ -741,7 +757,7 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
   );
 }
 
-function EventManager({ events }: { events: ExamEvent[] }) {
+function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id: string) => void }) {
   const [showAdd, setShowAdd] = useState(false);
   const [newE, setNewE] = useState({
     title: '',
@@ -782,11 +798,27 @@ function EventManager({ events }: { events: ExamEvent[] }) {
           <form onSubmit={handleAdd} className="space-y-4">
             <input type="text" value={newE.title} onChange={(e) => setNewE({ ...newE, title: e.target.value })} placeholder="Event Title" className="w-full px-4 py-2 rounded-lg border outline-none" required />
             <textarea value={newE.description} onChange={(e) => setNewE({ ...newE, description: e.target.value })} placeholder="Description" className="w-full px-4 py-2 rounded-lg border outline-none" required />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <input type="number" value={newE.entryFee} onChange={(e) => setNewE({ ...newE, entryFee: parseInt(e.target.value) })} placeholder="Entry Fee" className="px-4 py-2 rounded-lg border outline-none" required />
-              <input type="datetime-local" value={newE.startTime} onChange={(e) => setNewE({ ...newE, startTime: e.target.value })} className="px-4 py-2 rounded-lg border outline-none" required />
-              <input type="number" value={newE.duration} onChange={(e) => setNewE({ ...newE, duration: parseInt(e.target.value) })} placeholder="Duration (min)" className="px-4 py-2 rounded-lg border outline-none" required />
-              <input type="text" value={newE.prize} onChange={(e) => setNewE({ ...newE, prize: e.target.value })} placeholder="Prize Details" className="px-4 py-2 rounded-lg border outline-none" required />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase">Entry Fee (Tk)</label>
+                <input type="number" value={newE.entryFee} onChange={(e) => setNewE({ ...newE, entryFee: parseInt(e.target.value) })} placeholder="Entry Fee" className="w-full px-4 py-2 rounded-lg border outline-none" required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase">Start Time</label>
+                <input type="datetime-local" value={newE.startTime} onChange={(e) => setNewE({ ...newE, startTime: e.target.value })} className="w-full px-4 py-2 rounded-lg border outline-none" required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase">Duration (Minutes)</label>
+                <input type="number" value={newE.duration} onChange={(e) => setNewE({ ...newE, duration: parseInt(e.target.value) })} placeholder="Duration (min)" className="w-full px-4 py-2 rounded-lg border outline-none" required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase">Max Candidates</label>
+                <input type="number" value={newE.maxCandidates} onChange={(e) => setNewE({ ...newE, maxCandidates: parseInt(e.target.value) })} placeholder="Max Candidates" className="w-full px-4 py-2 rounded-lg border outline-none" required />
+              </div>
+              <div className="md:col-span-2 space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase">Prize Details</label>
+                <input type="text" value={newE.prize} onChange={(e) => setNewE({ ...newE, prize: e.target.value })} placeholder="e.g. 1000 Tk + Certificate" className="w-full px-4 py-2 rounded-lg border outline-none" required />
+              </div>
             </div>
             <div className="flex justify-end space-x-4">
               <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-gray-500 font-bold">Cancel</button>
@@ -798,12 +830,42 @@ function EventManager({ events }: { events: ExamEvent[] }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {events.map((e) => (
-          <div key={e.id} className="bg-white p-6 rounded-2xl shadow-sm border hover:border-[#D4AF37] transition-all">
+          <div key={e.id} className="bg-white p-6 rounded-2xl shadow-sm border hover:border-[#D4AF37] transition-all group relative">
+            <button 
+              onClick={() => onDelete(e.id)}
+              className="absolute top-4 right-4 p-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+            <div className="flex items-center space-x-2 mb-2">
+              <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                e.status === 'upcoming' ? 'bg-blue-50 text-blue-600' :
+                e.status === 'ongoing' ? 'bg-green-50 text-green-600' :
+                'bg-gray-50 text-gray-600'
+              }`}>
+                {e.status}
+              </span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase">{e.maxCandidates} Slots</span>
+            </div>
             <h3 className="font-bold text-[#7A4900] text-lg mb-2">{e.title}</h3>
             <p className="text-sm text-[#545454] mb-4 line-clamp-2">{e.description}</p>
-            <div className="flex justify-between items-center text-xs font-bold text-[#D4AF37]">
-              <span>{new Date(e.startTime).toLocaleString()}</span>
-              <span>Tk {e.entryFee}</span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-gray-400">START TIME</span>
+                <span className="text-[#D4AF37]">{new Date(e.startTime).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-gray-400">DURATION</span>
+                <span className="text-[#7A4900]">{e.duration} Minutes</span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-gray-400">ENTRY FEE</span>
+                <span className="text-[#7A4900]">Tk {e.entryFee}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold pt-2 border-t">
+                <span className="text-gray-400">PRIZE</span>
+                <span className="text-green-600">{e.prize}</span>
+              </div>
             </div>
           </div>
         ))}
