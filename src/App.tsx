@@ -82,6 +82,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+            <Route path="/admin/login" element={<Navigate to="/login?role=admin" replace />} />
             <Route path="/verify-email" element={user ? <VerifyEmail onVerified={refreshUser} /> : <Navigate to="/login" />} />
             <Route path="/dashboard" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Dashboard profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/profile" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Profile profile={profile} setProfile={setProfile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
@@ -253,11 +254,11 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       Login / Register
                     </Link>
                     <Link
-                      to="/login?role=admin"
+                      to="/admin/login"
                       onClick={() => setIsOpen(false)}
                       className="block w-full text-center bg-[#7A4900] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-black transition-all"
                     >
-                      Admin Login
+                      Admin Portal
                     </Link>
                   </div>
                 )}
@@ -330,6 +331,39 @@ function Landing() {
         >
           View Leaderboard
         </Link>
+      </motion.div>
+
+      {/* Quick Actions for Logged Out Users */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: true }}
+        className="mt-24 w-full max-w-4xl"
+      >
+        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8">Quick Access</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <Link
+            to="/login?role=student"
+            className="group bg-white p-8 rounded-3xl border-2 border-transparent hover:border-[#D4AF37] shadow-sm hover:shadow-xl transition-all text-left"
+          >
+            <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-2xl flex items-center justify-center text-[#D4AF37] mb-6 group-hover:scale-110 transition-transform">
+              <UserIcon className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-[#7A4900] mb-2">Student Portal</h3>
+            <p className="text-sm text-[#545454]">Access your practice modules, exam history, and personalized dashboard.</p>
+          </Link>
+
+          <Link
+            to="/login?role=admin"
+            className="group bg-white p-8 rounded-3xl border-2 border-transparent hover:border-[#7A4900] shadow-sm hover:shadow-xl transition-all text-left"
+          >
+            <div className="w-12 h-12 bg-[#7A4900]/10 rounded-2xl flex items-center justify-center text-[#7A4900] mb-6 group-hover:scale-110 transition-transform">
+              <Shield className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-[#7A4900] mb-2">Admin Portal</h3>
+            <p className="text-sm text-[#545454]">Secure administrative access for managing questions, events, and users.</p>
+          </Link>
+        </div>
       </motion.div>
     </div>
   );

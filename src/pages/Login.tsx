@@ -77,6 +77,7 @@ export default function Login() {
           displayName: displayName || user.email?.split('@')[0] || 'User',
           photoURL: `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
           role: selectedRole,
+          status: selectedRole === 'admin' ? (isDefaultAdmin ? 'active' : 'pending') : undefined,
           createdAt: new Date().toISOString(),
         };
         
@@ -112,6 +113,7 @@ export default function Login() {
             displayName: user.displayName || user.email?.split('@')[0] || 'Admin',
             photoURL: user.photoURL || `https://ui-avatars.com/api/?name=Admin&background=random`,
             role: 'admin',
+            status: 'active',
             createdAt: new Date().toISOString(),
           };
           await setDoc(doc(db, 'admins', user.uid), newAdmin);
@@ -126,6 +128,13 @@ export default function Login() {
         }
 
         const profileData = userDoc.data() as UserProfile;
+
+        if (profileData.role === 'admin' && profileData.status === 'pending') {
+          setError("Your administrator account is pending activation. Please contact a master administrator to activate your account.");
+          await signOut(auth);
+          setLoading(false);
+          return;
+        }
 
         // Check verification for non-admins
         if (!user.emailVerified && profileData.role !== 'admin') {

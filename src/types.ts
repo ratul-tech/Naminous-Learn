@@ -44,6 +44,7 @@ export interface UserProfile {
   school?: string;
   group?: Group;
   role: UserRole;
+  status?: 'pending' | 'active';
   createdAt: string;
 }
 

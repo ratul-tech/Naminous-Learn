@@ -43,6 +43,13 @@ service cloud.firestore {
          request.auth.token.email == "shahriarislamratul065@gmail.com");
     }
 
+    function isActiveAdmin() {
+      return isAdmin() && 
+        (get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active' ||
+         request.auth.token.email == "shahriarislam275@gmail.com" ||
+         request.auth.token.email == "shahriarislamratul065@gmail.com");
+    }
+
     function isValidStudent(data) {
       return data.keys().hasAll(['uid', 'email', 'role']) &&
              data.uid is string &&
@@ -101,42 +108,42 @@ service cloud.firestore {
     match /students/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId) && isValidStudent(request.resource.data);
-      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
-      allow delete: if isAdmin();
+      allow update: if isActiveAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
+      allow delete: if isActiveAdmin();
     }
 
     match /admins/{userId} {
       allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow write: if isActiveAdmin();
     }
 
     match /questions/{questionId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isActiveAdmin();
     }
 
     match /results/{resultId} {
       allow read: if true;
       allow create: if isAuthenticated() && isValidResult(request.resource.data);
-      allow update, delete: if isAdmin();
+      allow update, delete: if isActiveAdmin();
     }
 
     match /events/{eventId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isActiveAdmin();
     }
 
     match /payments/{paymentId} {
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow read: if isActiveAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidPayment(request.resource.data);
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow update: if isActiveAdmin();
+      allow delete: if isActiveAdmin();
     }
 
     match /feedback/{feedbackId} {
-      allow read: if isAdmin();
+      allow read: if isActiveAdmin();
       allow create: if isAuthenticated() && isValidFeedback(request.resource.data);
-      allow update, delete: if isAdmin();
+      allow update, delete: if isActiveAdmin();
     }
   }
 }

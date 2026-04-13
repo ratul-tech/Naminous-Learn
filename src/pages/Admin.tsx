@@ -69,6 +69,14 @@ export default function Admin() {
     }
   };
 
+  const handleActivateAdmin = async (uid: string) => {
+    try {
+      await updateDoc(doc(db, 'admins', uid), { status: 'active' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `admins/${uid}`);
+    }
+  };
+
   const handleDeleteQuestion = async (id: string) => {
     setConfirmModal({
       show: true,
@@ -145,7 +153,7 @@ export default function Admin() {
       <AnimatePresence mode="wait">
         {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} />}
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
-        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} />}
+        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
         {activeTab === 'events' && <EventManager key="events" events={events} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
@@ -382,7 +390,7 @@ function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
   );
 }
 
-function AdminManager({ admins, onDelete }: { admins: UserProfile[], onDelete: (uid: string) => void }) {
+function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[], onDelete: (uid: string) => void, onActivate: (uid: string) => void }) {
   const [showAdd, setShowAdd] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -409,6 +417,7 @@ function AdminManager({ admins, onDelete }: { admins: UserProfile[], onDelete: (
         displayName: name,
         photoURL: `https://ui-avatars.com/api/?name=${name}&background=random`,
         role: 'admin',
+        status: 'active',
         createdAt: new Date().toISOString(),
       };
 
@@ -464,6 +473,7 @@ function AdminManager({ admins, onDelete }: { admins: UserProfile[], onDelete: (
             <tr>
               <th className="px-6 py-4">Admin</th>
               <th className="px-6 py-4">Email</th>
+              <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Joined</th>
               <th className="px-6 py-4">Actions</th>
             </tr>
@@ -478,11 +488,29 @@ function AdminManager({ admins, onDelete }: { admins: UserProfile[], onDelete: (
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-[#545454]">{a.email}</td>
+                <td className="px-6 py-4">
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                    a.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                  }`}>
+                    {a.status || 'active'}
+                  </span>
+                </td>
                 <td className="px-6 py-4 text-xs text-gray-400">{new Date(a.createdAt).toLocaleDateString()}</td>
                 <td className="px-6 py-4">
-                  <button onClick={() => onDelete(a.uid)} className="p-2 text-red-400 hover:text-red-600 rounded-lg transition-all">
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    {a.status === 'pending' && (
+                      <button 
+                        onClick={() => onActivate(a.uid)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                        title="Activate Admin"
+                      >
+                        <CheckCircle2 className="w-5 h-5" />
+                      </button>
+                    )}
+                    <button onClick={() => onDelete(a.uid)} className="p-2 text-red-400 hover:text-red-600 rounded-lg transition-all">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
