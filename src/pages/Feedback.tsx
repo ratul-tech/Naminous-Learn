@@ -67,7 +67,7 @@ export default function FeedbackForm({ profile }: FeedbackProps) {
             </div>
             <div>
               <h1 className="text-3xl font-bold">Feedback</h1>
-              <p className="text-white/70">Help us improve Naminous Learn</p>
+              <p className="text-white/70">Help us improve Naminous</p>
             </div>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function FeedbackForm({ profile }: FeedbackProps) {
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder={type === 'Suggestion' ? "Tell us how we can make Naminous Learn better..." : "Describe the issue you encountered..."}
+                  placeholder={type === 'Suggestion' ? "Tell us how we can make Naminous better..." : "Describe the issue you encountered..."}
                   className="w-full px-4 py-3 rounded-2xl border focus:ring-2 focus:ring-[#D4AF37] outline-none min-h-[200px]"
                   required
                 />

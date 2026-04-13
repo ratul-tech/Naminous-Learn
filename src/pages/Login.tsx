@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -20,6 +20,16 @@ export default function Login() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'admin') {
+      setSelectedRole('admin');
+    } else if (roleParam === 'student') {
+      setSelectedRole('student');
+    }
+  }, [searchParams]);
 
   const handleForgotPassword = async () => {
     if (!email) {
@@ -168,7 +178,7 @@ export default function Login() {
             {isRegistering ? 'Create Account' : 'Welcome Back'}
           </h1>
           <p className="text-[#545454] mt-2">
-            {isRegistering ? 'Join Naminous Learn today' : 'Login to your account'}
+            {isRegistering ? 'Join Naminous today' : 'Login to your account'}
           </p>
         </div>
 
