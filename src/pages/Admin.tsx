@@ -239,6 +239,8 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
     category: 'Board' as any,
     board: 'Dhaka',
     college: 'NDC',
+    class: 'Class 9',
+    subject: 'Physics',
   });
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -249,7 +251,7 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
         createdAt: new Date().toISOString(),
       });
       setShowAdd(false);
-      setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC' });
+      setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC', class: 'Class 9', subject: 'Physics' });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'questions');
     }
@@ -293,7 +295,7 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
                 />
               ))}
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <select
                 value={newQ.correctAnswer}
                 onChange={(e) => setNewQ({ ...newQ, correctAnswer: parseInt(e.target.value) })}
@@ -309,13 +311,41 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
                 <option value="Board">Board</option>
                 <option value="College Admission">College Admission</option>
               </select>
+              <select
+                value={newQ.class}
+                onChange={(e) => setNewQ({ ...newQ, class: e.target.value })}
+                className="px-4 py-2 rounded-lg border outline-none"
+              >
+                <option value="Class 9">Class 9</option>
+                <option value="Class 10">Class 10</option>
+                <option value="SSC Candidate">SSC Candidate</option>
+                <option value="Class 11">Class 11</option>
+                <option value="Class 12">Class 12</option>
+                <option value="HSC Candidate">HSC Candidate</option>
+              </select>
+              <select
+                value={newQ.subject}
+                onChange={(e) => setNewQ({ ...newQ, subject: e.target.value })}
+                className="px-4 py-2 rounded-lg border outline-none"
+              >
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+                <option value="Higher Math">Higher Math</option>
+                <option value="General Math">General Math</option>
+                <option value="English">English</option>
+                <option value="ICT">ICT</option>
+                <option value="BGS">BGS</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
               {newQ.category === 'Board' ? (
                 <input
                   type="text"
                   value={newQ.board}
                   onChange={(e) => setNewQ({ ...newQ, board: e.target.value })}
-                  placeholder="Board Name"
-                  className="px-4 py-2 rounded-lg border outline-none"
+                  placeholder="Board Name (e.g. Dhaka 2023)"
+                  className="w-full px-4 py-2 rounded-lg border outline-none"
                 />
               ) : (
                 <input
@@ -323,7 +353,7 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
                   value={newQ.college}
                   onChange={(e) => setNewQ({ ...newQ, college: e.target.value })}
                   placeholder="College Name"
-                  className="px-4 py-2 rounded-lg border outline-none"
+                  className="w-full px-4 py-2 rounded-lg border outline-none"
                 />
               )}
             </div>
@@ -343,6 +373,8 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
                 <div className="flex items-center space-x-2 mb-2">
                   <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-gray-100 rounded text-gray-600">{q.category}</span>
                   <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-blue-50 rounded text-blue-600">{q.board || q.college}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-green-50 rounded text-green-600">{q.class}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-purple-50 rounded text-purple-600">{q.subject}</span>
                 </div>
                 <h3 className="font-bold text-[#7A4900] mb-2">{q.text}</h3>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-1">

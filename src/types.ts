@@ -57,6 +57,8 @@ export interface Question {
   subCategory?: string;
   board?: string;
   college?: string;
+  class?: string;
+  subject?: string;
   createdAt: string;
 }
 
