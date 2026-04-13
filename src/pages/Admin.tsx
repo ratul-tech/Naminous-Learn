@@ -171,7 +171,7 @@ export default function Admin() {
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} />}
+        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} allQuestions={questions} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
 
@@ -757,8 +757,9 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
   );
 }
 
-function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id: string) => void }) {
+function EventManager({ events, onDelete, allQuestions }: { events: ExamEvent[], onDelete: (id: string) => void, allQuestions: Question[] }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [newE, setNewE] = useState({
     title: '',
     description: '',
@@ -771,16 +772,28 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedQuestions.length === 0) {
+      alert('Please select at least one question for the event.');
+      return;
+    }
     try {
       await addDoc(collection(db, 'events'), {
         ...newE,
+        questions: selectedQuestions,
         status: 'upcoming',
         createdAt: new Date().toISOString(),
       });
       setShowAdd(false);
+      setSelectedQuestions([]);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'events');
     }
+  };
+
+  const toggleQuestion = (id: string) => {
+    setSelectedQuestions(prev => 
+      prev.includes(id) ? prev.filter(q => q !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -820,6 +833,26 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
                 <input type="text" value={newE.prize} onChange={(e) => setNewE({ ...newE, prize: e.target.value })} placeholder="e.g. 1000 Tk + Certificate" className="w-full px-4 py-2 rounded-lg border outline-none" required />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase">Select Questions ({selectedQuestions.length} selected)</label>
+              <div className="max-h-60 overflow-y-auto border rounded-xl divide-y">
+                {allQuestions.map(q => (
+                  <div 
+                    key={q.id} 
+                    onClick={() => toggleQuestion(q.id)}
+                    className={`p-3 cursor-pointer flex items-center justify-between hover:bg-gray-50 transition-colors ${selectedQuestions.includes(q.id) ? 'bg-blue-50' : ''}`}
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-[#7A4900]">{q.text}</p>
+                      <p className="text-[10px] text-gray-400 uppercase">{q.category} | {q.board || q.college}</p>
+                    </div>
+                    {selectedQuestions.includes(q.id) && <CheckCircle2 className="w-5 h-5 text-blue-600" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="flex justify-end space-x-4">
               <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-gray-500 font-bold">Cancel</button>
               <button type="submit" className="bg-[#D4AF37] text-white px-6 py-2 rounded-lg font-bold">Create Event</button>
@@ -865,6 +898,10 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
               <div className="flex justify-between items-center text-xs font-bold pt-2 border-t">
                 <span className="text-gray-400">PRIZE</span>
                 <span className="text-green-600">{e.prize}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-gray-400">QUESTIONS</span>
+                <span className="text-[#7A4900]">{e.questions?.length || 0} MCQs</span>
               </div>
             </div>
           </div>

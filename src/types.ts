@@ -84,7 +84,19 @@ export interface ExamEvent {
   maxCandidates: number;
   prize: string;
   status: EventStatus;
+  questions: string[];
   createdAt: string;
+}
+
+export interface Submission {
+  id: string;
+  uid: string;
+  eventId: string;
+  answers: Record<string, number>;
+  score: number;
+  completed: boolean;
+  startedAt: string;
+  submittedAt?: string;
 }
 
 export interface Payment {

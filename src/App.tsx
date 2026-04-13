@@ -87,7 +87,7 @@ export default function App() {
             <Route path="/dashboard" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Dashboard profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/profile" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Profile profile={profile} setProfile={setProfile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/practice" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Practice profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
-            <Route path="/exam" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Exam profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
+            <Route path="/exam/:id" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Exam profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/events" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Events profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/feedback" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <FeedbackForm profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />

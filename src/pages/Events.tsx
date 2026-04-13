@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import { ExamEvent, UserProfile, Payment } from '../types';
-import { Calendar, Clock, Trophy, Users, CreditCard, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ExamEvent, UserProfile, Payment, Submission } from '../types';
+import { Calendar, Clock, Trophy, Users, CreditCard, CheckCircle2, AlertCircle, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
 
@@ -12,7 +13,10 @@ interface EventsProps {
 }
 
 export default function Events({ profile }: EventsProps) {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<ExamEvent[]>([]);
+  const [userPayments, setUserPayments] = useState<Payment[]>([]);
+  const [userSubmissions, setUserSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<ExamEvent | null>(null);
   const [paymentData, setPaymentData] = useState({
@@ -40,6 +44,7 @@ export default function Events({ profile }: EventsProps) {
           maxCandidates: 100,
           prize: 'Tk 5000 + Certificate',
           status: 'upcoming',
+          questions: [],
           createdAt: new Date().toISOString()
         }]);
       } else {
@@ -50,6 +55,34 @@ export default function Events({ profile }: EventsProps) {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!profile) return;
+    const q = query(collection(db, 'payments'), where('uid', '==', profile.uid));
+    const unsub = onSnapshot(q, (snapshot) => {
+      setUserPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment)));
+    });
+    return () => unsub();
+  }, [profile]);
+
+  useEffect(() => {
+    if (!profile) return;
+    const q = query(collection(db, 'submissions'), where('uid', '==', profile.uid));
+    const unsub = onSnapshot(q, (snapshot) => {
+      setUserSubmissions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Submission)));
+    });
+    return () => unsub();
+  }, [profile]);
+
+  const getRegistrationStatus = (eventId: string) => {
+    const payment = userPayments.find(p => p.eventId === eventId);
+    if (!payment) return 'none';
+    return payment.status;
+  };
+
+  const hasSubmitted = (eventId: string) => {
+    return userSubmissions.some(s => s.eventId === eventId && s.completed);
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,12 +163,44 @@ export default function Events({ profile }: EventsProps) {
                 </div>
               </div>
 
-              <button
-                onClick={() => setSelectedEvent(event)}
-                className="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-bold hover:bg-[#B8860B] transition-all"
-              >
-                Register Now
-              </button>
+              {getRegistrationStatus(event.id) === 'approved' ? (
+                hasSubmitted(event.id) ? (
+                  <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-center">
+                    Exam Completed
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => navigate(`/exam/${event.id}`)}
+                    className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center space-x-2"
+                  >
+                    <Play className="w-4 h-4" />
+                    <span>Join Exam</span>
+                  </button>
+                )
+              ) : getRegistrationStatus(event.id) === 'pending' ? (
+                <div className="w-full bg-yellow-50 text-yellow-600 py-3 rounded-xl font-bold text-center border border-yellow-100">
+                  Pending Approval
+                </div>
+              ) : getRegistrationStatus(event.id) === 'rejected' ? (
+                <div className="space-y-2">
+                  <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-center border border-red-100">
+                    Payment Rejected
+                  </div>
+                  <button
+                    onClick={() => setSelectedEvent(event)}
+                    className="w-full text-[#D4AF37] font-bold text-sm hover:underline"
+                  >
+                    Try again with new Trx ID
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSelectedEvent(event)}
+                  className="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-bold hover:bg-[#B8860B] transition-all"
+                >
+                  Register Now
+                </button>
+              )}
             </div>
           </motion.div>
         ))}
