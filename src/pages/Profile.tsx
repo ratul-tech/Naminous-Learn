@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { UserProfile, Gender, Group } from '../types';
-import { User, Phone, School, GraduationCap, Users, Save, CheckCircle2 } from 'lucide-react';
+import { User, Phone, School, GraduationCap, Users, Save, CheckCircle2, Trash2, AlertTriangle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { signOut } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
 
@@ -13,6 +15,7 @@ interface ProfileProps {
 }
 
 export default function Profile({ profile, setProfile }: ProfileProps) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     gender: profile?.gender || 'Male' as Gender,
     phone: profile?.phone || '',
@@ -21,13 +24,71 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     group: profile?.group || 'Science' as Group,
   });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const calculateCompletion = () => {
+    const fields = [
+      profile?.displayName,
+      profile?.email,
+      formData.gender,
+      formData.phone,
+      formData.class,
+      formData.school,
+      formData.group,
+      profile?.photoURL
+    ];
+    const filledFields = fields.filter(f => f && f.toString().trim() !== '').length;
+    return Math.round((filledFields / fields.length) * 100);
+  };
+
+  const completion = calculateCompletion();
+
+  const handleDeleteAccount = async () => {
+    if (!profile) return;
+    setDeleting(true);
+    try {
+      const batch = writeBatch(db);
+      const uid = profile.uid;
+
+      // 1. Delete student/admin document
+      const collectionName = profile.role === 'admin' ? 'admins' : 'students';
+      batch.delete(doc(db, collectionName, uid));
+
+      // 2. Delete related data
+      const collectionsToDelete = ['results', 'payments', 'submissions', 'feedback'];
+      for (const coll of collectionsToDelete) {
+        const q = query(collection(db, coll), where('uid', '==', uid));
+        const snapshot = await getDocs(q);
+        snapshot.docs.forEach(d => batch.delete(d.ref));
+      }
+
+      await batch.commit();
+      await signOut(auth);
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
 
+    // Validation
+    if (!formData.phone.trim() || !formData.school.trim()) {
+      setError('Please fill in all required fields (Phone and Institution).');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
     setSaving(true);
+    setError('');
     try {
       const collectionName = profile.role === 'admin' ? 'admins' : 'students';
       await updateDoc(doc(db, collectionName, profile.uid), formData);
@@ -74,6 +135,23 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
               <p className="text-sm text-[#545454] mb-4 font-medium">{profile?.email}</p>
               <div className="inline-flex items-center px-4 py-1 rounded-full bg-[#D4AF37]/10 text-[#7A4900] text-xs font-bold uppercase tracking-wider">
                 {profile?.role} Account
+              </div>
+
+              <div className="mt-8 space-y-2">
+                <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
+                  <span className="text-gray-400">Profile Completion</span>
+                  <span className={completion === 100 ? 'text-green-600' : 'text-[#D4AF37]'}>{completion}%</span>
+                </div>
+                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${completion}%` }}
+                    className={`h-full ${completion === 100 ? 'bg-green-500' : 'bg-[#D4AF37]'}`}
+                  />
+                </div>
+                {completion < 100 && (
+                  <p className="text-[10px] text-[#545454] italic">Complete your profile to unlock all features!</p>
+                )}
               </div>
               
               <div className="mt-8 pt-8 border-t border-gray-50 grid grid-cols-2 gap-4">
@@ -203,12 +281,94 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                       <span>{message}</span>
                     </motion.div>
                   )}
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex items-center space-x-2 text-red-600 font-bold bg-red-50 px-6 py-3 rounded-xl border border-red-100"
+                    >
+                      <AlertTriangle className="w-5 h-5" />
+                      <span>{error}</span>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </div>
             </form>
+
+            <div className="mt-12 pt-8 border-t border-gray-100">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-red-600">Danger Zone</h3>
+                  <p className="text-sm text-[#545454]">Permanently delete your account and all your data</p>
+                </div>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center space-x-2 text-red-600 font-bold hover:bg-red-50 px-4 py-2 rounded-xl transition-all"
+                >
+                  <Trash2 className="w-5 h-5" />
+                  <span>Delete Account</span>
+                </button>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 relative"
+            >
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <div className="text-center">
+                <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertTriangle className="w-10 h-10" />
+                </div>
+                <h2 className="text-2xl font-bold text-[#7A4900] mb-2">Are you absolutely sure?</h2>
+                <p className="text-[#545454] mb-8">
+                  This action cannot be undone. This will permanently delete your account and remove your data from our servers, including your exam history and results.
+                </p>
+
+                <div className="flex flex-col space-y-3">
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleting}
+                    className="w-full bg-red-600 text-white py-4 rounded-2xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                  >
+                    {deleting ? (
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Trash2 className="w-5 h-5" />
+                        <span>Yes, Delete My Account</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                    className="w-full bg-gray-100 text-[#545454] py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
