@@ -148,7 +148,7 @@ export default function Exam({ profile }: ExamProps) {
         uid: profile.uid,
         displayName: profile.displayName,
         school: profile.school || 'N/A',
-        score: Math.round((score / questions.length) * 100),
+        score: Math.round((score / (questions.length || 1)) * 100),
         correctCount: score,
         wrongCount: questions.length - score,
         totalQuestions: questions.length,
@@ -256,7 +256,7 @@ export default function Exam({ profile }: ExamProps) {
         <motion.div 
           className="bg-[#D4AF37] h-full"
           initial={{ width: 0 }}
-          animate={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+          animate={{ width: `${((currentQuestionIndex + 1) / (questions.length || 1)) * 100}%` }}
         />
       </div>
 

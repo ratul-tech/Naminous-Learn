@@ -119,7 +119,7 @@ export default function Practice({ profile }: PracticeProps) {
     });
 
     const results = {
-      score: Math.round((score / filteredQuestions.length) * 100),
+      score: Math.round((score / (filteredQuestions.length || 1)) * 100),
       correctCount: score,
       wrongCount: filteredQuestions.length - score,
       totalQuestions: filteredQuestions.length,

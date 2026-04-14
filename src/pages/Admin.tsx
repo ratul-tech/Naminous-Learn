@@ -903,7 +903,7 @@ function EventManager({ events, onDelete, allQuestions, users }: { events: ExamE
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase">Entry Fee (Tk)</label>
-                <input type="number" value={newE.entryFee} onChange={(e) => setNewE({ ...newE, entryFee: parseInt(e.target.value) })} placeholder="Entry Fee" className="w-full px-4 py-2 rounded-lg border outline-none" required />
+                <input type="number" value={newE.entryFee || ''} onChange={(e) => setNewE({ ...newE, entryFee: parseInt(e.target.value) || 0 })} placeholder="Entry Fee" className="w-full px-4 py-2 rounded-lg border outline-none" required />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase">Start Time</label>
@@ -915,11 +915,11 @@ function EventManager({ events, onDelete, allQuestions, users }: { events: ExamE
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase">Duration (Minutes)</label>
-                <input type="number" value={newE.duration} onChange={(e) => setNewE({ ...newE, duration: parseInt(e.target.value) })} placeholder="Duration (min)" className="w-full px-4 py-2 rounded-lg border outline-none" required />
+                <input type="number" value={newE.duration || ''} onChange={(e) => setNewE({ ...newE, duration: parseInt(e.target.value) || 0 })} placeholder="Duration (min)" className="w-full px-4 py-2 rounded-lg border outline-none" required />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase">Max Candidates</label>
-                <input type="number" value={newE.maxCandidates} onChange={(e) => setNewE({ ...newE, maxCandidates: parseInt(e.target.value) })} placeholder="Max Candidates" className="w-full px-4 py-2 rounded-lg border outline-none" required />
+                <input type="number" value={newE.maxCandidates || ''} onChange={(e) => setNewE({ ...newE, maxCandidates: parseInt(e.target.value) || 0 })} placeholder="Max Candidates" className="w-full px-4 py-2 rounded-lg border outline-none" required />
               </div>
               <div className="md:col-span-2 space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase">Prize Details</label>
