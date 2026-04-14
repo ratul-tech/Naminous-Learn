@@ -82,6 +82,7 @@ export interface ExamEvent {
   description: string;
   entryFee: number;
   startTime: string;
+  endTime: string;
   duration: number;
   maxCandidates: number;
   prize: string;

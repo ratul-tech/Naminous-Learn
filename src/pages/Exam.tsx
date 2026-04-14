@@ -100,7 +100,7 @@ export default function Exam({ profile }: ExamProps) {
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const startTime = new Date(event.startTime).getTime();
-      const endTime = startTime + event.duration * 60 * 1000;
+      const endTime = event.endTime ? new Date(event.endTime).getTime() : startTime + event.duration * 60 * 1000;
 
       if (now < startTime) {
         setCountdown(Math.floor((startTime - now) / 1000));

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
@@ -171,7 +171,7 @@ export default function Admin() {
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} allQuestions={questions} />}
+        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} allQuestions={questions} users={users} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
 
@@ -232,6 +232,7 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, on
 
 function QuestionManager({ questions, onDelete }: { questions: Question[], onDelete: (id: string) => void }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newQ, setNewQ] = useState({
     text: '',
     options: ['', '', '', ''],
@@ -246,15 +247,37 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'questions'), {
-        ...newQ,
-        createdAt: new Date().toISOString(),
-      });
+      if (editingId) {
+        await updateDoc(doc(db, 'questions', editingId), {
+          ...newQ,
+        });
+      } else {
+        await addDoc(collection(db, 'questions'), {
+          ...newQ,
+          createdAt: new Date().toISOString(),
+        });
+      }
       setShowAdd(false);
+      setEditingId(null);
       setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC', class: 'Class 9', subject: 'Physics' });
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'questions');
+      handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, editingId ? `questions/${editingId}` : 'questions');
     }
+  };
+
+  const handleEdit = (q: Question) => {
+    setNewQ({
+      text: q.text,
+      options: [...q.options],
+      correctAnswer: q.correctAnswer,
+      category: q.category,
+      board: q.board || 'Dhaka',
+      college: q.college || 'NDC',
+      class: q.class || 'Class 9',
+      subject: q.subject || 'Physics',
+    });
+    setEditingId(q.id);
+    setShowAdd(true);
   };
 
   return (
@@ -385,9 +408,14 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
                   ))}
                 </div>
               </div>
-              <button onClick={() => onDelete(q.id)} className="text-red-400 hover:text-red-600 p-2">
-                <Trash2 className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button onClick={() => handleEdit(q)} className="text-blue-400 hover:text-blue-600 p-2">
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button onClick={() => onDelete(q.id)} className="text-red-400 hover:text-red-600 p-2">
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -789,7 +817,7 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
   );
 }
 
-function EventManager({ events, onDelete, allQuestions }: { events: ExamEvent[], onDelete: (id: string) => void, allQuestions: Question[] }) {
+function EventManager({ events, onDelete, allQuestions, users }: { events: ExamEvent[], onDelete: (id: string) => void, allQuestions: Question[], users: UserProfile[] }) {
   const [showAdd, setShowAdd] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [newE, setNewE] = useState({
@@ -797,10 +825,29 @@ function EventManager({ events, onDelete, allQuestions }: { events: ExamEvent[],
     description: '',
     entryFee: 100,
     startTime: '',
+    endTime: '',
     duration: 60,
     maxCandidates: 100,
     prize: '',
   });
+  const [viewingResults, setViewingResults] = useState<string | null>(null);
+  const [eventResults, setEventResults] = useState<any[]>([]);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [editingQuestions, setEditingQuestions] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (viewingResults) {
+      setLoadingResults(true);
+      const q = query(collection(db, 'results'), where('eventId', '==', viewingResults));
+      const unsub = onSnapshot(q, async (snapshot) => {
+        const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+        
+        setEventResults(results);
+        setLoadingResults(false);
+      });
+      return () => unsub();
+    }
+  }, [viewingResults]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -817,6 +864,16 @@ function EventManager({ events, onDelete, allQuestions }: { events: ExamEvent[],
       });
       setShowAdd(false);
       setSelectedQuestions([]);
+      setNewE({
+        title: '',
+        description: '',
+        entryFee: 100,
+        startTime: '',
+        endTime: '',
+        duration: 60,
+        maxCandidates: 100,
+        prize: '',
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'events');
     }
@@ -851,6 +908,10 @@ function EventManager({ events, onDelete, allQuestions }: { events: ExamEvent[],
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase">Start Time</label>
                 <input type="datetime-local" value={newE.startTime} onChange={(e) => setNewE({ ...newE, startTime: e.target.value })} className="w-full px-4 py-2 rounded-lg border outline-none" required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 uppercase">End Time</label>
+                <input type="datetime-local" value={newE.endTime} onChange={(e) => setNewE({ ...newE, endTime: e.target.value })} className="w-full px-4 py-2 rounded-lg border outline-none" required />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase">Duration (Minutes)</label>
@@ -920,6 +981,10 @@ function EventManager({ events, onDelete, allQuestions }: { events: ExamEvent[],
                 <span className="text-[#D4AF37]">{new Date(e.startTime).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-gray-400">END TIME</span>
+                <span className="text-red-500">{new Date(e.endTime).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold">
                 <span className="text-gray-400">DURATION</span>
                 <span className="text-[#7A4900]">{e.duration} Minutes</span>
               </div>
@@ -935,10 +1000,179 @@ function EventManager({ events, onDelete, allQuestions }: { events: ExamEvent[],
                 <span className="text-gray-400">QUESTIONS</span>
                 <span className="text-[#7A4900]">{e.questions?.length || 0} MCQs</span>
               </div>
+              <div className="pt-4 flex space-x-2">
+                <button 
+                  onClick={() => setViewingResults(e.id)}
+                  className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-all"
+                >
+                  View Results
+                </button>
+                <button 
+                  onClick={() => setEditingQuestions(e.id)}
+                  className="flex-1 bg-orange-50 text-orange-600 py-2 rounded-lg text-xs font-bold hover:bg-orange-100 transition-all"
+                >
+                  Edit Questions
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Questions Modal */}
+      <AnimatePresence>
+        {editingQuestions && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+            >
+              <div className="p-8 border-b flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#7A4900]">Manage Event Questions</h2>
+                  <p className="text-sm text-[#545454]">{events.find(e => e.id === editingQuestions)?.title}</p>
+                </div>
+                <button onClick={() => setEditingQuestions(null)} className="p-2 hover:bg-gray-100 rounded-full">
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8">
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-[#7A4900]">Current Questions ({events.find(e => e.id === editingQuestions)?.questions?.length || 0})</h3>
+                    <button 
+                      onClick={() => {
+                        // Logic to add a new question to this event
+                        // For now, we'll just show the question selector or a simplified add form
+                        alert('Use the global Question Manager to create questions, then select them here.');
+                      }}
+                      className="text-sm text-[#D4AF37] font-bold hover:underline"
+                    >
+                      + Add New Question
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {allQuestions.map(q => {
+                      const event = events.find(e => e.id === editingQuestions);
+                      const isSelected = event?.questions?.includes(q.id);
+                      return (
+                        <div 
+                          key={q.id}
+                          className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${isSelected ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-gray-50'}`}
+                        >
+                          <div className="flex-1">
+                            <p className="font-bold text-[#7A4900]">{q.text}</p>
+                            <p className="text-[10px] text-gray-400 uppercase">{q.category} | {q.board || q.college}</p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              if (!event) return;
+                              const newQuestions = isSelected 
+                                ? event.questions.filter(id => id !== q.id)
+                                : [...(event.questions || []), q.id];
+                              
+                              try {
+                                await updateDoc(doc(db, 'events', event.id), {
+                                  questions: newQuestions
+                                });
+                              } catch (err) {
+                                handleFirestoreError(err, OperationType.UPDATE, `events/${event.id}`);
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${isSelected ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
+                          >
+                            {isSelected ? 'Remove' : 'Add to Event'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Results Modal */}
+      <AnimatePresence>
+        {viewingResults && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+            >
+              <div className="p-8 border-b flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#7A4900]">Exam Results</h2>
+                  <p className="text-sm text-[#545454]">{events.find(e => e.id === viewingResults)?.title}</p>
+                </div>
+                <button onClick={() => setViewingResults(null)} className="p-2 hover:bg-gray-100 rounded-full">
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8">
+                {loadingResults ? (
+                  <div className="text-center py-10">Loading results...</div>
+                ) : eventResults.length === 0 ? (
+                  <div className="text-center py-10 text-gray-400">No results found for this event.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+                        <tr>
+                          <th className="px-6 py-4">Student</th>
+                          <th className="px-6 py-4">Contact Info</th>
+                          <th className="px-6 py-4">Score</th>
+                          <th className="px-6 py-4">Correct/Wrong</th>
+                          <th className="px-6 py-4">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {eventResults.map((r) => {
+                          // Find student details from the 'users' state in Admin component
+                          // Note: 'users' state in Admin.tsx contains all students
+                          const student = users.find(u => u.uid === r.uid);
+                          return (
+                            <tr key={r.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4">
+                                <p className="font-bold text-[#7A4900]">{r.displayName}</p>
+                                <p className="text-xs text-gray-400">{r.school}</p>
+                              </td>
+                              <td className="px-6 py-4">
+                                <p className="text-sm">{student?.email || 'N/A'}</p>
+                                <p className="text-xs text-[#545454]">{student?.phone || 'N/A'}</p>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="text-lg font-bold text-[#D4AF37]">{r.score}%</span>
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                <span className="text-green-600 font-bold">{r.correctCount}</span>
+                                <span className="mx-1">/</span>
+                                <span className="text-red-500 font-bold">{r.wrongCount}</span>
+                              </td>
+                              <td className="px-6 py-4 text-xs text-gray-400">
+                                {new Date(r.createdAt).toLocaleString()}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

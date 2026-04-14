@@ -40,6 +40,7 @@ export default function Events({ profile }: EventsProps) {
           description: 'A comprehensive mock test covering all major board subjects. Top 10 will receive special prizes!',
           entryFee: 100,
           startTime: new Date(Date.now() + 86400000 * 2).toISOString(),
+          endTime: new Date(Date.now() + 86400000 * 2 + 3600000).toISOString(),
           duration: 60,
           maxCandidates: 100,
           prize: 'Tk 5000 + Certificate',
@@ -73,6 +74,16 @@ export default function Events({ profile }: EventsProps) {
     });
     return () => unsub();
   }, [profile]);
+
+  const getEventTimeStatus = (event: ExamEvent) => {
+    const now = new Date();
+    const startTime = new Date(event.startTime);
+    const endTime = event.endTime ? new Date(event.endTime) : new Date(startTime.getTime() + event.duration * 60000);
+
+    if (now < startTime) return 'Coming Soon';
+    if (now > endTime) return 'Time Up';
+    return 'Ongoing';
+  };
 
   const getRegistrationStatus = (eventId: string) => {
     const payment = userPayments.find(p => p.eventId === eventId);
@@ -136,8 +147,12 @@ export default function Events({ profile }: EventsProps) {
           >
             <div className="p-8">
               <div className="flex justify-between items-start mb-6">
-                <div className="bg-orange-50 text-[#7A4900] px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                  {event.status}
+                <div className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  getEventTimeStatus(event) === 'Coming Soon' ? 'bg-blue-50 text-blue-600' :
+                  getEventTimeStatus(event) === 'Time Up' ? 'bg-red-50 text-red-600' :
+                  'bg-green-50 text-green-600'
+                }`}>
+                  {getEventTimeStatus(event)}
                 </div>
                 <div className="text-2xl font-bold text-[#D4AF37]">Tk {event.entryFee}</div>
               </div>
@@ -168,13 +183,21 @@ export default function Events({ profile }: EventsProps) {
                   <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-center">
                     Exam Completed
                   </div>
+                ) : getEventTimeStatus(event) === 'Coming Soon' ? (
+                  <div className="w-full bg-blue-50 text-blue-600 py-3 rounded-xl font-bold text-center border border-blue-100">
+                    Coming Soon
+                  </div>
+                ) : getEventTimeStatus(event) === 'Time Up' ? (
+                  <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-center border border-red-100">
+                    Time Up
+                  </div>
                 ) : (
                   <button
                     onClick={() => navigate(`/exam/${event.id}`)}
                     className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center space-x-2"
                   >
                     <Play className="w-4 h-4" />
-                    <span>Join Exam</span>
+                    <span>Join Exam Now</span>
                   </button>
                 )
               ) : getRegistrationStatus(event.id) === 'pending' ? (
