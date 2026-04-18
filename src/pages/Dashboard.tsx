@@ -53,6 +53,8 @@ export default function Dashboard({ profile }: DashboardProps) {
     fetchStats();
   }, [profile]);
 
+  const isMainAdmin = profile?.email?.toLowerCase() === 'shahriarislamratul065@gmail.com' || profile?.email?.toLowerCase() === 'shahriarislam275@gmail.com';
+
   if (profile?.role === 'admin') {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
@@ -68,7 +70,7 @@ export default function Dashboard({ profile }: DashboardProps) {
             <div>
               <h1 className="text-3xl font-bold text-[#7A4900]">Welcome, {profile.displayName}</h1>
               <p className="text-[#545454]">
-                Logged in as a <span className="font-bold text-[#D4AF37]">{profile.adminType === 'full' ? 'Full Administrator' : 'Question Holder'}</span>
+                Logged in as a <span className="font-bold text-[#D4AF37]">{(profile.adminType === 'full' || isMainAdmin) ? 'Full Administrator' : 'Question Holder'}</span>
               </p>
             </div>
           </div>
@@ -82,7 +84,7 @@ export default function Dashboard({ profile }: DashboardProps) {
               <h3 className="text-xl font-bold text-[#7A4900] mb-2">Question Bank</h3>
               <p className="text-sm text-[#545454]">Access the separate question management page to add, search, and edit questions.</p>
             </Link>
-            {profile.adminType === 'full' && (
+            {(profile.adminType === 'full' || isMainAdmin) && (
               <Link 
                 to="/admin" 
                 className="p-8 bg-[#7A4900]/5 rounded-3xl border-2 border-[#7A4900]/10 hover:border-[#7A4900] transition-all group"

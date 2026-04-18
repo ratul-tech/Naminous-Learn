@@ -58,7 +58,13 @@ export default function App() {
         }
 
         if (userDoc.exists()) {
-          setProfile(userDoc.data() as UserProfile);
+          const data = userDoc.data() as UserProfile;
+          if (isDefaultAdmin && (data.role !== 'admin' || data.adminType !== 'full')) {
+            // Force full admin privileges for default admins regardless of DB state
+            setProfile({ ...data, role: 'admin', adminType: 'full' });
+          } else {
+            setProfile(data);
+          }
         } else {
           setProfile(null);
         }
@@ -216,7 +222,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       </Link>
                     ))}
 
-                    {user.emailVerified && profile?.role === 'admin' && profile.adminType === 'full' && (
+                    {user.emailVerified && profile?.role === 'admin' && (profile.adminType === 'full' || (['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'].includes(profile.email.toLowerCase()))) && (
                       <Link
                         to="/admin"
                         onClick={() => setIsOpen(false)}
