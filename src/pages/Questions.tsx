@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Question, UserProfile, Category } from '../types';
+import { Question, UserProfile, Category, OperationType } from '../types';
 import { Plus, Trash2, Edit, Search, Filter, BookOpen, AlertCircle, Save, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
-import { OperationType } from '../types';
+import { ALL_SUBJECTS } from '../constants';
 
 interface QuestionsProps {
   profile: UserProfile | null;
@@ -154,14 +154,7 @@ export default function Questions({ profile }: QuestionsProps) {
               className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
             >
               <option value="All">All Subjects</option>
-              <option value="Physics">Physics</option>
-              <option value="Chemistry">Chemistry</option>
-              <option value="Biology">Biology</option>
-              <option value="Higher Math">Higher Math</option>
-              <option value="General Math">General Math</option>
-              <option value="English">English</option>
-              <option value="ICT">ICT</option>
-              <option value="BGS">BGS</option>
+              {ALL_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <select
               value={filterCategory}
@@ -268,14 +261,7 @@ export default function Questions({ profile }: QuestionsProps) {
                   onChange={(e) => setNewQ({ ...newQ, subject: e.target.value })}
                   className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold"
                 >
-                  <option value="Physics">Physics</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="Biology">Biology</option>
-                  <option value="Higher Math">Higher Math</option>
-                  <option value="General Math">General Math</option>
-                  <option value="English">English</option>
-                  <option value="ICT">ICT</option>
-                  <option value="BGS">BGS</option>
+                  {ALL_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </div>

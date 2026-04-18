@@ -126,11 +126,35 @@ export default function Admin() {
   };
 
   const handleDeleteAdmin = async (uid: string) => {
+    const mainAdminEmail = 'shahriarislamratul065@gmail.com';
+    const isMainAdmin = auth.currentUser?.email?.toLowerCase() === mainAdminEmail.toLowerCase();
+    const targetAdmin = admins.find(a => a.uid === uid);
+    
     if (uid === auth.currentUser?.uid) {
       setConfirmModal({
         show: true,
         title: 'Action Prohibited',
         message: 'You cannot delete your own administrator account while logged in.',
+        onConfirm: () => setConfirmModal(null)
+      });
+      return;
+    }
+
+    if (!isMainAdmin) {
+      setConfirmModal({
+        show: true,
+        title: 'Access Denied',
+        message: 'Only the main administrator can remove other administrator accounts.',
+        onConfirm: () => setConfirmModal(null)
+      });
+      return;
+    }
+
+    if (targetAdmin?.email.toLowerCase() === mainAdminEmail.toLowerCase()) {
+      setConfirmModal({
+        show: true,
+        title: 'Action Prohibited',
+        message: 'The main administrator account cannot be deleted.',
         onConfirm: () => setConfirmModal(null)
       });
       return;

@@ -98,6 +98,7 @@ export default function Login() {
             displayName: user.displayName || user.email?.split('@')[0] || 'Admin',
             photoURL: user.photoURL || `https://ui-avatars.com/api/?name=Admin&background=random`,
             role: 'admin',
+            adminType: 'full',
             status: 'active',
             createdAt: new Date().toISOString(),
           };

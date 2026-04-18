@@ -5,6 +5,7 @@ import { UserProfile, Question, OperationType } from '../types';
 import { BookOpen, Clock, CheckCircle2, ChevronRight, ChevronLeft, Send, AlertCircle, List, Play, RotateCcw, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
+import { getSubjectsForGroup } from '../constants';
 
 interface PracticeProps {
   profile: UserProfile | null;
@@ -36,8 +37,14 @@ export default function Practice({ profile }: PracticeProps) {
     results: null as any,
   });
 
-  const subjects = ['Physics', 'Chemistry', 'Biology', 'Higher Math', 'General Math', 'English', 'ICT', 'BGS'];
+  const subjects = getSubjectsForGroup(profile?.group);
   const times = [5, 10, 15, 20, 30, 45, 60];
+
+  useEffect(() => {
+    if (subjects.length > 0 && !subjects.includes(config.subject)) {
+      setConfig(prev => ({ ...prev, subject: subjects[0] }));
+    }
+  }, [subjects]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
