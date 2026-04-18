@@ -38,12 +38,23 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser ? { ...firebaseUser } : null);
       if (firebaseUser && firebaseUser.emailVerified) {
-        // Try students collection first
-        let userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
+        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
+        const isDefaultAdmin = defaultAdmins.includes(firebaseUser.email?.toLowerCase() || '');
+
+        let userDoc;
         
-        // If not in students, try admins
-        if (!userDoc.exists()) {
+        if (isDefaultAdmin) {
+          // Check admins first for default admins
           userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
+          if (!userDoc.exists()) {
+            userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
+          }
+        } else {
+          // Try students collection first for everyone else
+          userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
+          if (!userDoc.exists()) {
+            userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
+          }
         }
 
         if (userDoc.exists()) {
