@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { UserRole, UserProfile } from '../types';
+import { UserRole, UserProfile, AdminType } from '../types';
 import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -16,6 +16,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
+  const [adminType, setAdminType] = useState<AdminType>('question_holder');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ export default function Login() {
           displayName: displayName || user.email?.split('@')[0] || 'User',
           photoURL: `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
           role: selectedRole,
+          adminType: selectedRole === 'admin' ? adminType : undefined,
           status: selectedRole === 'admin' ? (isDefaultAdmin ? 'active' : 'pending') : undefined,
           createdAt: new Date().toISOString(),
         };
@@ -197,6 +199,31 @@ export default function Login() {
               </button>
             </div>
           </div>
+
+          {selectedRole === 'admin' && isRegistering && (
+            <div>
+              <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Admin Type</span>
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setAdminType('full')}
+                  className={`py-3 rounded-xl border-2 transition-all font-bold text-xs ${adminType === 'full' ? 'border-[#7A4900] bg-[#7A4900]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
+                >
+                  Full Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdminType('question_holder')}
+                  className={`py-3 rounded-xl border-2 transition-all font-bold text-xs ${adminType === 'question_holder' ? 'border-[#7A4900] bg-[#7A4900]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
+                >
+                  Question Holder
+                </button>
+              </div>
+            </div>
+          )}
 
           {isRegistering && (
             <div>

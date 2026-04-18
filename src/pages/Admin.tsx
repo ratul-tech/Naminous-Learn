@@ -12,7 +12,7 @@ import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'questions' | 'users' | 'payments' | 'events' | 'feedback' | 'admins'>('questions');
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'feedback' | 'admins'>('users');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [admins, setAdmins] = useState<UserProfile[]>([]);
@@ -157,7 +157,6 @@ export default function Admin() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-[#7A4900]">Admin Control Center</h1>
         <div className="flex bg-white p-1 rounded-xl shadow-sm border overflow-x-auto max-w-full">
-          <TabButton active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} icon={BookOpen} label="Questions" />
           <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Students" />
           <TabButton active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admins" />
           <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
@@ -167,7 +166,6 @@ export default function Admin() {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} />}
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
@@ -230,200 +228,6 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, on
   );
 }
 
-function QuestionManager({ questions, onDelete }: { questions: Question[], onDelete: (id: string) => void }) {
-  const [showAdd, setShowAdd] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [newQ, setNewQ] = useState({
-    text: '',
-    options: ['', '', '', ''],
-    correctAnswer: 0,
-    category: 'Board' as any,
-    board: 'Dhaka',
-    college: 'NDC',
-    class: 'Class 9',
-    subject: 'Physics',
-  });
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingId) {
-        await updateDoc(doc(db, 'questions', editingId), {
-          ...newQ,
-        });
-      } else {
-        await addDoc(collection(db, 'questions'), {
-          ...newQ,
-          createdAt: new Date().toISOString(),
-        });
-      }
-      setShowAdd(false);
-      setEditingId(null);
-      setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC', class: 'Class 9', subject: 'Physics' });
-    } catch (error) {
-      handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, editingId ? `questions/${editingId}` : 'questions');
-    }
-  };
-
-  const handleEdit = (q: Question) => {
-    setNewQ({
-      text: q.text,
-      options: [...q.options],
-      correctAnswer: q.correctAnswer,
-      category: q.category,
-      board: q.board || 'Dhaka',
-      college: q.college || 'NDC',
-      class: q.class || 'Class 9',
-      subject: q.subject || 'Physics',
-    });
-    setEditingId(q.id);
-    setShowAdd(true);
-  };
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-[#7A4900]">Manage Questions ({questions.length})</h2>
-        <button onClick={() => setShowAdd(true)} className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B]">
-          <Plus className="w-4 h-4" />
-          <span>Add Question</span>
-        </button>
-      </div>
-
-      {showAdd && (
-        <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-[#D4AF37]">
-          <form onSubmit={handleAdd} className="space-y-4">
-            <input
-              type="text"
-              value={newQ.text}
-              onChange={(e) => setNewQ({ ...newQ, text: e.target.value })}
-              placeholder="Question Text"
-              className="w-full px-4 py-2 rounded-lg border outline-none"
-              required
-            />
-            <div className="grid grid-cols-2 gap-4">
-              {newQ.options.map((opt, i) => (
-                <input
-                  key={i}
-                  type="text"
-                  value={opt}
-                  onChange={(e) => {
-                    const opts = [...newQ.options];
-                    opts[i] = e.target.value;
-                    setNewQ({ ...newQ, options: opts });
-                  }}
-                  placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                  className="w-full px-4 py-2 rounded-lg border outline-none"
-                  required
-                />
-              ))}
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <select
-                value={newQ.correctAnswer}
-                onChange={(e) => setNewQ({ ...newQ, correctAnswer: parseInt(e.target.value) })}
-                className="px-4 py-2 rounded-lg border outline-none"
-              >
-                {newQ.options.map((_, i) => <option key={i} value={i}>Correct: {String.fromCharCode(65 + i)}</option>)}
-              </select>
-              <select
-                value={newQ.category}
-                onChange={(e) => setNewQ({ ...newQ, category: e.target.value as any })}
-                className="px-4 py-2 rounded-lg border outline-none"
-              >
-                <option value="Board">Board</option>
-                <option value="College Admission">College Admission</option>
-              </select>
-              <select
-                value={newQ.class}
-                onChange={(e) => setNewQ({ ...newQ, class: e.target.value })}
-                className="px-4 py-2 rounded-lg border outline-none"
-              >
-                <option value="Class 9">Class 9</option>
-                <option value="Class 10">Class 10</option>
-                <option value="SSC Candidate">SSC Candidate</option>
-                <option value="Class 11">Class 11</option>
-                <option value="Class 12">Class 12</option>
-                <option value="HSC Candidate">HSC Candidate</option>
-              </select>
-              <select
-                value={newQ.subject}
-                onChange={(e) => setNewQ({ ...newQ, subject: e.target.value })}
-                className="px-4 py-2 rounded-lg border outline-none"
-              >
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Biology">Biology</option>
-                <option value="Higher Math">Higher Math</option>
-                <option value="General Math">General Math</option>
-                <option value="English">English</option>
-                <option value="ICT">ICT</option>
-                <option value="BGS">BGS</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              {newQ.category === 'Board' ? (
-                <input
-                  type="text"
-                  value={newQ.board}
-                  onChange={(e) => setNewQ({ ...newQ, board: e.target.value })}
-                  placeholder="Board Name (e.g. Dhaka 2023)"
-                  className="w-full px-4 py-2 rounded-lg border outline-none"
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={newQ.college}
-                  onChange={(e) => setNewQ({ ...newQ, college: e.target.value })}
-                  placeholder="College Name"
-                  className="w-full px-4 py-2 rounded-lg border outline-none"
-                />
-              )}
-            </div>
-            <div className="flex justify-end space-x-4">
-              <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-gray-500 font-bold">Cancel</button>
-              <button type="submit" className="bg-[#D4AF37] text-white px-6 py-2 rounded-lg font-bold">Save Question</button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="divide-y">
-          {questions.map((q) => (
-            <div key={q.id} className="p-6 flex justify-between items-start hover:bg-gray-50 transition-colors">
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-gray-100 rounded text-gray-600">{q.category}</span>
-                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-blue-50 rounded text-blue-600">{q.board || q.college}</span>
-                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-green-50 rounded text-green-600">{q.class}</span>
-                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 bg-purple-50 rounded text-purple-600">{q.subject}</span>
-                </div>
-                <h3 className="font-bold text-[#7A4900] mb-2">{q.text}</h3>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-1">
-                  {q.options.map((opt, i) => (
-                    <p key={i} className={`text-sm ${i === q.correctAnswer ? 'text-green-600 font-bold' : 'text-[#545454]'}`}>
-                      {String.fromCharCode(65 + i)}. {opt}
-                    </p>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button onClick={() => handleEdit(q)} className="text-blue-400 hover:text-blue-600 p-2">
-                  <Edit className="w-5 h-5" />
-                </button>
-                <button onClick={() => onDelete(q.id)} className="text-red-400 hover:text-red-600 p-2">
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
 function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
@@ -471,6 +275,7 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [adminType, setAdminType] = useState<'full' | 'question_holder'>('question_holder');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -480,7 +285,6 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
     setError('');
 
     try {
-      // Use a secondary app instance to create user without signing out current admin
       const secondaryApp = getApps().find(app => app.name === 'secondary') || initializeApp(firebaseConfig, 'secondary');
       const secondaryAuth = getAuth(secondaryApp);
       
@@ -493,6 +297,7 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
         displayName: name,
         photoURL: `https://ui-avatars.com/api/?name=${name}&background=random`,
         role: 'admin',
+        adminType,
         status: 'active',
         createdAt: new Date().toISOString(),
       };
@@ -527,10 +332,18 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
       {showAdd && (
         <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-[#7A4900]">
           <form onSubmit={handleCreateAdmin} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="px-4 py-2 rounded-lg border outline-none" required />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="px-4 py-2 rounded-lg border outline-none" required />
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="px-4 py-2 rounded-lg border outline-none" required minLength={6} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="px-4 py-3 rounded-xl border outline-none" required />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="px-4 py-3 rounded-xl border outline-none" required />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="px-4 py-3 rounded-xl border outline-none" required minLength={6} />
+              <select 
+                value={adminType} 
+                onChange={(e) => setAdminType(e.target.value as any)}
+                className="px-4 py-3 rounded-xl border outline-none font-bold text-[#7A4900]"
+              >
+                <option value="full">Full Admin</option>
+                <option value="question_holder">Question Holder</option>
+              </select>
             </div>
             {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
             <div className="flex justify-end space-x-4">
@@ -548,6 +361,7 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
           <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
             <tr>
               <th className="px-6 py-4">Admin</th>
+              <th className="px-6 py-4">Type</th>
               <th className="px-6 py-4">Email</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Joined</th>
@@ -562,6 +376,13 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
                     <img src={a.photoURL || undefined} alt="" className="w-8 h-8 rounded-full border border-gray-200" referrerPolicy="no-referrer" />
                     <span className="font-bold text-[#7A4900]">{a.displayName}</span>
                   </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                    a.adminType === 'full' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {a.adminType === 'full' ? 'Full Admin' : 'Question Holder'}
+                  </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-[#545454]">{a.email}</td>
                 <td className="px-6 py-4">

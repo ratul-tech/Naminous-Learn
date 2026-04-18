@@ -27,6 +27,7 @@ export interface FirestoreErrorInfo {
 }
 
 export type UserRole = 'student' | 'admin';
+export type AdminType = 'full' | 'question_holder';
 export type Gender = 'Male' | 'Female' | 'Other';
 export type Group = 'Science' | 'Commerce' | 'Arts';
 export type Category = 'Board' | 'College Admission';
@@ -44,6 +45,7 @@ export interface UserProfile {
   school?: string;
   group?: Group;
   role: UserRole;
+  adminType?: AdminType;
   status?: 'pending' | 'active';
   createdAt: string;
 }

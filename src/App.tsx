@@ -15,6 +15,7 @@ import Exam from './pages/Exam';
 import Leaderboard from './pages/Leaderboard';
 import Events from './pages/Events';
 import Admin from './pages/Admin';
+import Questions from './pages/Questions';
 import Login from './pages/Login';
 import FeedbackForm from './pages/Feedback';
 import VerifyEmail from './pages/VerifyEmail';
@@ -91,7 +92,8 @@ export default function App() {
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/events" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Events profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/feedback" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <FeedbackForm profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
-            <Route path="/admin" element={profile?.role === 'admin' ? <Admin /> : <Navigate to="/dashboard" />} />
+            <Route path="/questions" element={profile?.role === 'admin' ? <Questions profile={profile} /> : <Navigate to="/dashboard" />} />
+            <Route path="/admin" element={profile?.role === 'admin' ? (profile.adminType === 'full' ? <Admin /> : <Navigate to="/questions" />) : <Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
@@ -203,7 +205,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       </Link>
                     ))}
 
-                    {user.emailVerified && profile?.role === 'admin' && (
+                    {user.emailVerified && profile?.role === 'admin' && profile.adminType === 'full' && (
                       <Link
                         to="/admin"
                         onClick={() => setIsOpen(false)}
@@ -215,6 +217,21 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       >
                         <Shield className="w-5 h-5" />
                         <span>Admin Panel</span>
+                      </Link>
+                    )}
+
+                    {user.emailVerified && profile?.role === 'admin' && (
+                      <Link
+                        to="/questions"
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all mt-2 ${
+                          location.pathname === '/questions' 
+                            ? 'bg-[#D4AF37] text-white shadow-md' 
+                            : 'text-[#7A4900] bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10'
+                        }`}
+                      >
+                        <BookOpen className="w-5 h-5" />
+                        <span>Question Bank</span>
                       </Link>
                     )}
 
