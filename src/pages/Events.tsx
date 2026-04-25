@@ -214,11 +214,6 @@ export default function Events({ profile }: EventsProps) {
       await addDoc(collection(db, 'payments'), newPayment);
 
       setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setSelectedEvent(null);
-        setPaymentData({ method: 'Bkash', trxId: '' });
-      }, 3000);
     } catch (err: any) {
       console.error('Registration error:', err);
       setError('Failed to submit registration. Please try again.');
@@ -319,29 +314,41 @@ export default function Events({ profile }: EventsProps) {
 
               {getRegistrationStatus(event.id) === 'approved' ? (
                 hasSubmitted(event.id) ? (
-                  <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-center">
-                    Exam Completed
+                  <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-center flex items-center justify-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Exam Completed</span>
                   </div>
                 ) : getEventTimeStatus(event) === 'Coming Soon' ? (
-                  <div className="w-full bg-blue-50 text-blue-600 py-3 rounded-xl font-bold text-center border border-blue-100">
-                    Coming Soon
+                  <div className="w-full bg-blue-50 text-blue-600 py-3 rounded-xl font-bold text-center border border-blue-100 flex items-center justify-center space-x-2">
+                    <Clock className="w-4 h-4" />
+                    <span>Registered & Ready</span>
                   </div>
                 ) : getEventTimeStatus(event) === 'Time Up' ? (
-                  <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-center border border-red-100">
-                    Time Up
+                  <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-center border border-red-100 flex items-center justify-center space-x-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Time Up</span>
                   </div>
                 ) : (
                   <button
                     onClick={() => navigate(`/exam/${event.id}`)}
-                    className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center space-x-2"
+                    className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center space-x-2 shadow-lg shadow-green-100"
                   >
                     <Play className="w-4 h-4" />
                     <span>Join Exam Now</span>
                   </button>
                 )
               ) : getRegistrationStatus(event.id) === 'pending' ? (
-                <div className="w-full bg-yellow-50 text-yellow-600 py-3 rounded-xl font-bold text-center border border-yellow-100">
-                  Pending Approval
+                <div className="w-full bg-amber-50 text-amber-600 py-3 rounded-xl font-bold text-center border border-amber-100 flex flex-col items-center justify-center">
+                  <div className="flex items-center space-x-2 mb-0.5">
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Clock className="w-4 h-4" />
+                    </motion.div>
+                    <span>Registration Pending Verification</span>
+                  </div>
+                  <p className="text-[10px] font-medium opacity-80">Our team is reviewing your payment</p>
                 </div>
               ) : getRegistrationStatus(event.id) === 'rejected' ? (
                 <div className="space-y-2">
@@ -392,9 +399,28 @@ export default function Events({ profile }: EventsProps) {
 
               {success ? (
                 <div className="text-center py-12">
-                  <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600"
+                  >
+                    <CheckCircle2 className="w-12 h-12" />
+                  </motion.div>
                   <h2 className="text-3xl font-bold text-[#7A4900] mb-2">Registration Submitted!</h2>
-                  <p className="text-[#545454]">Our team will verify your payment and update your status shortly.</p>
+                  <p className="text-[#545454] max-w-sm mx-auto">
+                    Your registration is now <span className="font-bold text-amber-600">Pending Verification</span>. 
+                    Our team will verify your payment details and update your status shortly.
+                  </p>
+                  <button 
+                    onClick={() => {
+                      setSuccess(false);
+                      setSelectedEvent(null);
+                      setPaymentData({ method: 'Bkash', trxId: '' });
+                    }}
+                    className="mt-8 px-8 py-3 bg-[#D4AF37] text-white rounded-xl font-bold hover:bg-[#B8860B] transition-all"
+                  >
+                    Close & Monitor Status
+                  </button>
                 </div>
               ) : (
                 <>
