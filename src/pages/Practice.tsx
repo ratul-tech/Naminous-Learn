@@ -6,6 +6,7 @@ import { BookOpen, Clock, CheckCircle2, ChevronRight, ChevronLeft, Send, AlertCi
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { getSubjectsForGroup } from '../constants';
+import { MathRenderer } from '../components/MathRenderer';
 
 interface PracticeProps {
   profile: UserProfile | null;
@@ -330,7 +331,9 @@ export default function Practice({ profile }: PracticeProps) {
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{q.board}</span>
                       </div>
-                      <p className="font-bold text-[#7A4900]">{q.text}</p>
+                      <div className="font-bold text-[#7A4900]">
+                        <MathRenderer content={q.text} />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -368,9 +371,9 @@ export default function Practice({ profile }: PracticeProps) {
             </div>
 
             <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100">
-              <h2 className="text-2xl font-bold text-[#7A4900] mb-8 leading-relaxed">
-                {filteredQuestions[examState.currentQuestionIndex]?.text}
-              </h2>
+              <div className="text-2xl font-bold text-[#7A4900] mb-8 leading-relaxed">
+                <MathRenderer content={filteredQuestions[examState.currentQuestionIndex]?.text || ''} />
+              </div>
 
               <div className="space-y-4">
                 {filteredQuestions[examState.currentQuestionIndex]?.options.map((option, i) => (
@@ -383,12 +386,12 @@ export default function Practice({ profile }: PracticeProps) {
                         : 'border-gray-50 hover:border-gray-200 text-[#545454]'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
                       examState.answers[filteredQuestions[examState.currentQuestionIndex].id] === i ? 'bg-[#D4AF37] text-white' : 'bg-gray-100 text-gray-400'
                     }`}>
                       {String.fromCharCode(65 + i)}
                     </div>
-                    <span className="font-medium">{option}</span>
+                    <MathRenderer content={option} className="font-medium" />
                   </button>
                 ))}
               </div>
@@ -499,7 +502,9 @@ export default function Practice({ profile }: PracticeProps) {
                     {examState.answers[q.id] === q.correctAnswer ? 'Correct' : 'Incorrect'}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-[#7A4900] mb-6">{q.text}</h3>
+                <div className="text-lg font-bold text-[#7A4900] mb-6">
+                  <MathRenderer content={q.text} />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {q.options.map((opt, i) => (
                     <div
@@ -512,12 +517,12 @@ export default function Practice({ profile }: PracticeProps) {
                             : 'border-gray-50 text-gray-400'
                       }`}
                     >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                         i === q.correctAnswer ? 'bg-green-500 text-white' : i === examState.answers[q.id] ? 'bg-red-500 text-white' : 'bg-gray-100'
                       }`}>
                         {String.fromCharCode(65 + i)}
                       </div>
-                      <span>{opt}</span>
+                      <MathRenderer content={opt} />
                     </div>
                   ))}
                 </div>

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Question, UserProfile, Category, OperationType } from '../types';
-import { Plus, Trash2, Edit, Search, Filter, BookOpen, AlertCircle, Save, X } from 'lucide-react';
+import { MathRenderer } from '../components/MathRenderer';
+import { Plus, Trash2, Edit, Search, Filter, BookOpen, AlertCircle, Save, X, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { ALL_SUBJECTS } from '../constants';
@@ -33,6 +34,7 @@ export default function Questions({ profile }: QuestionsProps) {
   });
 
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const unsubQuestions = onSnapshot(query(collection(db, 'questions'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -123,50 +125,50 @@ export default function Questions({ profile }: QuestionsProps) {
 
       {/* Filters & Search */}
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-grow relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search questions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all"
-            />
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-grow relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search questions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all"
+              />
+            </div>
+            <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
+              <select
+                value={filterClass}
+                onChange={(e) => setFilterClass(e.target.value)}
+                className="flex-1 md:flex-none px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
+              >
+                <option value="All">All Classes</option>
+                <option value="Class 9">Class 9</option>
+                <option value="Class 10">Class 10</option>
+                <option value="SSC Candidate">SSC Candidate</option>
+                <option value="Class 11">Class 11</option>
+                <option value="Class 12">Class 12</option>
+                <option value="HSC Candidate">HSC Candidate</option>
+              </select>
+              <select
+                value={filterSubject}
+                onChange={(e) => setFilterSubject(e.target.value)}
+                className="flex-1 md:flex-none px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
+              >
+                <option value="All">All Subjects</option>
+                {ALL_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value as any)}
+                className="flex-1 md:flex-none px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
+              >
+                <option value="All">All Categories</option>
+                <option value="Board">Board</option>
+                <option value="College Admission">College Admission</option>
+              </select>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={filterClass}
-              onChange={(e) => setFilterClass(e.target.value)}
-              className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
-            >
-              <option value="All">All Classes</option>
-              <option value="Class 9">Class 9</option>
-              <option value="Class 10">Class 10</option>
-              <option value="SSC Candidate">SSC Candidate</option>
-              <option value="Class 11">Class 11</option>
-              <option value="Class 12">Class 12</option>
-              <option value="HSC Candidate">HSC Candidate</option>
-            </select>
-            <select
-              value={filterSubject}
-              onChange={(e) => setFilterSubject(e.target.value)}
-              className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
-            >
-              <option value="All">All Subjects</option>
-              {ALL_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value as any)}
-              className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
-            >
-              <option value="All">All Categories</option>
-              <option value="Board">Board</option>
-              <option value="College Admission">College Admission</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       {showAdd && (
@@ -183,15 +185,60 @@ export default function Questions({ profile }: QuestionsProps) {
           </div>
 
           <form onSubmit={handleAdd} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[#7A4900] ml-1">Question Text</label>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-1">
+                <label className="text-sm font-bold text-[#7A4900]">Question Text (Supports LaTeX: $math$, $$block math$$)</label>
+                <div className="flex items-center space-x-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="flex items-center space-x-2 text-xs font-bold text-[#D4AF37] hover:text-[#B8860B] transition-colors"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
+                  </button>
+                  <a 
+                    href="https://katex.org/docs/supported.html" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="text-[10px] text-gray-400 hover:text-[#D4AF37] underline"
+                  >
+                    Math Guide
+                  </a>
+                </div>
+              </div>
               <textarea
                 value={newQ.text}
                 onChange={(e) => setNewQ({ ...newQ, text: e.target.value })}
-                placeholder="Enter question text here..."
+                placeholder="Enter question text here... Use $x^2$ for $x^2$, $x_2$ for $x_2$, $\sqrt{x}$ for $\sqrt{x}$"
                 className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-medium h-32 resize-none"
                 required
               />
+              
+              <AnimatePresence>
+                {showPreview && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-6 rounded-2xl bg-[#D4AF37]/5 border-2 border-[#D4AF37]/20 space-y-4">
+                      <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest">Live Preview</p>
+                      <MathRenderer content={newQ.text || '*No text entered yet*'} className="text-[#7A4900] font-bold text-lg" />
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                        {newQ.options.map((opt, i) => (
+                          <div key={i} className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-[#D4AF37]/20 shadow-sm">
+                            <span className="font-bold text-[#D4AF37]">{String.fromCharCode(65 + i)}:</span>
+                            <MathRenderer content={opt || '*Empty*'} className="text-sm text-[#545454]" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -333,14 +380,16 @@ export default function Questions({ profile }: QuestionsProps) {
                     <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-blue-50 rounded-full text-blue-600">{q.class}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-purple-50 rounded-full text-purple-600">{q.subject}</span>
                   </div>
-                  <h3 className="text-lg font-bold text-[#7A4900] leading-relaxed">{q.text}</h3>
+                  <h3 className="text-lg font-bold text-[#7A4900] leading-relaxed">
+                    <MathRenderer content={q.text} />
+                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-2">
                     {q.options.map((opt, i) => (
                       <div key={i} className={`flex items-center space-x-3 text-sm ${i === q.correctAnswer ? 'text-green-600 font-bold' : 'text-[#545454]'}`}>
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 ${i === q.correctAnswer ? 'border-green-600 bg-green-50' : 'border-gray-100 bg-white'}`}>
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 shrink-0 ${i === q.correctAnswer ? 'border-green-600 bg-green-50' : 'border-gray-100 bg-white'}`}>
                           {String.fromCharCode(65 + i)}
                         </div>
-                        <span>{opt}</span>
+                        <MathRenderer content={opt} />
                       </div>
                     ))}
                   </div>

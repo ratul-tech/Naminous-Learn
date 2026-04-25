@@ -381,8 +381,9 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
       )}
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
-        <table className="w-full text-left">
-          <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
             <tr>
               <th className="px-6 py-4">Admin</th>
               <th className="px-6 py-4">Type</th>
@@ -438,6 +439,7 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
           </tbody>
         </table>
       </div>
+    </div>
     </motion.div>
   );
 }
@@ -620,9 +622,10 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
 
 function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[], onApprove: (id: string) => void, onReject: (id: string) => void }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <table className="w-full text-left">
-        <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white rounded-2xl shadow-sm overflow-hidden border">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left min-w-[700px]">
+          <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
           <tr>
             <th className="px-6 py-4">User ID</th>
             <th className="px-6 py-4">Method</th>
@@ -658,6 +661,7 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
           ))}
         </tbody>
       </table>
+      </div>
     </motion.div>
   );
 }
@@ -970,7 +974,7 @@ function EventManager({ events, onDelete, allQuestions, users }: { events: ExamE
                   <div className="text-center py-10 text-gray-400">No results found for this event.</div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[800px]">
                       <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
                         <tr>
                           <th className="px-6 py-4">Student</th>

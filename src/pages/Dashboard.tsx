@@ -58,44 +58,44 @@ export default function Dashboard({ profile }: DashboardProps) {
   if (profile?.role === 'admin') {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-10 rounded-[2.5rem] shadow-xl border-2 border-[#D4AF37]"
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border-2 border-[#D4AF37]"
+    >
+      <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 mb-6 text-center sm:text-left">
+        <div className="p-3 bg-[#D4AF37]/20 rounded-2xl">
+          <Shield className="w-8 h-8 text-[#7A4900]" />
+        </div>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#7A4900]">Welcome, {profile.displayName}</h1>
+          <p className="text-[#545454]">
+            Logged in as a <span className="font-bold text-[#D4AF37]">{(profile.adminType === 'full' || isMainAdmin) ? 'Full Administrator' : 'Question Holder'}</span>
+          </p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-10">
+        <Link 
+          to="/questions" 
+          className="p-6 md:p-8 bg-[#D4AF37]/10 rounded-2xl md:rounded-3xl border-2 border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all group"
         >
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="p-3 bg-[#D4AF37]/20 rounded-2xl">
-              <Shield className="w-8 h-8 text-[#7A4900]" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-[#7A4900]">Welcome, {profile.displayName}</h1>
-              <p className="text-[#545454]">
-                Logged in as a <span className="font-bold text-[#D4AF37]">{(profile.adminType === 'full' || isMainAdmin) ? 'Full Administrator' : 'Question Holder'}</span>
-              </p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
-            <Link 
-              to="/questions" 
-              className="p-8 bg-[#D4AF37]/10 rounded-3xl border-2 border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all group"
-            >
-              <BookOpen className="w-10 h-10 text-[#D4AF37] mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-xl font-bold text-[#7A4900] mb-2">Question Bank</h3>
-              <p className="text-sm text-[#545454]">Access the separate question management page to add, search, and edit questions.</p>
-            </Link>
-            {(profile.adminType === 'full' || isMainAdmin) && (
-              <Link 
-                to="/admin" 
-                className="p-8 bg-[#7A4900]/5 rounded-3xl border-2 border-[#7A4900]/10 hover:border-[#7A4900] transition-all group"
-              >
-                <Shield className="w-10 h-10 text-[#7A4900] mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-bold text-[#7A4900] mb-2">Admin Panel</h3>
-                <p className="text-sm text-[#545454]">Full system control: users, payments, events, and feedback management.</p>
-              </Link>
-            )}
-          </div>
-        </motion.div>
+          <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-[#D4AF37] mb-4 group-hover:scale-110 transition-transform" />
+          <h3 className="text-lg md:text-xl font-bold text-[#7A4900] mb-2">Question Bank</h3>
+          <p className="text-sm text-[#545454]">Access the separate question management page to add, search, and edit questions.</p>
+        </Link>
+        {(profile.adminType === 'full' || isMainAdmin) && (
+          <Link 
+            to="/admin" 
+            className="p-6 md:p-8 bg-[#7A4900]/5 rounded-2xl md:rounded-3xl border-2 border-[#7A4900]/10 hover:border-[#7A4900] transition-all group"
+          >
+            <Shield className="w-8 h-8 md:w-10 md:h-10 text-[#7A4900] mb-4 group-hover:scale-110 transition-transform" />
+            <h3 className="text-lg md:text-xl font-bold text-[#7A4900] mb-2">Admin Panel</h3>
+            <p className="text-sm text-[#545454]">Full system control: users, payments, events, and feedback management.</p>
+          </Link>
+        )}
+      </div>
+    </motion.div>
       </div>
     );
   }

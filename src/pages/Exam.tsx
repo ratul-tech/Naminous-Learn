@@ -7,6 +7,7 @@ import { Clock, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft, Send } fro
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
+import { MathRenderer } from '../components/MathRenderer';
 
 interface ExamProps {
   profile: UserProfile | null;
@@ -269,9 +270,9 @@ export default function Exam({ profile }: ExamProps) {
           exit={{ opacity: 0, x: -20 }}
           className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 mb-8"
         >
-          <h2 className="text-2xl font-bold text-[#7A4900] mb-8 leading-relaxed">
-            {currentQuestion?.text}
-          </h2>
+          <div className="text-2xl font-bold text-[#7A4900] mb-8 leading-relaxed">
+            <MathRenderer content={currentQuestion?.text || ''} />
+          </div>
 
           <div className="space-y-4">
             {currentQuestion?.options.map((option, i) => (
@@ -284,12 +285,12 @@ export default function Exam({ profile }: ExamProps) {
                     : 'border-gray-50 hover:border-gray-200 text-[#545454]'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
                   answers[currentQuestion.id] === i ? 'bg-[#D4AF37] text-white' : 'bg-gray-100 text-gray-400'
                 }`}>
                   {String.fromCharCode(65 + i)}
                 </div>
-                <span className="font-medium">{option}</span>
+                <MathRenderer content={option} className="font-medium" />
               </button>
             ))}
           </div>
