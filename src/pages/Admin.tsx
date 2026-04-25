@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
+import { MathRenderer } from '../components/MathRenderer';
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'feedback' | 'admins'>('users');
@@ -805,6 +806,8 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
     questions: [],
   });
 
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+
   const [currentQuestion, setCurrentQuestion] = useState<Partial<Question>>({
     text: '',
     options: ['', '', '', ''],
@@ -861,6 +864,7 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
   const resetForm = () => {
     setShowForm(false);
     setEditingEvent(null);
+    setEditingQuestionIndex(null);
     setEventData({
       title: '',
       description: '',
@@ -880,21 +884,37 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
     setShowForm(true);
   };
 
-  const addQuestion = () => {
+  const addOrUpdateQuestion = () => {
     if (!currentQuestion.text || currentQuestion.options?.some(o => !o)) {
       alert('Please fill in question text and all options.');
       return;
     }
-    const newQuestion: Question = { 
-      ...currentQuestion,
-      id: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-    } as Question;
-    
-    setEventData(prev => ({
-      ...prev,
-      questions: [...(prev.questions || []), newQuestion]
-    }));
+
+    if (editingQuestionIndex !== null) {
+      const updatedQuestions = [...(eventData.questions || [])];
+      updatedQuestions[editingQuestionIndex] = {
+        ...updatedQuestions[editingQuestionIndex],
+        ...currentQuestion,
+      } as Question;
+      
+      setEventData(prev => ({
+        ...prev,
+        questions: updatedQuestions
+      }));
+      setEditingQuestionIndex(null);
+    } else {
+      const newQuestion: Question = { 
+        ...currentQuestion,
+        id: Math.random().toString(36).substr(2, 9),
+        createdAt: new Date().toISOString(),
+      } as Question;
+      
+      setEventData(prev => ({
+        ...prev,
+        questions: [...(prev.questions || []), newQuestion]
+      }));
+    }
+
     setCurrentQuestion({
       text: '',
       options: ['', '', '', ''],
@@ -902,7 +922,25 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
     });
   };
 
+  const handleEditQuestion = (index: number) => {
+    const q = eventData.questions![index];
+    setCurrentQuestion({
+      text: q.text,
+      options: [...q.options],
+      correctAnswer: q.correctAnswer,
+    });
+    setEditingQuestionIndex(index);
+  };
+
   const removeQuestion = (index: number) => {
+    if (editingQuestionIndex === index) {
+      setEditingQuestionIndex(null);
+      setCurrentQuestion({
+        text: '',
+        options: ['', '', '', ''],
+        correctAnswer: 0,
+      });
+    }
     setEventData(prev => ({
       ...prev,
       questions: (prev.questions || []).filter((_, i) => i !== index)
@@ -967,8 +1005,8 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
               <div className="space-y-6">
                 <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
                   <h4 className="font-bold text-[#7A4900] mb-4 flex items-center">
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add Question Separately
+                    {editingQuestionIndex !== null ? <Edit className="w-5 h-5 mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
+                    {editingQuestionIndex !== null ? 'Edit Question' : 'Add Question Separately'}
                   </h4>
                   <div className="space-y-4">
                     <textarea 
@@ -1000,13 +1038,27 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
                         </div>
                       ))}
                     </div>
-                    <button 
-                      type="button" 
-                      onClick={addQuestion}
-                      className="w-full py-3 bg-[#7A4900] text-white rounded-xl font-bold text-sm hover:bg-black transition-all"
-                    >
-                      Add Question to List
-                    </button>
+                    <div className="flex space-x-2">
+                      <button 
+                        type="button" 
+                        onClick={addOrUpdateQuestion}
+                        className="flex-1 py-3 bg-[#7A4900] text-white rounded-xl font-bold text-sm hover:bg-black transition-all"
+                      >
+                        {editingQuestionIndex !== null ? 'Update Question' : 'Add Question to List'}
+                      </button>
+                      {editingQuestionIndex !== null && (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setEditingQuestionIndex(null);
+                            setCurrentQuestion({ text: '', options: ['', '', '', ''], correctAnswer: 0 });
+                          }}
+                          className="px-4 py-3 bg-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-300 transition-all"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -1014,14 +1066,19 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
                   <h4 className="font-bold text-[#7A4900] text-sm uppercase">Added Questions ({eventData.questions?.length})</h4>
                   <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
                     {eventData.questions?.map((q, i) => (
-                      <div key={i} className="bg-white p-3 rounded-xl border text-xs flex justify-between items-start">
+                      <div key={i} className={`p-3 rounded-xl border text-xs flex justify-between items-start transition-all ${editingQuestionIndex === i ? 'bg-yellow-50 border-[#D4AF37]' : 'bg-white'}`}>
                         <div className="flex-1">
                           <span className="font-bold text-[#D4AF37] mr-1">{i + 1}.</span>
-                          <span className="text-[#545454] line-clamp-2">{q.text}</span>
+                          <MathRenderer content={q.text} className="text-[#545454] line-clamp-2 inline" />
                         </div>
-                        <button type="button" onClick={() => removeQuestion(i)} className="text-red-400 hover:text-red-600 ml-2">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex space-x-1 ml-2">
+                          <button type="button" onClick={() => handleEditQuestion(i)} className="text-blue-400 hover:text-blue-600">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button type="button" onClick={() => removeQuestion(i)} className="text-red-400 hover:text-red-600">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {(!eventData.questions || eventData.questions.length === 0) && (
