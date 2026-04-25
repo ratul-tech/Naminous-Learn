@@ -1102,11 +1102,11 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {events.map((e) => (
           <div key={e.id} className="bg-white p-6 rounded-2xl shadow-sm border hover:border-[#D4AF37] transition-all group relative">
-            <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => startEdit(e)} className="p-2 text-blue-400 hover:bg-blue-50 rounded-lg">
+            <div className="absolute top-4 right-4 flex space-x-1">
+              <button onClick={() => startEdit(e)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Edit Event">
                 <Edit className="w-5 h-5" />
               </button>
-              <button onClick={() => onDelete(e.id)} className="p-2 text-red-100 hover:text-red-600 rounded-lg">
+              <button onClick={() => onDelete(e.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete Event">
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>

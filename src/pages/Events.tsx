@@ -267,17 +267,17 @@ export default function Events({ profile }: EventsProps) {
             className="bg-white rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#D4AF37] transition-all relative group"
           >
             {isAdmin && (
-              <div className="absolute top-4 right-20 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <div className="absolute top-4 right-4 flex space-x-1 z-10">
                 <button 
                   onClick={(e) => { e.stopPropagation(); startEdit(event); }}
-                  className="p-2 bg-white/90 backdrop-blur shadow-sm rounded-xl text-blue-600 hover:bg-blue-50"
+                  className="p-2 bg-white/90 backdrop-blur shadow-md rounded-xl text-blue-600 hover:bg-blue-50 transition-all"
                   title="Edit Event"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }}
-                  className="p-2 bg-white/90 backdrop-blur shadow-sm rounded-xl text-red-600 hover:bg-red-50"
+                  className="p-2 bg-white/90 backdrop-blur shadow-md rounded-xl text-red-600 hover:bg-red-50 transition-all"
                   title="Delete Event"
                 >
                   <Trash2 className="w-5 h-5" />
