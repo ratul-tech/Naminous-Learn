@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -313,92 +313,179 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
 
 function Landing() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <motion.img
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        src={LOGO_URL}
-        alt="Numinous Learn"
-        className="w-48 h-48 rounded-3xl shadow-2xl mb-8 border-4 border-[#D4AF37] object-cover"
-        referrerPolicy="no-referrer"
-      />
-      <motion.h1
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="text-5xl md:text-7xl font-bold text-[#7A4900] mb-8 leading-tight"
-      >
-        Achieve Academic Excellence with <span className="text-[#D4AF37]">Numinous Learn</span>
-      </motion.h1>
-      <motion.p
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="text-xl text-[#545454] max-w-2xl mb-12 leading-relaxed"
-      >
-        A dedicated space for students to prepare for their future through structured learning, 
-        comprehensive practice, and real-time evaluation.
-      </motion.p>
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6"
-      >
-        <Link
-          to="/login"
-          className="w-full sm:w-auto bg-[#D4AF37] text-white px-12 py-4 rounded-2xl font-bold text-lg hover:bg-[#B8860B] shadow-xl transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-2"
+    <div className="flex flex-col space-y-32 py-10">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center justify-center text-center relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-[#D4AF37]/5 to-transparent -z-10" />
+        
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative mb-10"
         >
-          <LogIn className="w-6 h-6" />
-          <span>Get Started Now</span>
-        </Link>
-        <Link
-          to="/login?role=admin"
-          className="w-full sm:w-auto bg-[#7A4900] text-white px-12 py-4 rounded-2xl font-bold text-lg hover:bg-black shadow-xl transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-2"
-        >
-          <Shield className="w-6 h-6" />
-          <span>Admin Login</span>
-        </Link>
-        <Link
-          to="/leaderboard"
-          className="w-full sm:w-auto bg-white text-[#7A4900] border-2 border-[#7A4900] px-12 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all"
-        >
-          View Leaderboard
-        </Link>
-      </motion.div>
+          <div className="absolute inset-0 bg-[#D4AF37] blur-3xl opacity-20 rounded-full" />
+          <img
+            src={LOGO_URL}
+            alt="Numinous Learn"
+            className="w-40 h-40 md:w-56 md:h-56 rounded-[2.5rem] shadow-2xl relative border-4 border-white object-cover"
+            referrerPolicy="no-referrer"
+          />
+        </motion.div>
 
-      {/* Quick Actions for Logged Out Users */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        viewport={{ once: true }}
-        className="mt-24 w-full max-w-4xl"
-      >
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8">Quick Access</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="max-w-4xl px-4"
+        >
+          <h1 className="text-5xl md:text-8xl font-bold text-[#7A4900] mb-8 leading-[1.1] font-serif">
+            Elevate Your <span className="text-[#D4AF37]">Academic</span> Potential
+          </h1>
+          <p className="text-xl md:text-2xl text-[#545454] max-w-2xl mx-auto mb-12 leading-relaxed font-medium opacity-80">
+            A premium learning sanctuary where students master their subjects through expert-curated practice and high-stakes evaluation.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Link
+              to="/login"
+              className="w-full sm:w-auto bg-[#D4AF37] text-white px-10 py-5 rounded-[2rem] font-bold text-xl hover:bg-[#B8860B] shadow-2xl shadow-amber-200 transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-3"
+            >
+              <LogIn className="w-6 h-6" />
+              <span>Start Your Journey</span>
+            </Link>
+            <Link
+              to="/leaderboard"
+              className="w-full sm:w-auto bg-white text-[#7A4900] border-2 border-[#7A4900]/10 px-10 py-5 rounded-[2rem] font-bold text-xl hover:border-[#7A4900] hover:bg-gray-50 transition-all flex items-center justify-center space-x-3"
+            >
+              <Trophy className="w-6 h-6" />
+              <span>Hall of Fame</span>
+            </Link>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Stats/Social Proof Section */}
+      <section className="bg-[#7A4900] rounded-[4rem] p-12 md:p-20 text-white relative overflow-hidden shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          <div>
+            <h3 className="text-5xl font-bold mb-2 font-serif">5000+</h3>
+            <p className="text-white/60 font-bold uppercase tracking-widest text-sm">Active Students</p>
+          </div>
+          <div>
+            <h3 className="text-5xl font-bold mb-2 font-serif">100k+</h3>
+            <p className="text-white/60 font-bold uppercase tracking-widest text-sm">Questions Solved</p>
+          </div>
+          <div>
+            <h3 className="text-5xl font-bold mb-2 font-serif">200+</h3>
+            <p className="text-white/60 font-bold uppercase tracking-widest text-sm">Monthly Events</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="container mx-auto px-4">
+        <div className="text-center mb-20">
+          <h2 className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.3em] mb-4">Core Capabilities</h2>
+          <h2 className="text-4xl md:text-6xl font-bold text-[#7A4900] font-serif">Everything you need to excel</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            {
+              title: "Structured Practice",
+              desc: "Subject-wise curated modules designed to build your base from the ground up.",
+              icon: BookOpen,
+              color: "bg-blue-50 text-blue-600"
+            },
+            {
+              title: "Live Events",
+              desc: "Compete in high-stakes mock tests with real-time ranking and exciting rewards.",
+              icon: Calendar,
+              color: "bg-amber-50 text-amber-600"
+            },
+            {
+              title: "Deep Analytics",
+              desc: "Track your progress with detailed performance reports and subject-wise mastery analysis.",
+              icon: TrendingUp,
+              color: "bg-emerald-50 text-emerald-600"
+            }
+          ].map((feat, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.2 }}
+              className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100 hover:border-[#D4AF37] transition-all group"
+            >
+              <div className={`w-16 h-16 ${feat.color} rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}>
+                <feat.icon className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#7A4900] mb-4 font-serif">{feat.title}</h3>
+              <p className="text-[#545454] leading-relaxed opacity-80">{feat.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Portal Access */}
+      <section className="bg-white rounded-[4rem] p-12 md:p-20 shadow-xl border border-gray-50 flex flex-col items-center">
+        <h2 className="text-center font-serif text-4xl md:text-5xl font-bold text-[#7A4900] mb-16">Choose Your Portal</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-5xl">
           <Link
             to="/login?role=student"
-            className="group bg-white p-8 rounded-3xl border-2 border-transparent hover:border-[#D4AF37] shadow-sm hover:shadow-xl transition-all text-left"
+            className="group relative bg-[#f5f5f0] p-12 rounded-[3.5rem] border-2 border-transparent hover:border-[#D4AF37] transition-all overflow-hidden"
           >
-            <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-2xl flex items-center justify-center text-[#D4AF37] mb-6 group-hover:scale-110 transition-transform">
-              <UserIcon className="w-6 h-6" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-[#D4AF37] text-white rounded-2xl flex items-center justify-center mb-8 shadow-xl">
+                <UserIcon className="w-8 h-8" />
+              </div>
+              <h3 className="text-3xl font-bold text-[#7A4900] mb-4 font-serif">Student Portal</h3>
+              <p className="text-[#545454] mb-8 font-medium opacity-80">Join as a student to access exams, track performance, and climb the leaderboard.</p>
+              <span className="inline-flex items-center space-x-2 font-bold text-[#D4AF37] group-hover:translate-x-2 transition-transform">
+                <span>Enter Academy</span>
+                <ArrowRight className="w-5 h-5" />
+              </span>
             </div>
-            <h3 className="text-xl font-bold text-[#7A4900] mb-2">Student Portal</h3>
-            <p className="text-sm text-[#545454]">Access your practice modules, exam history, and personalized dashboard.</p>
+            <UserIcon className="absolute -bottom-10 -right-10 w-48 h-48 text-[#D4AF37]/5 -rotate-12 group-hover:rotate-0 transition-transform" />
           </Link>
 
           <Link
             to="/login?role=admin"
-            className="group bg-white p-8 rounded-3xl border-2 border-transparent hover:border-[#7A4900] shadow-sm hover:shadow-xl transition-all text-left"
+            className="group relative bg-[#7A4900] p-12 rounded-[3.5rem] border-2 border-transparent hover:border-black transition-all overflow-hidden text-white"
           >
-            <div className="w-12 h-12 bg-[#7A4900]/10 rounded-2xl flex items-center justify-center text-[#7A4900] mb-6 group-hover:scale-110 transition-transform">
-              <Shield className="w-6 h-6" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-white text-[#7A4900] rounded-2xl flex items-center justify-center mb-8 shadow-xl">
+                <Shield className="w-8 h-8" />
+              </div>
+              <h3 className="text-3xl font-bold mb-4 font-serif">Admin Portal</h3>
+              <p className="text-white/70 mb-8 font-medium">Administrative access for curators, question holders, and community managers.</p>
+              <span className="inline-flex items-center space-x-2 font-bold text-white group-hover:translate-x-2 transition-transform">
+                <span>Manage System</span>
+                <ArrowRight className="w-5 h-5" />
+              </span>
             </div>
-            <h3 className="text-xl font-bold text-[#7A4900] mb-2">Admin Portal</h3>
-            <p className="text-sm text-[#545454]">Secure administrative access for managing questions, events, and users.</p>
+            <Shield className="absolute -bottom-10 -right-10 w-48 h-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform" />
           </Link>
         </div>
-      </motion.div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="text-center py-20 px-4">
+        <h2 className="text-4xl md:text-6xl font-bold text-[#7A4900] font-serif mb-8 max-w-3xl mx-auto">
+          Ready to reach the pinnacle of your <span className="text-[#D4AF37]">potential</span>?
+        </h2>
+        <p className="text-xl text-[#545454] max-w-xl mx-auto mb-12 opacity-80">
+          Join Numinous Learn today and transform the way you prepare for your academic future.
+        </p>
+        <Link
+          to="/login"
+          className="inline-block bg-[#D4AF37] text-white px-16 py-6 rounded-full font-bold text-2xl hover:bg-[#B8860B] shadow-2xl transition-all shadow-amber-200"
+        >
+          Create Free Account
+        </Link>
+      </section>
     </div>
   );
 }

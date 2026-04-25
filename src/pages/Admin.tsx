@@ -14,7 +14,7 @@ import { OperationType } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'feedback' | 'admins'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'feedback' | 'admins' | 'submissions'>('users');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [registrationTrend, setRegistrationTrend] = useState<{ date: string, count: number }[]>([]);
@@ -22,6 +22,7 @@ export default function Admin() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [events, setEvents] = useState<ExamEvent[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
@@ -61,6 +62,9 @@ export default function Admin() {
     const unsubFeedback = onSnapshot(query(collection(db, 'feedback'), orderBy('createdAt', 'desc')), (snapshot) => {
       setFeedback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
     });
+    const unsubSubmissions = onSnapshot(query(collection(db, 'submissions'), orderBy('submittedAt', 'desc')), (snapshot) => {
+      setSubmissions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
+    });
 
     setLoading(false);
     return () => {
@@ -70,6 +74,7 @@ export default function Admin() {
       unsubPayments();
       unsubEvents();
       unsubFeedback();
+      unsubSubmissions();
     };
   }, []);
 
@@ -205,6 +210,7 @@ export default function Admin() {
           <TabButton active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admins" />
           <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
           <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Events" />
+          <TabButton active={activeTab === 'submissions'} onClick={() => setActiveTab('submissions')} icon={BookOpen} label="Submissions" />
           <TabButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Feedback" />
         </div>
       </div>
@@ -302,6 +308,7 @@ export default function Admin() {
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
         {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} />}
+        {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
 
@@ -345,6 +352,197 @@ export default function Admin() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function SubmissionManager({ submissions, events, users }: { submissions: any[], events: ExamEvent[], users: UserProfile[] }) {
+  const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
+  const [filterEvent, setFilterEvent] = useState<string>('all');
+
+  const filteredSubmissions = filterEvent === 'all' 
+    ? submissions 
+    : submissions.filter(s => s.eventId === filterEvent);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h2 className="text-xl font-bold text-[#7A4900]">User Submissions ({filteredSubmissions.length})</h2>
+        <select 
+          value={filterEvent} 
+          onChange={(e) => setFilterEvent(e.target.value)}
+          className="px-4 py-2 rounded-xl border outline-none font-bold text-[#7A4900] bg-white shadow-sm"
+        >
+          <option value="all">All Events</option>
+          {events.map(e => (
+            <option key={e.id} value={e.id}>{e.title}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+              <tr>
+                <th className="px-6 py-4">Student</th>
+                <th className="px-6 py-4">Event</th>
+                <th className="px-6 py-4">Score</th>
+                <th className="px-6 py-4">Time</th>
+                <th className="px-6 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredSubmissions.map((s) => {
+                const user = users.find(u => u.uid === s.uid);
+                const event = events.find(e => e.id === s.eventId);
+                return (
+                  <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-[#7A4900]">{user?.displayName || 'Unknown Student'}</p>
+                      <p className="text-xs text-[#545454]">{user?.email}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-medium">{event?.title || 'Unknown Event'}</p>
+                      <p className="text-[10px] text-gray-400">ID: {s.eventId}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-lg font-bold text-[#D4AF37]">{s.score} Points</span>
+                        <span className="text-[10px] text-gray-400">Correct Answers</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-[10px] text-gray-400">
+                      {new Date(s.submittedAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={() => setSelectedSubmission(s)}
+                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-all"
+                      >
+                        Review Answers
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredSubmissions.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-20 text-gray-400">No submissions found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Submission Detail Modal */}
+      <AnimatePresence>
+        {selectedSubmission && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+            >
+              <div className="p-8 border-b flex justify-between items-center bg-[#fdfaf5]">
+                <div>
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider">Detailed Submission Review</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300" />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">ID: {selectedSubmission.id}</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#7A4900] font-serif">
+                    {users.find(u => u.uid === selectedSubmission.uid)?.displayName}'s Entry
+                  </h2>
+                  <p className="text-sm text-[#545454]">{events.find(e => e.id === selectedSubmission.eventId)?.title}</p>
+                </div>
+                <button onClick={() => setSelectedSubmission(null)} className="p-2 hover:bg-white rounded-full shadow-sm">
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-gray-50/30">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Final Score</p>
+                    <p className="text-3xl font-bold text-[#D4AF37]">{selectedSubmission.score}</p>
+                    <p className="text-xs text-gray-500 mt-1">out of {events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 'N/A'}</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Completion Time</p>
+                    <p className="text-lg font-bold text-[#7A4900]">
+                      {new Date(selectedSubmission.submittedAt).toLocaleTimeString()}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{new Date(selectedSubmission.submittedAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Success Rate</p>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {Math.round((selectedSubmission.score / (events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 1)) * 100)}%
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-bold text-[#7A4900] uppercase tracking-widest text-xs mb-4">Question Breakdown</h3>
+                  {events.find(e => e.id === selectedSubmission.eventId)?.questions?.map((q: Question, idx: number) => {
+                    const userAnswer = selectedSubmission.answers[q.id];
+                    const isCorrect = userAnswer === q.correctAnswer;
+                    
+                    return (
+                      <div key={q.id} className={`p-6 rounded-2xl border-2 bg-white transition-all ${isCorrect ? 'border-emerald-50' : 'border-red-50'}`}>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center space-x-3">
+                            <span className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-[#7A4900] text-sm">{idx + 1}</span>
+                            <MathRenderer content={q.text} className="font-bold text-[#7A4900] text-lg" />
+                          </div>
+                          {isCorrect ? (
+                            <div className="flex items-center text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Correct
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-red-600 bg-red-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Incorrect
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                          {q.options.map((opt, i) => (
+                            <div 
+                              key={i} 
+                              className={`p-4 rounded-xl border text-sm flex items-center space-x-3 ${
+                                i === q.correctAnswer 
+                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' 
+                                  : i === userAnswer 
+                                    ? 'bg-red-50 border-red-200 text-red-700' 
+                                    : 'bg-gray-50 border-gray-200 text-gray-400'
+                              }`}
+                            >
+                              <span className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                i === q.correctAnswer ? 'bg-emerald-600 text-white' : i === userAnswer ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-500'
+                              }`}>
+                                {String.fromCharCode(65 + i)}
+                              </span>
+                              <MathRenderer content={opt} />
+                              {i === q.correctAnswer && <span className="ml-auto text-[10px] uppercase font-black">Official Answer</span>}
+                              {i === userAnswer && i !== q.correctAnswer && <span className="ml-auto text-[10px] uppercase font-black">Student Choice</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 

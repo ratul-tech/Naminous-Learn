@@ -145,7 +145,7 @@ export default function Practice({ profile }: PracticeProps) {
           wrongCount: results.wrongCount,
           totalQuestions: results.totalQuestions,
           subject: config.subject,
-          class: profile.class,
+          class: profile.class || 'N/A',
           type: 'Practice',
           createdAt: new Date().toISOString(),
         });
@@ -180,7 +180,27 @@ export default function Practice({ profile }: PracticeProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-12">
+    <div className="space-y-12">
+      <header className="relative overflow-hidden bg-white p-10 md:p-16 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-block px-4 py-1.5 bg-[#7A4900]/5 text-[#7A4900] rounded-full text-xs font-bold uppercase tracking-widest mb-6"
+          >
+            Elite Training Station
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#7A4900] mb-6 font-serif">
+            Practice Modules
+          </h1>
+          <p className="text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed">
+            Sharpen your intellect with specialized modules tailored for <span className="text-[#D4AF37] font-bold">{profile.class}</span>.
+          </p>
+        </div>
+        
+        <BookOpen className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 text-gray-50 opacity-20 pointer-events-none" />
+      </header>
+
       <AnimatePresence mode="wait">
         {step === 'config' && (
           <motion.div
@@ -188,112 +208,153 @@ export default function Practice({ profile }: PracticeProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-8"
+            className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-gray-100 space-y-12"
           >
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-[#7A4900]">Practice Exam Setup</h1>
-              <p className="text-[#545454]">Customize your practice session for {profile.class}</p>
+            {/* Subject Selection */}
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Select Knowledge Area</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {subjects.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setConfig({ ...config, subject: s })}
+                    className={`px-6 py-4 rounded-2xl border-2 transition-all font-bold text-sm text-center ${
+                      config.subject === s 
+                        ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#7A4900] shadow-md shadow-amber-50' 
+                        : 'border-gray-50 text-gray-400 hover:border-gray-100'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 space-y-8">
-              {/* Subject Selection */}
-              <div>
-                <label className="block text-sm font-bold text-[#7A4900] mb-4 uppercase tracking-wider">Select Subject</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {subjects.map(s => (
+            {/* Mode Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div
+                onClick={() => setConfig({ ...config, mode: 'Complete Board' })}
+                className={`group cursor-pointer p-8 rounded-[2.5rem] border-2 transition-all relative overflow-hidden ${
+                  config.mode === 'Complete Board' 
+                    ? 'border-[#D4AF37] bg-[#D4AF37]/5' 
+                    : 'border-gray-50 hover:bg-gray-50'
+                }`}
+              >
+                <div className="relative z-10">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-colors ${
+                    config.mode === 'Complete Board' ? 'bg-[#D4AF37] text-white' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    <List className="w-7 h-7" />
+                  </div>
+                  <h3 className={`text-xl font-bold font-serif mb-2 transition-colors ${
+                    config.mode === 'Complete Board' ? 'text-[#7A4900]' : 'text-gray-400'
+                  }`}>
+                    Comprehensive Pool
+                  </h3>
+                  <p className="text-xs text-[#545454] leading-relaxed opacity-70">
+                    A balanced mix of random questions from the entire board database.
+                  </p>
+                </div>
+                {config.mode === 'Complete Board' && (
+                  <div className="absolute top-6 right-6">
+                    <CheckCircle2 className="w-6 h-6 text-[#D4AF37]" />
+                  </div>
+                )}
+              </div>
+
+              <div
+                onClick={() => setConfig({ ...config, mode: 'Selected Board' })}
+                className={`group cursor-pointer p-8 rounded-[2.5rem] border-2 transition-all relative overflow-hidden ${
+                  config.mode === 'Selected Board' 
+                    ? 'border-[#D4AF37] bg-[#D4AF37]/5' 
+                    : 'border-gray-50 hover:bg-gray-50'
+                }`}
+              >
+                <div className="relative z-10">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-colors ${
+                    config.mode === 'Selected Board' ? 'bg-[#D4AF37] text-white' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    <CheckCircle2 className="w-7 h-7" />
+                  </div>
+                  <h3 className={`text-xl font-bold font-serif mb-2 transition-colors ${
+                    config.mode === 'Selected Board' ? 'text-[#7A4900]' : 'text-gray-400'
+                  }`}>
+                    Master Selection
+                  </h3>
+                  <p className="text-xs text-[#545454] leading-relaxed opacity-70">
+                    Hand-pick specific questions to target your weak points and refine mastery.
+                  </p>
+                </div>
+                {config.mode === 'Selected Board' && (
+                  <div className="absolute top-6 right-6">
+                    <CheckCircle2 className="w-6 h-6 text-[#D4AF37]" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              {/* Time Selection */}
+              <div className="space-y-4">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Duration (Minutes)</label>
+                <div className="flex flex-wrap gap-2">
+                  {times.map(t => (
                     <button
-                      key={s}
-                      onClick={() => setConfig({ ...config, subject: s })}
-                      className={`px-4 py-3 rounded-xl border-2 transition-all font-bold text-sm ${config.subject === s ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-50 text-gray-400 hover:border-gray-200'}`}
+                      key={t}
+                      onClick={() => setConfig({ ...config, time: t })}
+                      className={`px-4 py-2 rounded-xl border-2 transition-all font-bold text-xs ${
+                        config.time === t 
+                          ? 'border-[#7A4900] bg-[#7A4900] text-white' 
+                          : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                      }`}
                     >
-                      {s}
+                      {t}m
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Mode Selection */}
-              <div>
-                <label className="block text-sm font-bold text-[#7A4900] mb-4 uppercase tracking-wider">Exam Mode</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setConfig({ ...config, mode: 'Complete Board' })}
-                    className={`p-6 rounded-2xl border-2 text-left transition-all ${config.mode === 'Complete Board' ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-gray-50'}`}
-                  >
-                    <div className="flex items-center space-x-3 mb-2">
-                      <List className={`w-6 h-6 ${config.mode === 'Complete Board' ? 'text-[#D4AF37]' : 'text-gray-300'}`} />
-                      <h3 className={`font-bold ${config.mode === 'Complete Board' ? 'text-[#7A4900]' : 'text-gray-400'}`}>Complete Board Questions</h3>
-                    </div>
-                    <p className="text-xs text-[#545454]">Random questions from all available board questions for this subject.</p>
-                  </button>
-                  <button
-                    onClick={() => setConfig({ ...config, mode: 'Selected Board' })}
-                    className={`p-6 rounded-2xl border-2 text-left transition-all ${config.mode === 'Selected Board' ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-gray-50'}`}
-                  >
-                    <div className="flex items-center space-x-3 mb-2">
-                      <CheckCircle2 className={`w-6 h-6 ${config.mode === 'Selected Board' ? 'text-[#D4AF37]' : 'text-gray-300'}`} />
-                      <h3 className={`font-bold ${config.mode === 'Selected Board' ? 'text-[#7A4900]' : 'text-gray-400'}`}>Selected Board Questions</h3>
-                    </div>
-                    <p className="text-xs text-[#545454]">Manually pick which questions you want to practice from the pool.</p>
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Time Selection */}
-                <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-4 uppercase tracking-wider">Time Limit (Minutes)</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {times.map(t => (
+              {/* Question Count */}
+              {config.mode === 'Complete Board' && (
+                <div className="space-y-4">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Quantity</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[10, 20, 30, 50].map(c => (
                       <button
-                        key={t}
-                        onClick={() => setConfig({ ...config, time: t })}
-                        className={`py-2 rounded-lg border-2 transition-all font-bold text-xs ${config.time === t ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-50 text-gray-400'}`}
+                        key={c}
+                        onClick={() => setConfig({ ...config, count: c })}
+                        className={`px-6 py-2 rounded-xl border-2 transition-all font-bold text-xs ${
+                          config.count === c 
+                            ? 'border-[#7A4900] bg-[#7A4900] text-white' 
+                            : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                        }`}
                       >
-                        {t}m
+                        {c}
                       </button>
                     ))}
                   </div>
                 </div>
+              )}
+            </div>
 
-                {/* Question Count (only for Complete Board) */}
-                {config.mode === 'Complete Board' && (
-                  <div>
-                    <label className="block text-sm font-bold text-[#7A4900] mb-4 uppercase tracking-wider">Question Count</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[10, 20, 30, 50].map(c => (
-                        <button
-                          key={c}
-                          onClick={() => setConfig({ ...config, count: c })}
-                          className={`py-2 rounded-lg border-2 transition-all font-bold text-xs ${config.count === c ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#7A4900]' : 'border-gray-50 text-gray-400'}`}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-6">
-                {config.mode === 'Selected Board' ? (
-                  <button
-                    onClick={() => setStep('selection')}
-                    className="w-full bg-[#7A4900] text-white py-4 rounded-2xl font-bold text-lg hover:bg-black shadow-lg transition-all flex items-center justify-center space-x-3"
-                  >
-                    <span>Select Questions</span>
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleStartExam}
-                    className="w-full bg-[#D4AF37] text-white py-4 rounded-2xl font-bold text-lg hover:bg-[#B8860B] shadow-lg transition-all flex items-center justify-center space-x-3"
-                  >
-                    <Play className="w-6 h-6" />
-                    <span>Start Practice Exam</span>
-                  </button>
-                )}
-              </div>
+            <div className="pt-8 border-t border-gray-50 flex justify-center">
+              {config.mode === 'Selected Board' ? (
+                <button
+                  onClick={() => setStep('selection')}
+                  className="w-full md:w-auto min-w-[300px] bg-[#7A4900] text-white py-5 px-10 rounded-2xl font-bold text-lg hover:bg-black shadow-xl transition-all flex items-center justify-center space-x-3 group"
+                >
+                  <span>Customize Question Selection</span>
+                  <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleStartExam}
+                  className="w-full md:w-auto min-w-[300px] bg-[#D4AF37] text-white py-5 px-10 rounded-2xl font-bold text-lg hover:bg-[#B8860B] shadow-2xl shadow-amber-100 transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-4"
+                >
+                  <Play className="w-6 h-6" />
+                  <span>Begin Training Session</span>
+                </button>
+              )}
             </div>
           </motion.div>
         )}

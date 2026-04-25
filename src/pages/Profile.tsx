@@ -105,13 +105,28 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#7A4900]">My Profile</h1>
-        <p className="text-[#545454]">Manage your personal information and academic details</p>
-      </div>
+    <div className="space-y-12 pb-12">
+      <header className="relative overflow-hidden bg-white p-10 md:p-16 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-block px-4 py-1.5 bg-[#D4AF37]/10 text-[#7A4900] rounded-full text-[10px] font-bold uppercase tracking-widest mb-6 border border-[#D4AF37]/20"
+          >
+            Academic Identity
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#7A4900] font-serif mb-6">
+            Scholar Profile
+          </h1>
+          <p className="text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed">
+            Manage your academic credentials and personal milestones on the <span className="text-[#D4AF37] font-semibold italic">Elite Board</span>.
+          </p>
+        </div>
+        
+        <Users className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 text-gray-50 opacity-20 pointer-events-none" />
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Profile Summary Card */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}

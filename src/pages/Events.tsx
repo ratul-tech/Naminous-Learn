@@ -226,157 +226,198 @@ export default function Events({ profile }: EventsProps) {
   if (loading) return <div className="text-center py-20">Loading events...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-[#7A4900] mb-2">Online Exam Events</h1>
-        <p className="text-[#545454]">Participate in competitive exams and win exciting prizes</p>
-      </div>
+    <div className="space-y-12">
+      <header className="relative overflow-hidden bg-white p-10 md:p-16 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-block px-4 py-1.5 bg-[#D4AF37]/10 text-[#7A4900] rounded-full text-xs font-bold uppercase tracking-widest mb-6"
+          >
+            Academic Events
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#7A4900] mb-6 font-serif">
+            Competitive Exam Events
+          </h1>
+          <p className="text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed">
+            Join our periodic mock tests designed to challenge your understanding and prepare you for real-world competitive scenarios.
+          </p>
+        </div>
+        
+        {/* Background Decorative */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-5 pointer-events-none">
+          <Calendar className="w-full h-full" />
+        </div>
+      </header>
 
-      <div className="flex justify-center border-b border-gray-100">
-        <div className="flex space-x-8">
+      <div className="flex justify-center">
+        <div className="inline-flex p-1.5 bg-white rounded-2xl shadow-sm border border-gray-100">
           {(['ongoing', 'upcoming', 'ended'] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`pb-4 px-2 text-sm font-bold uppercase tracking-widest transition-all relative ${
-                activeCategory === cat ? 'text-[#D4AF37]' : 'text-gray-400 hover:text-gray-600'
+              className={`px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all relative ${
+                activeCategory === cat 
+                  ? 'bg-[#7A4900] text-white shadow-lg' 
+                  : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {cat} Events
-              {activeCategory === cat && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D4AF37]"
-                />
-              )}
+              {cat}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {filteredEvents.map((event) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+        {filteredEvents.map((event, idx) => (
           <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
             key={event.id}
-            whileHover={{ y: -5 }}
-            className="bg-white rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#D4AF37] transition-all relative group"
+            className="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-gray-100 hover:border-[#D4AF37] transition-all flex flex-col group relative"
           >
             {isAdmin && (
-              <div className="absolute top-4 right-4 flex space-x-1 z-10">
+              <div className="absolute top-6 right-6 flex space-x-2 z-10">
                 <button 
                   onClick={(e) => { e.stopPropagation(); startEdit(event); }}
-                  className="p-2 bg-white/90 backdrop-blur shadow-md rounded-xl text-blue-600 hover:bg-blue-50 transition-all"
+                  className="p-3 bg-white/90 backdrop-blur shadow-md rounded-xl text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
                   title="Edit Event"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }}
-                  className="p-2 bg-white/90 backdrop-blur shadow-md rounded-xl text-red-600 hover:bg-red-50 transition-all"
+                  className="p-3 bg-white/90 backdrop-blur shadow-md rounded-xl text-red-600 hover:bg-red-600 hover:text-white transition-all"
                   title="Delete Event"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
             )}
-            <div className="p-8">
-              <div className="flex justify-between items-start mb-6">
-                <div className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                  getEventTimeStatus(event) === 'Coming Soon' ? 'bg-blue-50 text-blue-600' :
-                  getEventTimeStatus(event) === 'Time Up' ? 'bg-red-50 text-red-600' :
-                  'bg-green-50 text-green-600'
+            
+            <div className="p-8 md:p-10 flex-grow">
+              <div className="flex justify-between items-center mb-8">
+                <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${
+                  getCategory(event) === 'upcoming' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                  getCategory(event) === 'ended' ? 'bg-gray-100 text-gray-500 border border-gray-200' :
+                  'bg-emerald-50 text-emerald-600 border border-emerald-100'
                 }`}>
                   {getEventTimeStatus(event)}
                 </div>
-                <div className="text-2xl font-bold text-[#D4AF37]">Tk {event.entryFee}</div>
-              </div>
-              <h2 className="text-2xl font-bold text-[#7A4900] mb-4">{event.title}</h2>
-              <p className="text-[#545454] mb-8 line-clamp-2">{event.description}</p>
-              
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="flex items-center space-x-2 text-sm text-[#545454]">
-                  <Calendar className="w-4 h-4 text-[#D4AF37]" />
-                  <span>{new Date(event.startTime).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-[#545454]">
-                  <Clock className="w-4 h-4 text-[#D4AF37]" />
-                  <span>{event.duration} Minutes</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-[#545454]">
-                  <Users className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Max {event.maxCandidates} Students</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-[#545454]">
-                  <Trophy className="w-4 h-4 text-[#D4AF37]" />
-                  <span>{event.prize}</span>
-                </div>
+                <div className="text-3xl font-bold text-[#D4AF37] font-serif">Tk {event.entryFee}</div>
               </div>
 
+              <h2 className="text-3xl font-bold text-[#7A4900] mb-6 font-serif group-hover:text-[#D4AF37] transition-colors">{event.title}</h2>
+              <p className="text-[#545454] mb-8 line-clamp-3 leading-relaxed text-sm">
+                {event.description}
+              </p>
+              
+              <div className="grid grid-cols-2 gap-y-6 gap-x-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Scheduled For</p>
+                  <div className="flex items-center space-x-2 text-sm font-bold text-[#7A4900]">
+                    <Calendar className="w-4 h-4 text-[#D4AF37]" />
+                    <span>{new Date(event.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Duration</p>
+                  <div className="flex items-center space-x-2 text-sm font-bold text-[#7A4900]">
+                    <Clock className="w-4 h-4 text-[#D4AF37]" />
+                    <span>{event.duration} Minutes</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Capacity</p>
+                  <div className="flex items-center space-x-2 text-sm font-bold text-[#7A4900]">
+                    <Users className="w-4 h-4 text-[#D4AF37]" />
+                    <span>{event.maxCandidates} Seats</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Prizes</p>
+                  <div className="flex items-center space-x-2 text-sm font-bold text-[#7A4900]">
+                    <Trophy className="w-4 h-4 text-[#D4AF37]" />
+                    <span>{event.prize}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 md:p-10 bg-white border-t border-gray-50">
               {getRegistrationStatus(event.id) === 'approved' ? (
                 hasSubmitted(event.id) ? (
-                  <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-center flex items-center justify-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Exam Completed</span>
+                  <div className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-bold text-center flex items-center justify-center space-x-2 border border-gray-100">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>Completed</span>
                   </div>
-                ) : getEventTimeStatus(event) === 'Coming Soon' ? (
-                  <div className="w-full bg-blue-50 text-blue-600 py-3 rounded-xl font-bold text-center border border-blue-100 flex items-center justify-center space-x-2">
-                    <Clock className="w-4 h-4" />
+                ) : getCategory(event) === 'upcoming' ? (
+                  <div className="w-full bg-blue-50 text-blue-600 py-4 rounded-2xl font-bold text-center border border-blue-100 flex items-center justify-center space-x-2">
+                    <Clock className="w-5 h-5" />
                     <span>Registered & Ready</span>
                   </div>
-                ) : getEventTimeStatus(event) === 'Time Up' ? (
-                  <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-center border border-red-100 flex items-center justify-center space-x-2">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>Time Up</span>
+                ) : getCategory(event) === 'ended' ? (
+                  <div className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-bold text-center border border-red-100 flex items-center justify-center space-x-2">
+                    <AlertCircle className="w-5 h-5" />
+                    <span>Event Concluded</span>
                   </div>
                 ) : (
                   <button
                     onClick={() => navigate(`/exam/${event.id}`)}
-                    className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center space-x-2 shadow-lg shadow-green-100"
+                    className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center space-x-3 shadow-lg shadow-emerald-100 transform hover:-translate-y-1"
                   >
-                    <Play className="w-4 h-4" />
-                    <span>Join Exam Now</span>
+                    <Play className="w-5 h-5" />
+                    <span>Join Exam Hall</span>
                   </button>
                 )
               ) : getRegistrationStatus(event.id) === 'pending' ? (
-                <div className="w-full bg-amber-50 text-amber-600 py-3 rounded-xl font-bold text-center border border-amber-100 flex flex-col items-center justify-center">
-                  <div className="flex items-center space-x-2 mb-0.5">
+                <div className="w-full bg-amber-50 text-amber-600 p-5 rounded-2xl font-bold text-center border border-amber-100 flex flex-col items-center justify-center">
+                  <div className="flex items-center space-x-2 mb-1">
                     <motion.div
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      <Clock className="w-4 h-4" />
+                      <Clock className="w-5 h-5" />
                     </motion.div>
-                    <span>Registration Pending Verification</span>
+                    <span>Verification in Progress</span>
                   </div>
-                  <p className="text-[10px] font-medium opacity-80">Our team is reviewing your payment</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Reviewing Payment Details</p>
                 </div>
               ) : getRegistrationStatus(event.id) === 'rejected' ? (
-                <div className="space-y-2">
-                  <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-center border border-red-100">
-                    Payment Rejected
+                <div className="space-y-3">
+                  <div className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-bold text-center border border-red-100 flex items-center justify-center space-x-2">
+                    <X className="w-5 h-5" />
+                    <span>Payment Rejected</span>
                   </div>
                   <button
                     onClick={() => setSelectedEvent(event)}
-                    className="w-full text-[#D4AF37] font-bold text-sm hover:underline"
+                    className="w-full py-4 text-[#7A4900] bg-[#D4AF37]/10 rounded-2xl font-bold text-sm hover:bg-[#D4AF37]/20 transition-all"
                   >
-                    Try again with new Trx ID
+                    Resubmit Transaction ID
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={() => setSelectedEvent(event)}
-                  className="w-full bg-[#D4AF37] text-white py-3 rounded-xl font-bold hover:bg-[#B8860B] transition-all"
+                  disabled={getCategory(event) === 'ended'}
+                  className={`w-full py-4 rounded-2xl font-bold transition-all shadow-lg transform hover:-translate-y-1 ${
+                    getCategory(event) === 'ended' 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' 
+                      : 'bg-[#D4AF37] text-white hover:bg-[#B8860B] shadow-amber-100'
+                  }`}
                 >
-                  Register Now
+                  {getCategory(event) === 'ended' ? 'Registration Closed' : 'Register for Event'}
                 </button>
               )}
             </div>
           </motion.div>
         ))}
         {filteredEvents.length === 0 && (
-          <div className="col-span-full py-20 text-center">
-            <Calendar className="w-16 h-16 text-gray-100 mx-auto mb-4" />
-            <p className="text-gray-400 font-medium">No {activeCategory} events found at the moment.</p>
+          <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
+            <Calendar className="w-20 h-20 text-gray-100 mx-auto mb-6" />
+            <p className="text-gray-400 font-bold text-xl">No {activeCategory} events scheduled.</p>
+            <p className="text-gray-300">Check back later for new opportunities!</p>
           </div>
         )}
       </div>
