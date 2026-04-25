@@ -6,8 +6,9 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
 
@@ -15,6 +16,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'feedback' | 'admins'>('users');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [registrationTrend, setRegistrationTrend] = useState<{ date: string, count: number }[]>([]);
   const [admins, setAdmins] = useState<UserProfile[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [events, setEvents] = useState<ExamEvent[]>([]);
@@ -27,7 +29,24 @@ export default function Admin() {
       setQuestions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
     });
     const unsubUsers = onSnapshot(query(collection(db, 'students'), orderBy('createdAt', 'desc')), (snapshot) => {
-      setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any)));
+      const fetchedUsers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any));
+      setUsers(fetchedUsers);
+      
+      // Calculate 30-day registration trend
+      const last30Days = Array.from({ length: 30 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        return d.toISOString().split('T')[0];
+      }).reverse();
+
+      const trend = last30Days.map(date => {
+        const count = fetchedUsers.filter(u => u.createdAt?.startsWith(date)).length;
+        return { 
+          date: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), 
+          count 
+        };
+      });
+      setRegistrationTrend(trend);
     });
     const unsubAdmins = onSnapshot(query(collection(db, 'admins'), orderBy('createdAt', 'desc')), (snapshot) => {
       setAdmins(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any)));
@@ -219,6 +238,62 @@ export default function Admin() {
           color="bg-green-50 text-green-600" 
           description="User submissions"
         />
+      </div>
+      
+      {/* Registration Trend Chart */}
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <div className="flex items-center space-x-3 mb-8">
+          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-[#7A4900]">Registration Trend</h2>
+            <p className="text-xs text-gray-400">New student registrations over the past 30 days</p>
+          </div>
+        </div>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={registrationTrend}>
+              <defs>
+                <linearGradient id="colorRegistrations" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#7A4900" stopOpacity={0.1}/>
+                  <stop offset="95%" stopColor="#7A4900" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="date" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: '#9ca3af' }}
+                interval={4}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: '#9ca3af' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  borderRadius: '16px', 
+                  border: 'none', 
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                  padding: '12px'
+                }}
+                labelStyle={{ fontWeight: 'bold', color: '#7A4900' }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="count" 
+                name="New Students"
+                stroke="#7A4900" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorRegistrations)" 
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
