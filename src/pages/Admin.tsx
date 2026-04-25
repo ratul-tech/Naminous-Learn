@@ -300,7 +300,7 @@ export default function Admin() {
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} allQuestions={questions} users={users} />}
+        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
 
@@ -790,10 +790,10 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
   );
 }
 
-function EventManager({ events, onDelete, allQuestions, users }: { events: ExamEvent[], onDelete: (id: string) => void, allQuestions: Question[], users: UserProfile[] }) {
-  const [showAdd, setShowAdd] = useState(false);
-  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
-  const [newE, setNewE] = useState({
+function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id: string) => void }) {
+  const [showForm, setShowForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<ExamEvent | null>(null);
+  const [eventData, setEventData] = useState<Partial<ExamEvent>>({
     title: '',
     description: '',
     entryFee: 100,
@@ -802,126 +802,241 @@ function EventManager({ events, onDelete, allQuestions, users }: { events: ExamE
     duration: 60,
     maxCandidates: 100,
     prize: '',
+    questions: [],
   });
+
+  const [currentQuestion, setCurrentQuestion] = useState<Partial<Question>>({
+    text: '',
+    options: ['', '', '', ''],
+    correctAnswer: 0,
+  });
+
   const [viewingResults, setViewingResults] = useState<string | null>(null);
   const [eventResults, setEventResults] = useState<any[]>([]);
   const [loadingResults, setLoadingResults] = useState(false);
-  const [editingQuestions, setEditingQuestions] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'students'), (snapshot) => {
+      setUsers(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any)));
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (viewingResults) {
       setLoadingResults(true);
       const q = query(collection(db, 'results'), where('eventId', '==', viewingResults));
-      const unsub = onSnapshot(q, async (snapshot) => {
-        const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
-        
-        setEventResults(results);
+      const unsubArr = onSnapshot(q, (snapshot) => {
+        setEventResults(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
         setLoadingResults(false);
       });
-      return () => unsub();
+      return () => unsubArr();
     }
   }, [viewingResults]);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedQuestions.length === 0) {
-      alert('Please select at least one question for the event.');
+    if (!eventData.questions || eventData.questions.length === 0) {
+      alert('Please add at least one question for the event.');
       return;
     }
+
     try {
-      await addDoc(collection(db, 'events'), {
-        ...newE,
-        questions: selectedQuestions,
-        status: 'upcoming',
-        createdAt: new Date().toISOString(),
-      });
-      setShowAdd(false);
-      setSelectedQuestions([]);
-      setNewE({
-        title: '',
-        description: '',
-        entryFee: 100,
-        startTime: '',
-        endTime: '',
-        duration: 60,
-        maxCandidates: 100,
-        prize: '',
-      });
+      if (editingEvent) {
+        await updateDoc(doc(db, 'events', editingEvent.id), eventData);
+      } else {
+        await addDoc(collection(db, 'events'), {
+          ...eventData,
+          status: 'upcoming',
+          createdAt: new Date().toISOString(),
+        });
+      }
+      resetForm();
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'events');
+      handleFirestoreError(error, editingEvent ? OperationType.UPDATE : OperationType.CREATE, editingEvent ? `events/${editingEvent.id}` : 'events');
     }
   };
 
-  const toggleQuestion = (id: string) => {
-    setSelectedQuestions(prev => 
-      prev.includes(id) ? prev.filter(q => q !== id) : [...prev, id]
-    );
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingEvent(null);
+    setEventData({
+      title: '',
+      description: '',
+      entryFee: 100,
+      startTime: '',
+      endTime: '',
+      duration: 60,
+      maxCandidates: 100,
+      prize: '',
+      questions: [],
+    });
+  };
+
+  const startEdit = (event: ExamEvent) => {
+    setEditingEvent(event);
+    setEventData({ ...event });
+    setShowForm(true);
+  };
+
+  const addQuestion = () => {
+    if (!currentQuestion.text || currentQuestion.options?.some(o => !o)) {
+      alert('Please fill in question text and all options.');
+      return;
+    }
+    const newQuestion: Question = { 
+      ...currentQuestion,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString(),
+    } as Question;
+    
+    setEventData(prev => ({
+      ...prev,
+      questions: [...(prev.questions || []), newQuestion]
+    }));
+    setCurrentQuestion({
+      text: '',
+      options: ['', '', '', ''],
+      correctAnswer: 0,
+    });
+  };
+
+  const removeQuestion = (index: number) => {
+    setEventData(prev => ({
+      ...prev,
+      questions: (prev.questions || []).filter((_, i) => i !== index)
+    }));
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-[#7A4900]">Manage Events ({events.length})</h2>
-        <button onClick={() => setShowAdd(true)} className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B]">
+        <button onClick={() => setShowForm(true)} className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B]">
           <Plus className="w-4 h-4" />
           <span>Create Event</span>
         </button>
       </div>
 
-      {showAdd && (
-        <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-[#D4AF37]">
-          <form onSubmit={handleAdd} className="space-y-4">
-            <input type="text" value={newE.title} onChange={(e) => setNewE({ ...newE, title: e.target.value })} placeholder="Event Title" className="w-full px-4 py-2 rounded-lg border outline-none" required />
-            <textarea value={newE.description} onChange={(e) => setNewE({ ...newE, description: e.target.value })} placeholder="Description" className="w-full px-4 py-2 rounded-lg border outline-none" required />
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Entry Fee (Tk)</label>
-                <input type="number" value={newE.entryFee || ''} onChange={(e) => setNewE({ ...newE, entryFee: parseInt(e.target.value) || 0 })} placeholder="Entry Fee" className="w-full px-4 py-2 rounded-lg border outline-none" required />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Start Time</label>
-                <input type="datetime-local" value={newE.startTime} onChange={(e) => setNewE({ ...newE, startTime: e.target.value })} className="w-full px-4 py-2 rounded-lg border outline-none" required />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">End Time</label>
-                <input type="datetime-local" value={newE.endTime} onChange={(e) => setNewE({ ...newE, endTime: e.target.value })} className="w-full px-4 py-2 rounded-lg border outline-none" required />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Duration (Minutes)</label>
-                <input type="number" value={newE.duration || ''} onChange={(e) => setNewE({ ...newE, duration: parseInt(e.target.value) || 0 })} placeholder="Duration (min)" className="w-full px-4 py-2 rounded-lg border outline-none" required />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Max Candidates</label>
-                <input type="number" value={newE.maxCandidates || ''} onChange={(e) => setNewE({ ...newE, maxCandidates: parseInt(e.target.value) || 0 })} placeholder="Max Candidates" className="w-full px-4 py-2 rounded-lg border outline-none" required />
-              </div>
-              <div className="md:col-span-2 space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase">Prize Details</label>
-                <input type="text" value={newE.prize} onChange={(e) => setNewE({ ...newE, prize: e.target.value })} placeholder="e.g. 1000 Tk + Certificate" className="w-full px-4 py-2 rounded-lg border outline-none" required />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase">Select Questions ({selectedQuestions.length} selected)</label>
-              <div className="max-h-60 overflow-y-auto border rounded-xl divide-y">
-                {allQuestions.map(q => (
-                  <div 
-                    key={q.id} 
-                    onClick={() => toggleQuestion(q.id)}
-                    className={`p-3 cursor-pointer flex items-center justify-between hover:bg-gray-50 transition-colors ${selectedQuestions.includes(q.id) ? 'bg-blue-50' : ''}`}
-                  >
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-[#7A4900]">{q.text}</p>
-                      <p className="text-[10px] text-gray-400 uppercase">{q.category} | {q.board || q.college}</p>
-                    </div>
-                    {selectedQuestions.includes(q.id) && <CheckCircle2 className="w-5 h-5 text-blue-600" />}
+      {showForm && (
+        <div className="bg-white p-8 rounded-3xl shadow-xl border-2 border-[#D4AF37]">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-bold text-[#7A4900]">{editingEvent ? 'Edit Event' : 'New Event'}</h3>
+            <button onClick={resetForm} className="p-2 hover:bg-gray-100 rounded-full">
+              <X className="w-6 h-6 text-gray-400" />
+            </button>
+          </div>
+          <form onSubmit={handleSaveEvent} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Event Title</label>
+                  <input type="text" value={eventData.title} onChange={(e) => setEventData({ ...eventData, title: e.target.value })} placeholder="e.g. Mega Mock Test 2026" className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Description</label>
+                  <textarea value={eventData.description} onChange={(e) => setEventData({ ...eventData, description: e.target.value })} placeholder="Event details and rules..." className="w-full px-4 py-3 rounded-xl border outline-none h-32 focus:ring-2 focus:ring-[#D4AF37]" required />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Entry Fee (Tk)</label>
+                    <input type="number" value={eventData.entryFee} onChange={(e) => setEventData({ ...eventData, entryFee: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
                   </div>
-                ))}
+                  <div>
+                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Duration (min)</label>
+                    <input type="number" value={eventData.duration} onChange={(e) => setEventData({ ...eventData, duration: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Start Time</label>
+                    <input type="datetime-local" value={eventData.startTime} onChange={(e) => setEventData({ ...eventData, startTime: e.target.value })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">End Time</label>
+                    <input type="datetime-local" value={eventData.endTime} onChange={(e) => setEventData({ ...eventData, endTime: e.target.value })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Prize Details</label>
+                  <input type="text" value={eventData.prize} onChange={(e) => setEventData({ ...eventData, prize: e.target.value })} placeholder="e.g. 5000 Tk + Certificate" className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                  <h4 className="font-bold text-[#7A4900] mb-4 flex items-center">
+                    <Plus className="w-5 h-5 mr-2" />
+                    Add Question Separately
+                  </h4>
+                  <div className="space-y-4">
+                    <textarea 
+                      value={currentQuestion.text} 
+                      onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })} 
+                      placeholder="Question Text (Supports LaTeX)" 
+                      className="w-full px-4 py-3 rounded-xl border outline-none text-sm"
+                    />
+                    <div className="grid grid-cols-1 gap-2">
+                      {currentQuestion.options?.map((opt, i) => (
+                        <div key={i} className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            name="correctOpt" 
+                            checked={currentQuestion.correctAnswer === i} 
+                            onChange={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: i })}
+                          />
+                          <input 
+                            type="text" 
+                            value={opt} 
+                            onChange={(e) => {
+                              const newOpts = [...(currentQuestion.options || [])];
+                              newOpts[i] = e.target.value;
+                              setCurrentQuestion({ ...currentQuestion, options: newOpts });
+                            }} 
+                            placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                            className="flex-1 px-4 py-2 rounded-lg border outline-none text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={addQuestion}
+                      className="w-full py-3 bg-[#7A4900] text-white rounded-xl font-bold text-sm hover:bg-black transition-all"
+                    >
+                      Add Question to List
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-[#7A4900] text-sm uppercase">Added Questions ({eventData.questions?.length})</h4>
+                  <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
+                    {eventData.questions?.map((q, i) => (
+                      <div key={i} className="bg-white p-3 rounded-xl border text-xs flex justify-between items-start">
+                        <div className="flex-1">
+                          <span className="font-bold text-[#D4AF37] mr-1">{i + 1}.</span>
+                          <span className="text-[#545454] line-clamp-2">{q.text}</span>
+                        </div>
+                        <button type="button" onClick={() => removeQuestion(i)} className="text-red-400 hover:text-red-600 ml-2">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {(!eventData.questions || eventData.questions.length === 0) && (
+                      <p className="text-center py-6 text-gray-400 text-sm">No questions added yet.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-4">
-              <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-gray-500 font-bold">Cancel</button>
-              <button type="submit" className="bg-[#D4AF37] text-white px-6 py-2 rounded-lg font-bold">Create Event</button>
+            <div className="pt-6 border-t flex justify-end space-x-4">
+              <button type="button" onClick={resetForm} className="px-8 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
+              <button type="submit" className="px-10 py-3 bg-[#D4AF37] text-white rounded-xl font-bold shadow-lg shadow-yellow-100 hover:bg-[#B8860B] transition-all">
+                {editingEvent ? 'Update Event' : 'Create Event'}
+              </button>
             </div>
           </form>
         </div>
@@ -930,12 +1045,14 @@ function EventManager({ events, onDelete, allQuestions, users }: { events: ExamE
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {events.map((e) => (
           <div key={e.id} className="bg-white p-6 rounded-2xl shadow-sm border hover:border-[#D4AF37] transition-all group relative">
-            <button 
-              onClick={() => onDelete(e.id)}
-              className="absolute top-4 right-4 p-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
+            <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => startEdit(e)} className="p-2 text-blue-400 hover:bg-blue-50 rounded-lg">
+                <Edit className="w-5 h-5" />
+              </button>
+              <button onClick={() => onDelete(e.id)} className="p-2 text-red-100 hover:text-red-600 rounded-lg">
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
             <div className="flex items-center space-x-2 mb-2">
               <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
                 e.status === 'upcoming' ? 'bg-blue-50 text-blue-600' :
@@ -950,41 +1067,29 @@ function EventManager({ events, onDelete, allQuestions, users }: { events: ExamE
             <p className="text-sm text-[#545454] mb-4 line-clamp-2">{e.description}</p>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400">START TIME</span>
+                <span className="text-gray-400 uppercase">Start</span>
                 <span className="text-[#D4AF37]">{new Date(e.startTime).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400">END TIME</span>
-                <span className="text-red-500">{new Date(e.endTime).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400">DURATION</span>
+                <span className="text-gray-400 uppercase">Duration</span>
                 <span className="text-[#7A4900]">{e.duration} Minutes</span>
               </div>
               <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400">ENTRY FEE</span>
-                <span className="text-[#7A4900]">Tk {e.entryFee}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs font-bold pt-2 border-t">
-                <span className="text-gray-400">PRIZE</span>
-                <span className="text-green-600">{e.prize}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400">QUESTIONS</span>
-                <span className="text-[#7A4900]">{e.questions?.length || 0} MCQs</span>
+                <span className="text-gray-400 uppercase">Questions</span>
+                <span className="text-[#7A4900]">{e.questions?.length || 0} Manual MCQs</span>
               </div>
               <div className="pt-4 flex space-x-2">
                 <button 
                   onClick={() => setViewingResults(e.id)}
-                  className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-all"
+                  className="flex-1 bg-blue-50 text-blue-600 py-3 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all"
                 >
-                  View Results
+                  View Performance
                 </button>
                 <button 
-                  onClick={() => setEditingQuestions(e.id)}
-                  className="flex-1 bg-orange-50 text-orange-600 py-2 rounded-lg text-xs font-bold hover:bg-orange-100 transition-all"
+                  onClick={() => startEdit(e)}
+                  className="flex-1 bg-orange-50 text-orange-600 py-3 rounded-xl text-xs font-bold hover:bg-orange-100 transition-all"
                 >
-                  Edit Questions
+                  Modify Event
                 </button>
               </div>
             </div>
@@ -992,158 +1097,72 @@ function EventManager({ events, onDelete, allQuestions, users }: { events: ExamE
         ))}
       </div>
 
-      {/* Edit Questions Modal */}
-      <AnimatePresence>
-        {editingQuestions && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
-            >
-              <div className="p-8 border-b flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#7A4900]">Manage Event Questions</h2>
-                  <p className="text-sm text-[#545454]">{events.find(e => e.id === editingQuestions)?.title}</p>
-                </div>
-                <button onClick={() => setEditingQuestions(null)} className="p-2 hover:bg-gray-100 rounded-full">
-                  <X className="w-6 h-6 text-gray-400" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-8">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-[#7A4900]">Current Questions ({events.find(e => e.id === editingQuestions)?.questions?.length || 0})</h3>
-                    <button 
-                      onClick={() => {
-                        // Logic to add a new question to this event
-                        // For now, we'll just show the question selector or a simplified add form
-                        alert('Use the global Question Manager to create questions, then select them here.');
-                      }}
-                      className="text-sm text-[#D4AF37] font-bold hover:underline"
-                    >
-                      + Add New Question
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {allQuestions.map(q => {
-                      const event = events.find(e => e.id === editingQuestions);
-                      const isSelected = event?.questions?.includes(q.id);
-                      return (
-                        <div 
-                          key={q.id}
-                          className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${isSelected ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-gray-50'}`}
-                        >
-                          <div className="flex-1">
-                            <p className="font-bold text-[#7A4900]">{q.text}</p>
-                            <p className="text-[10px] text-gray-400 uppercase">{q.category} | {q.board || q.college}</p>
-                          </div>
-                          <button
-                            onClick={async () => {
-                              if (!event) return;
-                              const newQuestions = isSelected 
-                                ? event.questions.filter(id => id !== q.id)
-                                : [...(event.questions || []), q.id];
-                              
-                              try {
-                                await updateDoc(doc(db, 'events', event.id), {
-                                  questions: newQuestions
-                                });
-                              } catch (err) {
-                                handleFirestoreError(err, OperationType.UPDATE, `events/${event.id}`);
-                              }
-                            }}
-                            className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${isSelected ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
-                          >
-                            {isSelected ? 'Remove' : 'Add to Event'}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
       {/* Results Modal */}
       <AnimatePresence>
         {viewingResults && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
-            >
-              <div className="p-8 border-b flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#7A4900]">Exam Results</h2>
-                  <p className="text-sm text-[#545454]">{events.find(e => e.id === viewingResults)?.title}</p>
-                </div>
-                <button onClick={() => setViewingResults(null)} className="p-2 hover:bg-gray-100 rounded-full">
-                  <X className="w-6 h-6 text-gray-400" />
-                </button>
-              </div>
+           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+             <motion.div
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.9 }}
+               className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+             >
+               <div className="p-8 border-b flex justify-between items-center">
+                 <div>
+                   <h2 className="text-2xl font-bold text-[#7A4900]">Performance Report</h2>
+                   <p className="text-sm text-[#545454]">{events.find(e => e.id === viewingResults)?.title}</p>
+                 </div>
+                 <button onClick={() => setViewingResults(null)} className="p-2 hover:bg-gray-100 rounded-full">
+                   <X className="w-6 h-6 text-gray-400" />
+                 </button>
+               </div>
 
-              <div className="flex-1 overflow-y-auto p-8">
-                {loadingResults ? (
-                  <div className="text-center py-10">Loading results...</div>
-                ) : eventResults.length === 0 ? (
-                  <div className="text-center py-10 text-gray-400">No results found for this event.</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[800px]">
-                      <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
-                        <tr>
-                          <th className="px-6 py-4">Student</th>
-                          <th className="px-6 py-4">Contact Info</th>
-                          <th className="px-6 py-4">Score</th>
-                          <th className="px-6 py-4">Correct/Wrong</th>
-                          <th className="px-6 py-4">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {eventResults.map((r) => {
-                          // Find student details from the 'users' state in Admin component
-                          // Note: 'users' state in Admin.tsx contains all students
-                          const student = users.find(u => u.uid === r.uid);
-                          return (
-                            <tr key={r.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4">
-                                <p className="font-bold text-[#7A4900]">{r.displayName}</p>
-                                <p className="text-xs text-gray-400">{r.school}</p>
-                              </td>
-                              <td className="px-6 py-4">
-                                <p className="text-sm">{student?.email || 'N/A'}</p>
-                                <p className="text-xs text-[#545454]">{student?.phone || 'N/A'}</p>
-                              </td>
-                              <td className="px-6 py-4">
-                                <span className="text-lg font-bold text-[#D4AF37]">{r.score}%</span>
-                              </td>
-                              <td className="px-6 py-4 text-sm">
-                                <span className="text-green-600 font-bold">{r.correctCount}</span>
-                                <span className="mx-1">/</span>
-                                <span className="text-red-500 font-bold">{r.wrongCount}</span>
-                              </td>
-                              <td className="px-6 py-4 text-xs text-gray-400">
-                                {new Date(r.createdAt).toLocaleString()}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
+               <div className="flex-1 overflow-y-auto p-8">
+                 {loadingResults ? (
+                   <div className="text-center py-10">Loading results...</div>
+                 ) : eventResults.length === 0 ? (
+                   <div className="text-center py-10 text-gray-400">No student performance recorded yet.</div>
+                 ) : (
+                   <div className="overflow-x-auto">
+                     <table className="w-full text-left">
+                       <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+                         <tr>
+                           <th className="px-6 py-4">Student</th>
+                           <th className="px-6 py-4">Contact</th>
+                           <th className="px-6 py-4 text-center">Score</th>
+                           <th className="px-6 py-4">Date</th>
+                         </tr>
+                       </thead>
+                       <tbody className="divide-y">
+                         {eventResults.map((r) => {
+                           const student = users.find(u => u.uid === r.uid);
+                           return (
+                             <tr key={r.id} className="hover:bg-gray-50">
+                               <td className="px-6 py-4">
+                                 <p className="font-bold text-[#7A4900]">{r.displayName}</p>
+                                 <p className="text-[10px] text-gray-400">{r.school}</p>
+                               </td>
+                               <td className="px-6 py-4 text-xs">
+                                 <p>{student?.email || 'N/A'}</p>
+                                 <p className="text-gray-400">{student?.phone || 'N/A'}</p>
+                               </td>
+                               <td className="px-6 py-4 text-center">
+                                 <span className="text-lg font-bold text-[#D4AF37]">{r.score}%</span>
+                                 <div className="text-[10px] text-gray-400">{r.correctCount}/{r.totalQuestions} Correct</div>
+                               </td>
+                               <td className="px-6 py-4 text-[10px] text-gray-400">
+                                 {new Date(r.createdAt).toLocaleString()}
+                               </td>
+                             </tr>
+                           );
+                         })}
+                       </tbody>
+                     </table>
+                   </div>
+                 )}
+               </div>
+             </motion.div>
+           </div>
         )}
       </AnimatePresence>
     </motion.div>

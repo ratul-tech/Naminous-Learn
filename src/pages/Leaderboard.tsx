@@ -1,21 +1,41 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { ExamResult } from '../types';
-import { Trophy, Medal, School, User } from 'lucide-react';
+import { ALL_SUBJECTS } from '../constants';
+import { Trophy, Medal, School, User, Filter, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Leaderboard() {
   const [topResults, setTopResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    subject: 'All',
+    class: 'All',
+    type: 'All'
+  });
+
+  const subjects = ['All', ...ALL_SUBJECTS];
+  const classes = ['All', 'Class 11', 'Class 12', 'Admission'];
+  const types = ['All', 'Practice', 'Event'];
 
   useEffect(() => {
-    const q = query(
+    let q = query(
       collection(db, 'results'),
       orderBy('score', 'desc'),
       orderBy('createdAt', 'asc'),
       limit(20)
     );
+
+    if (filters.subject !== 'All') {
+      q = query(q, where('subject', '==', filters.subject));
+    }
+    if (filters.class !== 'All') {
+      q = query(q, where('class', '==', filters.class));
+    }
+    if (filters.type !== 'All') {
+      q = query(q, where('type', '==', filters.type));
+    }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamResult));
@@ -27,7 +47,7 @@ export default function Leaderboard() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [filters]);
 
   if (loading) return <div className="text-center py-20">Loading leaderboard...</div>;
 
@@ -35,14 +55,68 @@ export default function Leaderboard() {
   const others = topResults.slice(3);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12">
+    <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-[#7A4900] mb-2">Global Leaderboard</h1>
-        <p className="text-[#545454]">Top performers across all practice modules</p>
+        <p className="text-[#545454]">Top performers across all practice modules and events</p>
       </div>
 
-      {/* Podium */}
-      <div className="flex flex-col md:flex-row items-end justify-center gap-4 md:gap-0 mt-20 mb-12">
+      {/* Filters */}
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-center">
+        <div className="flex items-center space-x-2 text-[#7A4900] font-bold text-sm mr-4">
+          <Filter className="w-4 h-4" />
+          <span>Filters:</span>
+        </div>
+        
+        <div className="relative group">
+          <select 
+            value={filters.subject}
+            onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
+            className="appearance-none bg-gray-50 border-none rounded-xl px-4 py-2 pr-10 text-sm font-bold text-[#7A4900] focus:ring-2 focus:ring-[#D4AF37] outline-none cursor-pointer min-w-[120px]"
+          >
+            {subjects.map(s => <option key={s} value={s}>{s === 'All' ? 'All Subjects' : s}</option>)}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        </div>
+
+        <div className="relative group">
+          <select 
+            value={filters.class}
+            onChange={(e) => setFilters({ ...filters, class: e.target.value })}
+            className="appearance-none bg-gray-50 border-none rounded-xl px-4 py-2 pr-10 text-sm font-bold text-[#7A4900] focus:ring-2 focus:ring-[#D4AF37] outline-none cursor-pointer min-w-[120px]"
+          >
+            {classes.map(c => <option key={c} value={c}>{c === 'All' ? 'All Classes' : c}</option>)}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        </div>
+
+        <div className="relative group">
+          <select 
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            className="appearance-none bg-gray-50 border-none rounded-xl px-4 py-2 pr-10 text-sm font-bold text-[#7A4900] focus:ring-2 focus:ring-[#D4AF37] outline-none cursor-pointer min-w-[120px]"
+          >
+            {types.map(t => <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>)}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-20 flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#7A4900] font-bold">Fetching rankings...</p>
+        </div>
+      ) : topResults.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
+           <Trophy className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+           <h3 className="text-xl font-bold text-[#7A4900]">No Rankings Yet</h3>
+           <p className="text-[#545454]">Be the first to secure a spot in this category!</p>
+        </div>
+      ) : (
+        <>
+          {/* Podium */}
+          <div className="flex flex-col md:flex-row items-end justify-center gap-4 md:gap-0 mt-20 mb-12">
         {/* 2nd Place */}
         {top3[1] && (
           <PodiumItem
@@ -119,6 +193,8 @@ export default function Leaderboard() {
           </AnimatePresence>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

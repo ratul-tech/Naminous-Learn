@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -416,6 +416,24 @@ function Footer() {
             <p className="text-[#545454] leading-relaxed max-w-sm">
               Empowering students to achieve excellence through structured practice and real-time evaluation. Join thousands of students on their journey to success.
             </p>
+            <div className="flex items-center space-x-4 mt-6">
+              <a 
+                href="https://www.youtube.com/@NuminousLearn" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm"
+              >
+                <Youtube className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://www.facebook.com/share/18hQRvHAc5/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+            </div>
           </div>
           <div>
             <h3 className="text-lg font-bold text-[#7A4900] mb-6">Quick Links</h3>

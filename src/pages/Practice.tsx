@@ -144,6 +144,8 @@ export default function Practice({ profile }: PracticeProps) {
           correctCount: results.correctCount,
           wrongCount: results.wrongCount,
           totalQuestions: results.totalQuestions,
+          subject: config.subject,
+          class: profile.class,
           type: 'Practice',
           createdAt: new Date().toISOString(),
         });

@@ -74,6 +74,8 @@ export interface ExamResult {
   wrongCount: number;
   totalQuestions: number;
   type: 'Practice' | 'Event';
+  subject?: string;
+  class?: string;
   eventId?: string;
   createdAt: string;
 }
@@ -89,7 +91,7 @@ export interface ExamEvent {
   maxCandidates: number;
   prize: string;
   status: EventStatus;
-  questions: string[];
+  questions: Question[];
   createdAt: string;
 }
 

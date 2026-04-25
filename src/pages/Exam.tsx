@@ -73,14 +73,9 @@ export default function Exam({ profile }: ExamProps) {
         const eventData = { id: eventDoc.id, ...eventDoc.data() } as ExamEvent;
         setEvent(eventData);
 
-        // 4. Fetch Questions
+        // 4. Use questions from event
         if (eventData.questions && eventData.questions.length > 0) {
-          const qPromises = eventData.questions.map(qid => getDoc(doc(db, 'questions', qid)));
-          const qSnaps = await Promise.all(qPromises);
-          const fetchedQuestions = qSnaps
-            .filter(s => s.exists())
-            .map(s => ({ id: s.id, ...s.data() } as Question));
-          setQuestions(fetchedQuestions);
+          setQuestions(eventData.questions as Question[]);
         }
 
         setLoading(false);
@@ -153,6 +148,7 @@ export default function Exam({ profile }: ExamProps) {
         correctCount: score,
         wrongCount: questions.length - score,
         totalQuestions: questions.length,
+        class: profile.class,
         type: 'Event',
         eventId: event.id,
         createdAt: new Date().toISOString(),
