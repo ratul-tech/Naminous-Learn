@@ -189,6 +189,38 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          icon={Users} 
+          label="Total Students" 
+          value={users.length} 
+          color="bg-blue-50 text-blue-600" 
+          description="Registered students"
+        />
+        <StatCard 
+          icon={BookOpen} 
+          label="Total Questions" 
+          value={questions.length} 
+          color="bg-purple-50 text-purple-600" 
+          description="In question bank"
+        />
+        <StatCard 
+          icon={Calendar} 
+          label="Upcoming Events" 
+          value={events.filter(e => new Date(e.startTime) > new Date()).length} 
+          color="bg-yellow-50 text-yellow-600" 
+          description="Scheduled exams"
+        />
+        <StatCard 
+          icon={MessageSquare} 
+          label="Recent Feedback" 
+          value={feedback.length} 
+          color="bg-green-50 text-green-600" 
+          description="User submissions"
+        />
+      </div>
+
       <AnimatePresence mode="wait">
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
@@ -249,6 +281,23 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, on
       <Icon className="w-4 h-4" />
       <span className="font-bold text-sm">{label}</span>
     </button>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, color, description }: { icon: any, label: string, value: number, color: string, description: string }) {
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+      <div className={`p-3 rounded-xl ${color}`}>
+        <Icon className="w-6 h-6" />
+      </div>
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
+        <div className="flex items-baseline space-x-2">
+          <h3 className="text-2xl font-bold text-[#7A4900]">{value}</h3>
+          <p className="text-[10px] text-gray-400 font-medium">{description}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
