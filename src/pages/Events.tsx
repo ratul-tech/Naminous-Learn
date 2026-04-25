@@ -36,7 +36,7 @@ export default function Events({ profile }: EventsProps) {
       if (fetchedEvents.length === 0) {
         setEvents([{
           id: 'demo-event-1',
-          title: 'Naminous Mega Mock Test 2026',
+          title: 'Numinous Learn Mega Mock Test 2026',
           description: 'A comprehensive mock test covering all major board subjects. Top 10 will receive special prizes!',
           entryFee: 100,
           startTime: new Date(Date.now() + 86400000 * 2).toISOString(),

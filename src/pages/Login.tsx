@@ -173,7 +173,7 @@ export default function Login() {
             {isRegistering ? 'Create Account' : 'Welcome Back'}
           </h1>
           <p className="text-[#545454] mt-2">
-            {isRegistering ? 'Join Naminous today' : 'Login to your account'}
+            {isRegistering ? 'Join Numinous Learn today' : 'Login to your account'}
           </p>
         </div>
 

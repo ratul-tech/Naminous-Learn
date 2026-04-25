@@ -139,8 +139,8 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-4">
             <Link to="/" className="flex items-center space-x-3">
-              <img src={LOGO_URL} alt="Naminous" className="h-12 w-12 rounded-xl shadow-md object-cover" referrerPolicy="no-referrer" />
-              <span className="text-2xl font-bold text-[#7A4900]">Naminous</span>
+              <img src={LOGO_URL} alt="Numinous Learn" className="h-12 w-12 rounded-xl shadow-md object-cover" referrerPolicy="no-referrer" />
+              <span className="text-2xl font-bold text-[#7A4900]">Numinous Learn</span>
             </Link>
           </div>
 
@@ -279,7 +279,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                   </>
                 ) : (
                   <div className="space-y-4 pt-4">
-                    <p className="text-sm text-gray-400 text-center mb-6">Join Naminous to start your journey.</p>
+                    <p className="text-sm text-gray-400 text-center mb-6">Join Numinous Learn to start your journey.</p>
                     <Link
                       to="/login"
                       onClick={() => setIsOpen(false)}
@@ -300,7 +300,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
 
               <div className="p-6 border-t bg-gray-50">
                 <p className="text-[10px] text-gray-400 text-center uppercase tracking-widest font-bold">
-                  © {new Date().getFullYear()} Naminous
+                  © {new Date().getFullYear()} Numinous Learn
                 </p>
               </div>
             </motion.div>
@@ -318,7 +318,7 @@ function Landing() {
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         src={LOGO_URL}
-        alt="Naminous"
+        alt="Numinous Learn"
         className="w-48 h-48 rounded-3xl shadow-2xl mb-8 border-4 border-[#D4AF37] object-cover"
         referrerPolicy="no-referrer"
       />
@@ -328,7 +328,7 @@ function Landing() {
         transition={{ delay: 0.2 }}
         className="text-5xl md:text-7xl font-bold text-[#7A4900] mb-8 leading-tight"
       >
-        Achieve Academic Excellence with <span className="text-[#D4AF37]">Naminous</span>
+        Achieve Academic Excellence with <span className="text-[#D4AF37]">Numinous Learn</span>
       </motion.h1>
       <motion.p
         initial={{ y: 20, opacity: 0 }}
@@ -410,8 +410,8 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-3 mb-6">
-              <img src={LOGO_URL} alt="Naminous" className="h-10 w-10 rounded-lg" referrerPolicy="no-referrer" />
-              <span className="text-xl font-bold text-[#7A4900]">Naminous</span>
+              <img src={LOGO_URL} alt="Numinous Learn" className="h-10 w-10 rounded-lg" referrerPolicy="no-referrer" />
+              <span className="text-xl font-bold text-[#7A4900]">Numinous Learn</span>
             </div>
             <p className="text-[#545454] leading-relaxed max-w-sm">
               Empowering students to achieve excellence through structured practice and real-time evaluation. Join thousands of students on their journey to success.
@@ -431,7 +431,7 @@ function Footer() {
             <ul className="space-y-4">
               <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Report an Issue</Link></li>
               <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Suggestions</Link></li>
-              <li className="text-sm text-gray-400">© {new Date().getFullYear()} Naminous. All rights reserved.</li>
+              <li className="text-sm text-gray-400">© {new Date().getFullYear()} Numinous Learn. All rights reserved.</li>
             </ul>
           </div>
         </div>
