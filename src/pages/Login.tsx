@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserRole, UserProfile, AdminType } from '../types';
 import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -70,6 +70,11 @@ export default function Login() {
         const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
         try {
           await setDoc(doc(db, collectionName, user.uid), newProfile);
+          if (selectedRole === 'student') {
+            await setDoc(doc(db, 'global_stats', 'counters'), { 
+              studentsCount: increment(1) 
+            }, { merge: true });
+          }
         } catch (err) {
           handleFirestoreError(err, OperationType.CREATE, `${collectionName}/${user.uid}`);
         }

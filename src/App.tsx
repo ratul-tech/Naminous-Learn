@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
 import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight } from 'lucide-react';
@@ -312,6 +312,30 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
 }
 
 function Landing() {
+  const [stats, setStats] = useState({ studentsCount: 5000, questionsCount: 100000, eventsCount: 200 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'global_stats', 'counters'), (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        setStats({
+          studentsCount: data.studentsCount || 5000,
+          questionsCount: data.questionsCount || 100000,
+          eventsCount: data.eventsCount || 200
+        });
+      }
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M+';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k+';
+    return num.toString();
+  };
+
   return (
     <div className="flex flex-col space-y-32 py-10">
       {/* Hero Section */}
@@ -369,15 +393,15 @@ function Landing() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
           <div>
-            <h3 className="text-5xl font-bold mb-2 font-serif">5000+</h3>
+            <h3 className="text-5xl font-bold mb-2 font-serif">{loading ? '...' : formatNumber(stats.studentsCount)}</h3>
             <p className="text-white/60 font-bold uppercase tracking-widest text-sm">Active Students</p>
           </div>
           <div>
-            <h3 className="text-5xl font-bold mb-2 font-serif">100k+</h3>
+            <h3 className="text-5xl font-bold mb-2 font-serif">{loading ? '...' : formatNumber(stats.questionsCount)}</h3>
             <p className="text-white/60 font-bold uppercase tracking-widest text-sm">Questions Solved</p>
           </div>
           <div>
-            <h3 className="text-5xl font-bold mb-2 font-serif">200+</h3>
+            <h3 className="text-5xl font-bold mb-2 font-serif">{loading ? '...' : formatNumber(stats.eventsCount)}</h3>
             <p className="text-white/60 font-bold uppercase tracking-widest text-sm">Monthly Events</p>
           </div>
         </div>

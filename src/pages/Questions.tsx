@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, where, increment, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Question, UserProfile, Category, OperationType } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
@@ -57,6 +57,10 @@ export default function Questions({ profile }: QuestionsProps) {
           ...newQ,
           createdAt: new Date().toISOString(),
         });
+        // Increment global question count
+        await setDoc(doc(db, 'global_stats', 'counters'), { 
+          questionsCount: increment(1) 
+        }, { merge: true });
       }
       setShowAdd(false);
       setEditingId(null);

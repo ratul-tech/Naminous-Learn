@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where, increment } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
@@ -1052,6 +1052,10 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
           status: 'upcoming',
           createdAt: new Date().toISOString(),
         });
+        // Increment global events count (persistent even if event deleted)
+        await setDoc(doc(db, 'global_stats', 'counters'), { 
+          eventsCount: increment(1) 
+        }, { merge: true });
       }
       resetForm();
     } catch (error) {

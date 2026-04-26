@@ -164,5 +164,10 @@ service cloud.firestore {
       allow update: if isActiveAdmin();
       allow delete: if isActiveAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
     }
+
+    match /global_stats/{statId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
   }
 }
