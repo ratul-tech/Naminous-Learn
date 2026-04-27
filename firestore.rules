@@ -40,17 +40,11 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-         request.auth.token.email == "shahriarislam275@gmail.com" ||
-         request.auth.token.email == "shahriarislamratul065@gmail.com");
+      return isAuthenticated() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     function isActiveAdmin() {
-      return isAdmin() && 
-        (get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active' ||
-         request.auth.token.email == "shahriarislam275@gmail.com" ||
-         request.auth.token.email == "shahriarislamratul065@gmail.com");
+      return isAdmin() && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active';
     }
 
     function isValidSubmission(data) {

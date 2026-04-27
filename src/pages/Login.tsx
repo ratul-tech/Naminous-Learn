@@ -40,11 +40,8 @@ export default function Login() {
 
     try {
       if (isRegistering) {
-        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
-        const isDefaultAdmin = defaultAdmins.includes(email.toLowerCase());
-
-        if (selectedRole === 'admin' && !isDefaultAdmin) {
-          setError("Only authorized administrators can register as Admin. Please register as a Student or contact the system owner.");
+        if (selectedRole === 'admin') {
+          setError("Admin registration must be performed by an existing administrator through the Admin Panel.");
           setLoading(false);
           return;
         }
@@ -61,29 +58,21 @@ export default function Login() {
           displayName: displayName || user.email?.split('@')[0] || 'User',
           photoURL: `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
           role: selectedRole,
-          adminType: selectedRole === 'admin' ? (isDefaultAdmin ? 'full' : adminType) : undefined,
-          status: selectedRole === 'admin' ? (isDefaultAdmin ? 'active' : 'pending') : undefined,
           createdAt: new Date().toISOString(),
         };
         
-        // Save to correct collection
-        const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
+        // Save to students collection (admins registered via admin panel)
+        const collectionName = 'students';
         try {
           await setDoc(doc(db, collectionName, user.uid), newProfile);
-          if (selectedRole === 'student') {
-            await setDoc(doc(db, 'global_stats', 'counters'), { 
-              studentsCount: increment(1) 
-            }, { merge: true });
-          }
+          await setDoc(doc(db, 'global_stats', 'counters'), { 
+            studentsCount: increment(1) 
+          }, { merge: true });
         } catch (err) {
           handleFirestoreError(err, OperationType.CREATE, `${collectionName}/${user.uid}`);
         }
         
-        if (selectedRole === 'admin') {
-          navigate('/dashboard');
-        } else {
-          navigate('/verify-email');
-        }
+        navigate('/verify-email');
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -91,25 +80,6 @@ export default function Login() {
         // Check role in corresponding collection
         const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
         let userDoc = await getDoc(doc(db, collectionName, user.uid));
-
-        // Special handling for default admins
-        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
-        const isDefaultAdmin = defaultAdmins.includes(user.email?.toLowerCase() || '');
-
-        if (selectedRole === 'admin' && !userDoc.exists() && isDefaultAdmin) {
-          const newAdmin: UserProfile = {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || user.email?.split('@')[0] || 'Admin',
-            photoURL: user.photoURL || `https://ui-avatars.com/api/?name=Admin&background=random`,
-            role: 'admin',
-            adminType: 'full',
-            status: 'active',
-            createdAt: new Date().toISOString(),
-          };
-          await setDoc(doc(db, 'admins', user.uid), newAdmin);
-          userDoc = await getDoc(doc(db, 'admins', user.uid));
-        }
 
         if (!userDoc.exists()) {
           setError(`Account not found in ${selectedRole} records. Please ensure you selected the correct account type.`);
@@ -148,12 +118,7 @@ export default function Login() {
       if (err.code === 'auth/email-already-in-use') {
         setError("This email is already registered. Please login instead.");
       } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
-        if (defaultAdmins.includes(email.toLowerCase())) {
-          setError("Admin account not found. Please register first using the 'Register' link below.");
-        } else {
-          setError("Invalid email or password. Please try again.");
-        }
+        setError("Invalid email or password. Please try again.");
       } else if (err.code === 'auth/weak-password') {
         setError("Password should be at least 6 characters.");
       } else if (err.code === 'auth/invalid-email') {

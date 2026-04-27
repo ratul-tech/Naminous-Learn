@@ -38,33 +38,18 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser ? { ...firebaseUser } : null);
       if (firebaseUser && firebaseUser.emailVerified) {
-        const defaultAdmins = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'];
-        const isDefaultAdmin = defaultAdmins.includes(firebaseUser.email?.toLowerCase() || '');
-
         let userDoc;
         
-        if (isDefaultAdmin) {
-          // Check admins first for default admins
+        // Try students collection first for everyone
+        userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
+        if (!userDoc.exists()) {
+          // Then try admins
           userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
-          if (!userDoc.exists()) {
-            userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
-          }
-        } else {
-          // Try students collection first for everyone else
-          userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
-          if (!userDoc.exists()) {
-            userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
-          }
         }
 
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
-          if (isDefaultAdmin && (data.role !== 'admin' || data.adminType !== 'full')) {
-            // Force full admin privileges for default admins regardless of DB state
-            setProfile({ ...data, role: 'admin', adminType: 'full' });
-          } else {
-            setProfile(data);
-          }
+          setProfile(data);
         } else {
           setProfile(null);
         }

@@ -53,8 +53,6 @@ export default function Dashboard({ profile }: DashboardProps) {
     fetchStats();
   }, [profile]);
 
-  const isMainAdmin = profile?.email?.toLowerCase() === 'shahriarislamratul065@gmail.com' || profile?.email?.toLowerCase() === 'shahriarislam275@gmail.com';
-
   if (profile?.role === 'admin') {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
@@ -70,7 +68,7 @@ export default function Dashboard({ profile }: DashboardProps) {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#7A4900]">Welcome, {profile.displayName}</h1>
           <p className="text-[#545454]">
-            Logged in as a <span className="font-bold text-[#D4AF37]">{(profile.adminType === 'full' || isMainAdmin) ? 'Full Administrator' : 'Question Holder'}</span>
+            Logged in as an <span className="font-bold text-[#D4AF37]">{profile.adminType === 'full' ? 'Administrator' : 'Question Holder'}</span>
           </p>
         </div>
       </div>
@@ -91,9 +89,7 @@ export default function Dashboard({ profile }: DashboardProps) {
           <Shield className="w-8 h-8 md:w-10 md:h-10 text-[#7A4900] mb-4 group-hover:scale-110 transition-transform" />
           <h3 className="text-lg md:text-xl font-bold text-[#7A4900] mb-2">Admin Panel</h3>
           <p className="text-sm text-[#545454]">
-            {(profile.adminType === 'full' || isMainAdmin) 
-              ? 'Full system control: users, payments, events, and feedback management.' 
-              : 'Add and manage exam questions and event questions.'}
+            Full system control: users, payments, events, and feedback management.
           </p>
         </Link>
       </div>

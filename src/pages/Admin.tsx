@@ -31,7 +31,7 @@ export default function Admin({ profile }: AdminProps) {
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
-  const isFullAdmin = profile?.adminType === 'full' || ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'].includes(profile?.email?.toLowerCase() || '');
+  const isFullAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     const unsubQuestions = onSnapshot(query(collection(db, 'questions'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -142,10 +142,6 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteAdmin = async (uid: string) => {
-    const mainAdminEmail = 'shahriarislamratul065@gmail.com';
-    const isMainAdmin = auth.currentUser?.email?.toLowerCase() === mainAdminEmail.toLowerCase();
-    const targetAdmin = admins.find(a => a.uid === uid);
-    
     if (uid === auth.currentUser?.uid) {
       setConfirmModal({
         show: true,
@@ -156,25 +152,6 @@ export default function Admin({ profile }: AdminProps) {
       return;
     }
 
-    if (!isMainAdmin) {
-      setConfirmModal({
-        show: true,
-        title: 'Access Denied',
-        message: 'Only the main administrator can remove other administrator accounts.',
-        onConfirm: () => setConfirmModal(null)
-      });
-      return;
-    }
-
-    if (targetAdmin?.email.toLowerCase() === mainAdminEmail.toLowerCase()) {
-      setConfirmModal({
-        show: true,
-        title: 'Action Prohibited',
-        message: 'The main administrator account cannot be deleted.',
-        onConfirm: () => setConfirmModal(null)
-      });
-      return;
-    }
     setConfirmModal({
       show: true,
       title: 'Delete Admin',
@@ -575,8 +552,6 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const isMainAdmin = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'].includes(currentProfile?.email?.toLowerCase() || '');
-
   const handleUpdateRole = async (uid: string, newType: 'full' | 'question_holder') => {
     try {
       await updateDoc(doc(db, 'admins', uid), { adminType: newType });
@@ -685,22 +660,14 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  {isMainAdmin && a.email.toLowerCase() !== 'shahriarislamratul065@gmail.com' && a.email.toLowerCase() !== 'shahriarislam275@gmail.com' ? (
-                    <select
-                      value={a.adminType}
-                      onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
-                      className="text-[10px] font-bold px-2 py-1 rounded-full uppercase outline-none border-none bg-gray-50 cursor-pointer"
-                    >
-                      <option value="full">Full Admin</option>
-                      <option value="question_holder">Question Holder</option>
-                    </select>
-                  ) : (
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                      a.adminType === 'full' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                    }`}>
-                      {a.adminType === 'full' ? 'Full Admin' : 'Question Holder'}
-                    </span>
-                  )}
+                  <select
+                    value={a.adminType}
+                    onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
+                    className="text-[10px] font-bold px-2 py-1 rounded-full uppercase outline-none border-none bg-gray-50 cursor-pointer"
+                  >
+                    <option value="full">Full Admin</option>
+                    <option value="question_holder">Question Holder</option>
+                  </select>
                 </td>
                 <td className="px-6 py-4 text-sm text-[#545454]">{a.email}</td>
                 <td className="px-6 py-4">
