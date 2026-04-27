@@ -171,31 +171,6 @@ export default function Login() {
             </div>
           </div>
 
-          {selectedRole === 'admin' && isRegistering && (
-            <div>
-              <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Admin Type</span>
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setAdminType('full')}
-                  className={`py-3 rounded-xl border-2 transition-all font-bold text-xs ${adminType === 'full' ? 'border-[#7A4900] bg-[#7A4900]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
-                >
-                  Full Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAdminType('question_holder')}
-                  className={`py-3 rounded-xl border-2 transition-all font-bold text-xs ${adminType === 'question_holder' ? 'border-[#7A4900] bg-[#7A4900]/10 text-[#7A4900]' : 'border-gray-100 text-gray-400'}`}
-                >
-                  Question Holder
-                </button>
-              </div>
-            </div>
-          )}
-
           {isRegistering && (
             <div>
               <label className="block text-sm font-medium text-[#545454] mb-2 flex items-center space-x-2">
