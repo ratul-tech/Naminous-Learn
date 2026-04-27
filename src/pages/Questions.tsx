@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, where, increment, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Question, UserProfile, Category, OperationType } from '../types';
@@ -13,6 +14,8 @@ interface QuestionsProps {
 }
 
 export default function Questions({ profile }: QuestionsProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -84,6 +87,14 @@ export default function Questions({ profile }: QuestionsProps) {
     setEditingId(q.id);
     setShowAdd(true);
   };
+
+  useEffect(() => {
+    if (location.state?.editQuestion) {
+      handleEdit(location.state.editQuestion);
+      // Clear state to avoid re-triggering
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   const handleDeleteQuestion = async (id: string) => {
     setConfirmModal({
@@ -398,17 +409,17 @@ export default function Questions({ profile }: QuestionsProps) {
                     ))}
                   </div>
                 </div>
-                <div className="flex md:flex-col items-center space-x-2 md:space-x-0 md:space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex md:flex-col items-center space-x-2 md:space-x-0 md:space-y-2 transition-all">
                   <button 
                     onClick={() => handleEdit(q)} 
-                    className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all shadow-sm"
+                    className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 hover:scale-110 active:scale-95 transition-all shadow-sm border border-blue-100"
                     title="Edit Question"
                   >
                     <Edit className="w-5 h-5" />
                   </button>
                   <button 
                     onClick={() => handleDeleteQuestion(q.id)} 
-                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all shadow-sm"
+                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 hover:scale-110 active:scale-95 transition-all shadow-sm border border-red-100"
                     title="Delete Question"
                   >
                     <Trash2 className="w-5 h-5" />

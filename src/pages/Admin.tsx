@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where, increment } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { initializeApp, getApp, getApps } from 'firebase/app';
@@ -14,7 +15,7 @@ import { OperationType } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'feedback' | 'admins' | 'submissions'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'questions' | 'feedback' | 'admins' | 'submissions'>('users');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [registrationTrend, setRegistrationTrend] = useState<{ date: string, count: number }[]>([]);
@@ -208,6 +209,7 @@ export default function Admin() {
         <div className="flex bg-white p-1 rounded-xl shadow-sm border overflow-x-auto max-w-full">
           <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Students" />
           <TabButton active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admins" />
+          <TabButton active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} icon={BookOpen} label="Questions" />
           <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
           <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Events" />
           <TabButton active={activeTab === 'submissions'} onClick={() => setActiveTab('submissions')} icon={BookOpen} label="Submissions" />
@@ -306,6 +308,7 @@ export default function Admin() {
       <AnimatePresence mode="wait">
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
+        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
         {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} />}
         {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} />}
@@ -763,6 +766,80 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
         </table>
       </div>
     </div>
+    </motion.div>
+  );
+}
+
+function QuestionManager({ questions, onDelete }: { questions: Question[], onDelete: (id: string) => void }) {
+  const navigate = useNavigate();
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-[#7A4900]">Question Bank ({questions.length})</h2>
+        <button 
+          onClick={() => navigate('/questions')} 
+          className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B] transition-all"
+        >
+          <Edit className="w-4 h-4" />
+          <span>Full Management</span>
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+              <tr>
+                <th className="px-6 py-4">Question</th>
+                <th className="px-6 py-4">Metadata</th>
+                <th className="px-6 py-4">Subject</th>
+                <th className="px-6 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {questions.map((q) => (
+                <tr key={q.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 w-1/2">
+                    <div className="text-sm font-medium line-clamp-2">
+                       <MathRenderer content={q.text} />
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 rounded-full uppercase">{q.category}</span>
+                    <p className="text-xs text-gray-400 mt-1">{q.class}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-bold text-[#D4AF37]">{q.subject}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => navigate('/questions', { state: { editQuestion: q } })}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Edit Question"
+                      >
+                        <Edit className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => onDelete(q.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete Question"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {questions.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="text-center py-20 text-gray-400">No questions found in bank.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </motion.div>
   );
 }
