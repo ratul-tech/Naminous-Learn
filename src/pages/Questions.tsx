@@ -151,11 +151,11 @@ export default function Questions({ profile }: QuestionsProps) {
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all"
               />
             </div>
-            <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:flex md:flex-nowrap gap-2 w-full md:w-auto">
               <select
                 value={filterClass}
                 onChange={(e) => setFilterClass(e.target.value)}
-                className="flex-1 md:flex-none px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
+                className="w-full md:w-40 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-gray-100"
               >
                 <option value="All">All Classes</option>
                 <option value="Class 9">Class 9</option>
@@ -168,7 +168,7 @@ export default function Questions({ profile }: QuestionsProps) {
               <select
                 value={filterSubject}
                 onChange={(e) => setFilterSubject(e.target.value)}
-                className="flex-1 md:flex-none px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
+                className="w-full md:w-48 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-gray-100"
               >
                 <option value="All">All Subjects</option>
                 {ALL_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -176,7 +176,7 @@ export default function Questions({ profile }: QuestionsProps) {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value as any)}
-                className="flex-1 md:flex-none px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm"
+                className="w-full md:w-48 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-gray-100"
               >
                 <option value="All">All Categories</option>
                 <option value="Board">Board</option>
