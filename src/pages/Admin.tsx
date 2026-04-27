@@ -7,18 +7,22 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
 
-export default function Admin() {
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'questions' | 'feedback' | 'admins' | 'submissions'>('users');
+interface AdminProps {
+  profile: UserProfile | null;
+}
+
+export default function Admin({ profile }: AdminProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'questions' | 'feedback' | 'admins' | 'submissions'>(
+    profile?.adminType === 'question_holder' ? 'questions' : 'users'
+  );
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [registrationTrend, setRegistrationTrend] = useState<{ date: string, count: number }[]>([]);
   const [admins, setAdmins] = useState<UserProfile[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [events, setEvents] = useState<ExamEvent[]>([]);
@@ -27,6 +31,8 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
+  const isFullAdmin = profile?.adminType === 'full' || ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'].includes(profile?.email?.toLowerCase() || '');
+
   useEffect(() => {
     const unsubQuestions = onSnapshot(query(collection(db, 'questions'), orderBy('createdAt', 'desc')), (snapshot) => {
       setQuestions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
@@ -34,22 +40,6 @@ export default function Admin() {
     const unsubUsers = onSnapshot(query(collection(db, 'students'), orderBy('createdAt', 'desc')), (snapshot) => {
       const fetchedUsers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any));
       setUsers(fetchedUsers);
-      
-      // Calculate 30-day registration trend
-      const last30Days = Array.from({ length: 30 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        return d.toISOString().split('T')[0];
-      }).reverse();
-
-      const trend = last30Days.map(date => {
-        const count = fetchedUsers.filter(u => u.createdAt?.startsWith(date)).length;
-        return { 
-          date: new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), 
-          count 
-        };
-      });
-      setRegistrationTrend(trend);
     });
     const unsubAdmins = onSnapshot(query(collection(db, 'admins'), orderBy('createdAt', 'desc')), (snapshot) => {
       setAdmins(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any)));
@@ -207,13 +197,25 @@ export default function Admin() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-[#7A4900]">Admin Control Center</h1>
         <div className="flex bg-white p-1 rounded-xl shadow-sm border overflow-x-auto max-w-full">
-          <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Students" />
-          <TabButton active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admins" />
+          {isFullAdmin && (
+            <>
+              <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Students" />
+              <TabButton active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admins" />
+            </>
+          )}
           <TabButton active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} icon={BookOpen} label="Questions" />
-          <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
+          {isFullAdmin && (
+            <>
+              <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
+            </>
+          )}
           <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Events" />
-          <TabButton active={activeTab === 'submissions'} onClick={() => setActiveTab('submissions')} icon={BookOpen} label="Submissions" />
-          <TabButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Feedback" />
+          {isFullAdmin && (
+            <>
+              <TabButton active={activeTab === 'submissions'} onClick={() => setActiveTab('submissions')} icon={BookOpen} label="Submissions" />
+              <TabButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Feedback" />
+            </>
+          )}
         </div>
       </div>
 
@@ -248,69 +250,13 @@ export default function Admin() {
           description="User submissions"
         />
       </div>
-      
-      {/* Registration Trend Chart */}
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-[#7A4900]">Registration Trend</h2>
-            <p className="text-xs text-gray-400">New student registrations over the past 30 days</p>
-          </div>
-        </div>
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={registrationTrend}>
-              <defs>
-                <linearGradient id="colorRegistrations" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7A4900" stopOpacity={0.1}/>
-                  <stop offset="95%" stopColor="#7A4900" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="date" 
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 10, fill: '#9ca3af' }}
-                interval={4}
-              />
-              <YAxis 
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 10, fill: '#9ca3af' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  borderRadius: '16px', 
-                  border: 'none', 
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                  padding: '12px'
-                }}
-                labelStyle={{ fontWeight: 'bold', color: '#7A4900' }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="count" 
-                name="New Students"
-                stroke="#7A4900" 
-                strokeWidth={3}
-                fillOpacity={1} 
-                fill="url(#colorRegistrations)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
       <AnimatePresence mode="wait">
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
-        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} />}
-        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} />}
+        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
+        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} />}
+        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} />}
         {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
@@ -620,7 +566,7 @@ function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
   );
 }
 
-function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[], onDelete: (uid: string) => void, onActivate: (uid: string) => void }) {
+function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins: UserProfile[], onDelete: (uid: string) => void, onActivate: (uid: string) => void, currentProfile: UserProfile | null }) {
   const [showAdd, setShowAdd] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -628,6 +574,16 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
   const [adminType, setAdminType] = useState<'full' | 'question_holder'>('question_holder');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const isMainAdmin = ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'].includes(currentProfile?.email?.toLowerCase() || '');
+
+  const handleUpdateRole = async (uid: string, newType: 'full' | 'question_holder') => {
+    try {
+      await updateDoc(doc(db, 'admins', uid), { adminType: newType });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `admins/${uid}`);
+    }
+  };
 
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -729,11 +685,22 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                    a.adminType === 'full' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    {a.adminType === 'full' ? 'Full Admin' : 'Question Holder'}
-                  </span>
+                  {isMainAdmin && a.email.toLowerCase() !== 'shahriarislamratul065@gmail.com' && a.email.toLowerCase() !== 'shahriarislam275@gmail.com' ? (
+                    <select
+                      value={a.adminType}
+                      onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
+                      className="text-[10px] font-bold px-2 py-1 rounded-full uppercase outline-none border-none bg-gray-50 cursor-pointer"
+                    >
+                      <option value="full">Full Admin</option>
+                      <option value="question_holder">Question Holder</option>
+                    </select>
+                  ) : (
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                      a.adminType === 'full' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      {a.adminType === 'full' ? 'Full Admin' : 'Question Holder'}
+                    </span>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm text-[#545454]">{a.email}</td>
                 <td className="px-6 py-4">
@@ -770,7 +737,7 @@ function AdminManager({ admins, onDelete, onActivate }: { admins: UserProfile[],
   );
 }
 
-function QuestionManager({ questions, onDelete }: { questions: Question[], onDelete: (id: string) => void }) {
+function QuestionManager({ questions, onDelete, isFullAdmin }: { questions: Question[], onDelete: (id: string) => void, isFullAdmin: boolean }) {
   const navigate = useNavigate();
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
@@ -820,13 +787,15 @@ function QuestionManager({ questions, onDelete }: { questions: Question[], onDel
                       >
                         <Edit className="w-5 h-5" />
                       </button>
-                      <button 
-                        onClick={() => onDelete(q.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        title="Delete Question"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      {isFullAdmin && (
+                        <button 
+                          onClick={() => onDelete(q.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          title="Delete Question"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -1070,7 +1039,7 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
   );
 }
 
-function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id: string) => void }) {
+function EventManager({ events, onDelete, isFullAdmin }: { events: ExamEvent[], onDelete: (id: string) => void, isFullAdmin: boolean }) {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ExamEvent | null>(null);
   const [eventData, setEventData] = useState<Partial<ExamEvent>>({
@@ -1236,10 +1205,12 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-[#7A4900]">Manage Events ({events.length})</h2>
-        <button onClick={() => setShowForm(true)} className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B]">
-          <Plus className="w-4 h-4" />
-          <span>Create Event</span>
-        </button>
+        {isFullAdmin && (
+          <button onClick={() => setShowForm(true)} className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B]">
+            <Plus className="w-4 h-4" />
+            <span>Create Event</span>
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -1404,9 +1375,11 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
               <button onClick={() => startEdit(e)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Edit Event">
                 <Edit className="w-5 h-5" />
               </button>
-              <button onClick={() => onDelete(e.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete Event">
-                <Trash2 className="w-5 h-5" />
-              </button>
+              {isFullAdmin && (
+                <button onClick={() => onDelete(e.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete Event">
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
             </div>
             <div className="flex items-center space-x-2 mb-2">
               <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${

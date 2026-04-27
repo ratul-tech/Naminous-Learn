@@ -110,7 +110,7 @@ export default function App() {
             <Route path="/events" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <Events profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/feedback" element={user ? ((user.emailVerified || profile?.role === 'admin') ? <FeedbackForm profile={profile} /> : <Navigate to="/verify-email" />) : <Navigate to="/login" />} />
             <Route path="/questions" element={profile?.role === 'admin' ? <Questions profile={profile} /> : <Navigate to="/dashboard" />} />
-            <Route path="/admin" element={profile?.role === 'admin' ? (profile.adminType === 'full' ? <Admin /> : <Navigate to="/questions" />) : <Navigate to="/dashboard" />} />
+            <Route path="/admin" element={profile?.role === 'admin' ? <Admin profile={profile} /> : <Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
@@ -222,7 +222,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       </Link>
                     ))}
 
-                    {user.emailVerified && profile?.role === 'admin' && (profile.adminType === 'full' || (['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'].includes(profile.email.toLowerCase()))) && (
+                    {user.emailVerified && profile?.role === 'admin' && (
                       <Link
                         to="/admin"
                         onClick={() => setIsOpen(false)}

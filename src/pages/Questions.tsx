@@ -413,13 +413,15 @@ export default function Questions({ profile }: QuestionsProps) {
                   >
                     <Edit className="w-5 h-5" />
                   </button>
-                  <button 
-                    onClick={() => handleDeleteQuestion(q.id)} 
-                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 hover:scale-110 active:scale-95 transition-all shadow-sm border border-red-100"
-                    title="Delete Question"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  {(profile?.adminType === 'full' || ['shahriarislam275@gmail.com', 'shahriarislamratul065@gmail.com'].includes(profile?.email?.toLowerCase() || '')) && (
+                    <button 
+                      onClick={() => handleDeleteQuestion(q.id)} 
+                      className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 hover:scale-110 active:scale-95 transition-all shadow-sm border border-red-100"
+                      title="Delete Question"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
