@@ -1,7 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import rehypeMathjax from 'rehype-mathjax';
+import rehypeMathjax from 'rehype-mathjax/chtml';
 import { MathEngine } from '../types';
 
 interface MathRendererProps {
