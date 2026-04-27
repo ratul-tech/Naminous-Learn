@@ -27,6 +27,7 @@ export default function Events({ profile }: EventsProps) {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [activeCategory, setActiveCategory] = useState<'ongoing' | 'upcoming' | 'ended'>('ongoing');
+  const [activeClass, setActiveClass] = useState<string>('All');
 
   // Admin States
   const [showEditForm, setShowEditForm] = useState(false);
@@ -182,7 +183,11 @@ export default function Events({ profile }: EventsProps) {
     return 'ongoing';
   };
 
-  const filteredEvents = events.filter(e => getCategory(e) === activeCategory);
+  const filteredEvents = events.filter(e => {
+    const isCategoryMatch = getCategory(e) === activeCategory;
+    const isClassMatch = activeClass === 'All' || e.class === activeClass;
+    return isCategoryMatch && isClassMatch;
+  });
 
   const getRegistrationStatus = (eventId: string) => {
     const payment = userPayments.find(p => p.eventId === eventId);
@@ -250,7 +255,7 @@ export default function Events({ profile }: EventsProps) {
         </div>
       </header>
 
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center space-y-6">
         <div className="inline-flex p-1.5 bg-white rounded-2xl shadow-sm border border-gray-100">
           {(['ongoing', 'upcoming', 'ended'] as const).map((cat) => (
             <button
@@ -263,6 +268,22 @@ export default function Events({ profile }: EventsProps) {
               }`}
             >
               {cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-2">
+          {['All', 'Class 9', 'Class 10', 'SSC Candidate', 'College Admission'].map((c) => (
+            <button
+              key={c}
+              onClick={() => setActiveClass(c)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeClass === c 
+                  ? 'bg-[#D4AF37] text-white' 
+                  : 'bg-white text-gray-400 border border-gray-100 hover:border-[#D4AF37]'
+              }`}
+            >
+              {c}
             </button>
           ))}
         </div>
@@ -308,7 +329,8 @@ export default function Events({ profile }: EventsProps) {
                 <div className="text-3xl font-bold text-[#D4AF37] font-serif">Tk {event.entryFee}</div>
               </div>
 
-              <h2 className="text-3xl font-bold text-[#7A4900] mb-6 font-serif group-hover:text-[#D4AF37] transition-colors">{event.title}</h2>
+              <h2 className="text-3xl font-bold text-[#7A4900] mb-1 font-serif group-hover:text-[#D4AF37] transition-colors">{event.title}</h2>
+              <p className="text-[10px] font-bold text-[#D4AF37] mb-6 uppercase tracking-widest">{event.class || 'All Levels'}</p>
               <p className="text-[#545454] mb-8 line-clamp-3 leading-relaxed text-sm">
                 {event.description}
               </p>
@@ -592,6 +614,19 @@ export default function Events({ profile }: EventsProps) {
                           required
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-widest">Target Level</label>
+                      <select 
+                        value={eventData.class} 
+                        onChange={(e) => setEventData({ ...eventData, class: e.target.value })}
+                        className="w-full px-5 py-3 rounded-2xl border-2 focus:border-[#D4AF37] outline-none font-bold"
+                      >
+                        <option value="Class 9">Class 9</option>
+                        <option value="Class 10">Class 10</option>
+                        <option value="SSC Candidate">SSC Candidate</option>
+                        <option value="College Admission">College Admission</option>
+                      </select>
                     </div>
                   </div>
 

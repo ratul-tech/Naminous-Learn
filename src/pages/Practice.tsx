@@ -24,6 +24,7 @@ export default function Practice({ profile }: PracticeProps) {
   
   const [config, setConfig] = useState({
     subject: 'Physics',
+    class: profile?.class || 'Class 9',
     mode: 'Complete Board' as Mode,
     time: 20, // minutes
     count: 10,
@@ -49,12 +50,11 @@ export default function Practice({ profile }: PracticeProps) {
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      if (!profile?.class) return;
       setLoading(true);
       try {
         const q = query(
           collection(db, 'questions'),
-          where('class', '==', profile.class)
+          where('class', '==', config.class)
         );
         const snapshot = await getDocs(q);
         const allQ = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
@@ -66,7 +66,7 @@ export default function Practice({ profile }: PracticeProps) {
       }
     };
     fetchQuestions();
-  }, [profile]);
+  }, [config.class]);
 
   useEffect(() => {
     const filtered = questions.filter(q => q.subject === config.subject);
@@ -194,7 +194,7 @@ export default function Practice({ profile }: PracticeProps) {
             Practice Modules
           </h1>
           <p className="text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed">
-            Sharpen your intellect with specialized modules tailored for <span className="text-[#D4AF37] font-bold">{profile.class}</span>.
+            Sharpen your intellect with specialized modules tailored for excellence.
           </p>
         </div>
         
@@ -210,6 +210,26 @@ export default function Practice({ profile }: PracticeProps) {
             exit={{ opacity: 0, y: -20 }}
             className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-gray-100 space-y-12"
           >
+            {/* Academic Level Selection */}
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Select Academic Level</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {['Class 9', 'Class 10', 'SSC Candidate', 'College Admission'].map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setConfig({ ...config, class: c })}
+                    className={`px-6 py-4 rounded-2xl border-2 transition-all font-bold text-sm text-center ${
+                      config.class === c 
+                        ? 'border-[#7A4900] bg-[#7A4900]/5 text-[#7A4900] shadow-md' 
+                        : 'border-gray-50 text-gray-400 hover:border-gray-100'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Subject Selection */}
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Select Knowledge Area</label>

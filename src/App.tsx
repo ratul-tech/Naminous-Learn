@@ -115,7 +115,7 @@ export default function App() {
           </Routes>
         </main>
 
-        <Footer />
+        <Footer user={user} />
       </div>
     </Router>
   );
@@ -514,56 +514,58 @@ function Landing() {
   );
 }
 
-function Footer() {
+function Footer({ user }: { user: User | null }) {
   return (
     <footer className="bg-white border-t mt-auto">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-3 mb-6">
-              <img src={LOGO_URL} alt="Numinous Learn" className="h-10 w-10 rounded-lg" referrerPolicy="no-referrer" />
-              <span className="text-xl font-bold text-[#7A4900]">Numinous Learn</span>
+        {(!user || !user.emailVerified) && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-3 mb-6">
+                <img src={LOGO_URL} alt="Numinous Learn" className="h-10 w-10 rounded-lg" referrerPolicy="no-referrer" />
+                <span className="text-xl font-bold text-[#7A4900]">Numinous Learn</span>
+              </div>
+              <p className="text-[#545454] leading-relaxed max-w-sm">
+                Empowering students to achieve excellence through structured practice and real-time evaluation. Join thousands of students on their journey to success.
+              </p>
+              <div className="flex items-center space-x-4 mt-6">
+                <a 
+                  href="https://www.youtube.com/@NuminousLearn" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                >
+                  <Youtube className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://www.facebook.com/share/18hQRvHAc5/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+              </div>
             </div>
-            <p className="text-[#545454] leading-relaxed max-w-sm">
-              Empowering students to achieve excellence through structured practice and real-time evaluation. Join thousands of students on their journey to success.
-            </p>
-            <div className="flex items-center space-x-4 mt-6">
-              <a 
-                href="https://www.youtube.com/@NuminousLearn" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm"
-              >
-                <Youtube className="w-5 h-5" />
-              </a>
-              <a 
-                href="https://www.facebook.com/share/18hQRvHAc5/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
+            <div>
+              <h3 className="text-lg font-bold text-[#7A4900] mb-6">Quick Links</h3>
+              <ul className="space-y-4">
+                <li><Link to="/practice" className="hover:text-[#D4AF37] transition-all">Practice Modules</Link></li>
+                <li><Link to="/leaderboard" className="hover:text-[#D4AF37] transition-all">Leaderboard</Link></li>
+                <li><Link to="/events" className="hover:text-[#D4AF37] transition-all">Upcoming Events</Link></li>
+                <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Submit Feedback</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#7A4900] mb-6">Support</h3>
+              <ul className="space-y-4">
+                <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Report an Issue</Link></li>
+                <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Suggestions</Link></li>
+                <li className="text-sm text-gray-400">© {new Date().getFullYear()} Numinous Learn. All rights reserved.</li>
+              </ul>
             </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-[#7A4900] mb-6">Quick Links</h3>
-            <ul className="space-y-4">
-              <li><Link to="/practice" className="hover:text-[#D4AF37] transition-all">Practice Modules</Link></li>
-              <li><Link to="/leaderboard" className="hover:text-[#D4AF37] transition-all">Leaderboard</Link></li>
-              <li><Link to="/events" className="hover:text-[#D4AF37] transition-all">Upcoming Events</Link></li>
-              <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Submit Feedback</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-[#7A4900] mb-6">Support</h3>
-            <ul className="space-y-4">
-              <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Report an Issue</Link></li>
-              <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Suggestions</Link></li>
-              <li className="text-sm text-gray-400">© {new Date().getFullYear()} Numinous Learn. All rights reserved.</li>
-            </ul>
-          </div>
-        </div>
+        )}
       </div>
     </footer>
   );

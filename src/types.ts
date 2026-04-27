@@ -92,6 +92,7 @@ export interface ExamEvent {
   prize: string;
   status: EventStatus;
   questions: Question[];
+  class?: string;
   createdAt: string;
 }
 

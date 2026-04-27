@@ -959,12 +959,16 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-[#7A4900] mb-2">Class</label>
-                    <input
-                      type="text"
+                    <select
                       value={editData.class}
                       onChange={(e) => setEditData({ ...editData, class: e.target.value })}
-                      className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
-                    />
+                      className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37] font-bold"
+                    >
+                      <option value="Class 9">Class 9</option>
+                      <option value="Class 10">Class 10</option>
+                      <option value="SSC Candidate">SSC Candidate</option>
+                      <option value="College Admission">College Admission</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-[#7A4900] mb-2">Group</label>
@@ -1079,6 +1083,7 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
     maxCandidates: 100,
     prize: '',
     questions: [],
+    class: 'Class 9',
   });
 
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
@@ -1154,6 +1159,7 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
       maxCandidates: 100,
       prize: '',
       questions: [],
+      class: 'Class 9',
     });
   };
 
@@ -1279,6 +1285,19 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
                   <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Prize Details</label>
                   <input type="text" value={eventData.prize} onChange={(e) => setEventData({ ...eventData, prize: e.target.value })} placeholder="e.g. 5000 Tk + Certificate" className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Target Level</label>
+                  <select 
+                    value={eventData.class} 
+                    onChange={(e) => setEventData({ ...eventData, class: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37] font-bold"
+                  >
+                    <option value="Class 9">Class 9</option>
+                    <option value="Class 10">Class 10</option>
+                    <option value="SSC Candidate">SSC Candidate</option>
+                    <option value="College Admission">College Admission</option>
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-6">
@@ -1399,7 +1418,8 @@ function EventManager({ events, onDelete }: { events: ExamEvent[], onDelete: (id
               </span>
               <span className="text-[10px] font-bold text-gray-400 uppercase">{e.maxCandidates} Slots</span>
             </div>
-            <h3 className="font-bold text-[#7A4900] text-lg mb-2">{e.title}</h3>
+            <h3 className="font-bold text-[#7A4900] text-lg mb-1">{e.title}</h3>
+            <p className="text-[10px] font-bold text-[#D4AF37] mb-2 uppercase tracking-widest">{e.class || 'All Levels'}</p>
             <p className="text-sm text-[#545454] mb-4 line-clamp-2">{e.description}</p>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs font-bold">

@@ -161,9 +161,7 @@ export default function Questions({ profile }: QuestionsProps) {
                 <option value="Class 9">Class 9</option>
                 <option value="Class 10">Class 10</option>
                 <option value="SSC Candidate">SSC Candidate</option>
-                <option value="Class 11">Class 11</option>
-                <option value="Class 12">Class 12</option>
-                <option value="HSC Candidate">HSC Candidate</option>
+                <option value="College Admission">College Admission</option>
               </select>
               <select
                 value={filterSubject}
@@ -310,9 +308,7 @@ export default function Questions({ profile }: QuestionsProps) {
                   <option value="Class 9">Class 9</option>
                   <option value="Class 10">Class 10</option>
                   <option value="SSC Candidate">SSC Candidate</option>
-                  <option value="Class 11">Class 11</option>
-                  <option value="Class 12">Class 12</option>
-                  <option value="HSC Candidate">HSC Candidate</option>
+                  <option value="College Admission">College Admission</option>
                 </select>
               </div>
 

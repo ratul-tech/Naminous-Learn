@@ -16,7 +16,7 @@ export default function Leaderboard() {
   });
 
   const subjects = ['All', ...ALL_SUBJECTS];
-  const classes = ['All', 'Class 11', 'Class 12', 'Admission'];
+  const classes = ['All', 'Class 9', 'Class 10', 'SSC Candidate', 'College Admission'];
   const types = ['All', 'Practice', 'Event'];
 
   useEffect(() => {
