@@ -238,13 +238,13 @@ export default function Questions({ profile }: QuestionsProps) {
                   >
                     <div className="p-6 rounded-2xl bg-[#D4AF37]/5 border-2 border-[#D4AF37]/20 space-y-4">
                       <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest">Live Preview</p>
-                      <MathRenderer content={newQ.text || '*No text entered yet*'} className="text-[#7A4900] font-bold text-lg" />
+                      <MathRenderer content={newQ.text || '*No text entered yet*'} className="text-[#7A4900] font-bold text-lg" engine={profile?.mathEngine} />
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                         {newQ.options.map((opt, i) => (
                           <div key={i} className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-[#D4AF37]/20 shadow-sm">
                             <span className="font-bold text-[#D4AF37]">{String.fromCharCode(65 + i)}:</span>
-                            <MathRenderer content={opt || '*Empty*'} className="text-sm text-[#545454]" />
+                            <MathRenderer content={opt || '*Empty*'} className="text-sm text-[#545454]" engine={profile?.mathEngine} />
                           </div>
                         ))}
                       </div>
@@ -392,7 +392,7 @@ export default function Questions({ profile }: QuestionsProps) {
                     <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-purple-50 rounded-full text-purple-600">{q.subject}</span>
                   </div>
                   <h3 className="text-lg font-bold text-[#7A4900] leading-relaxed">
-                    <MathRenderer content={q.text} />
+                    <MathRenderer content={q.text} engine={profile?.mathEngine} />
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-2">
                     {q.options.map((opt, i) => (
@@ -400,7 +400,7 @@ export default function Questions({ profile }: QuestionsProps) {
                         <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 shrink-0 ${i === q.correctAnswer ? 'border-green-600 bg-green-50' : 'border-gray-100 bg-white'}`}>
                           {String.fromCharCode(65 + i)}
                         </div>
-                        <MathRenderer content={opt} />
+                        <MathRenderer content={opt} engine={profile?.mathEngine} />
                       </div>
                     ))}
                   </div>

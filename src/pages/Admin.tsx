@@ -6,7 +6,7 @@ import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { Question, UserProfile, Payment, ExamEvent, Feedback } from '../types';
+import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
 import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
@@ -254,10 +254,10 @@ export default function Admin({ profile }: AdminProps) {
       <AnimatePresence mode="wait">
         {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
         {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
-        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} />}
+        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
         {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} />}
-        {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} />}
+        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
+        {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} mathEngine={profile?.mathEngine} />}
         {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
       </AnimatePresence>
 
@@ -304,7 +304,7 @@ export default function Admin({ profile }: AdminProps) {
   );
 }
 
-function SubmissionManager({ submissions, events, users }: { submissions: any[], events: ExamEvent[], users: UserProfile[] }) {
+function SubmissionManager({ submissions, events, users, mathEngine }: { submissions: any[], events: ExamEvent[], users: UserProfile[], mathEngine?: MathEngine }) {
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
   const [filterEvent, setFilterEvent] = useState<string>('all');
 
@@ -444,7 +444,7 @@ function SubmissionManager({ submissions, events, users }: { submissions: any[],
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex items-center space-x-3">
                             <span className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-[#7A4900] text-sm">{idx + 1}</span>
-                            <MathRenderer content={q.text} className="font-bold text-[#7A4900] text-lg" />
+                            <MathRenderer content={q.text} className="font-bold text-[#7A4900] text-lg" engine={mathEngine} />
                           </div>
                           {isCorrect ? (
                             <div className="flex items-center text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
@@ -476,7 +476,7 @@ function SubmissionManager({ submissions, events, users }: { submissions: any[],
                               }`}>
                                 {String.fromCharCode(65 + i)}
                               </span>
-                              <MathRenderer content={opt} />
+                              <MathRenderer content={opt} engine={mathEngine} />
                               {i === q.correctAnswer && <span className="ml-auto text-[10px] uppercase font-black">Official Answer</span>}
                               {i === userAnswer && i !== q.correctAnswer && <span className="ml-auto text-[10px] uppercase font-black">Student Choice</span>}
                             </div>
@@ -737,7 +737,7 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
   );
 }
 
-function QuestionManager({ questions, onDelete, isFullAdmin }: { questions: Question[], onDelete: (id: string) => void, isFullAdmin: boolean }) {
+function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { questions: Question[], onDelete: (id: string) => void, isFullAdmin: boolean, mathEngine?: MathEngine }) {
   const navigate = useNavigate();
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
@@ -768,7 +768,7 @@ function QuestionManager({ questions, onDelete, isFullAdmin }: { questions: Ques
                 <tr key={q.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 w-1/2">
                     <div className="text-sm font-medium line-clamp-2">
-                       <MathRenderer content={q.text} />
+                       <MathRenderer content={q.text} engine={mathEngine} />
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -1039,7 +1039,7 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
   );
 }
 
-function EventManager({ events, onDelete, isFullAdmin }: { events: ExamEvent[], onDelete: (id: string) => void, isFullAdmin: boolean }) {
+function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: ExamEvent[], onDelete: (id: string) => void, isFullAdmin: boolean, mathEngine?: MathEngine }) {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ExamEvent | null>(null);
   const [eventData, setEventData] = useState<Partial<ExamEvent>>({
@@ -1338,7 +1338,7 @@ function EventManager({ events, onDelete, isFullAdmin }: { events: ExamEvent[], 
                       <div key={i} className={`p-3 rounded-xl border text-xs flex justify-between items-start transition-all ${editingQuestionIndex === i ? 'bg-yellow-50 border-[#D4AF37]' : 'bg-white'}`}>
                         <div className="flex-1">
                           <span className="font-bold text-[#D4AF37] mr-1">{i + 1}.</span>
-                          <MathRenderer content={q.text} className="text-[#545454] line-clamp-2 inline" />
+                          <MathRenderer content={q.text} className="text-[#545454] line-clamp-2 inline" engine={mathEngine} />
                         </div>
                         <div className="flex space-x-1 ml-2">
                           <button type="button" onClick={() => handleEditQuestion(i)} className="text-blue-400 hover:text-blue-600">

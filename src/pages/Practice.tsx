@@ -415,7 +415,7 @@ export default function Practice({ profile }: PracticeProps) {
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{q.board}</span>
                       </div>
                       <div className="font-bold text-[#7A4900]">
-                        <MathRenderer content={q.text} />
+                        <MathRenderer content={q.text} engine={profile?.mathEngine} />
                       </div>
                     </div>
                   </div>
@@ -455,7 +455,7 @@ export default function Practice({ profile }: PracticeProps) {
 
             <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100">
               <div className="text-2xl font-bold text-[#7A4900] mb-8 leading-relaxed">
-                <MathRenderer content={filteredQuestions[examState.currentQuestionIndex]?.text || ''} />
+                <MathRenderer content={filteredQuestions[examState.currentQuestionIndex]?.text || ''} engine={profile?.mathEngine} />
               </div>
 
               <div className="space-y-4">
@@ -474,7 +474,7 @@ export default function Practice({ profile }: PracticeProps) {
                     }`}>
                       {String.fromCharCode(65 + i)}
                     </div>
-                    <MathRenderer content={option} className="font-medium" />
+                    <MathRenderer content={option} className="font-medium" engine={profile?.mathEngine} />
                   </button>
                 ))}
               </div>
@@ -586,7 +586,7 @@ export default function Practice({ profile }: PracticeProps) {
                   </span>
                 </div>
                 <div className="text-lg font-bold text-[#7A4900] mb-6">
-                  <MathRenderer content={q.text} />
+                  <MathRenderer content={q.text} engine={profile?.mathEngine} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {q.options.map((opt, i) => (
@@ -605,7 +605,7 @@ export default function Practice({ profile }: PracticeProps) {
                       }`}>
                         {String.fromCharCode(65 + i)}
                       </div>
-                      <MathRenderer content={opt} />
+                      <MathRenderer content={opt} engine={profile?.mathEngine} />
                     </div>
                   ))}
                 </div>

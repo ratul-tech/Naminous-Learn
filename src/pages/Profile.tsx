@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserProfile, Gender, Group } from '../types';
-import { User, Phone, School, GraduationCap, Users, Save, CheckCircle2, Trash2, AlertTriangle, X } from 'lucide-react';
+import { User, Phone, School, GraduationCap, Users, Save, CheckCircle2, Trash2, AlertTriangle, X, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +22,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     class: profile?.class || 'Class 9',
     school: profile?.school || '',
     group: profile?.group || 'Science' as Group,
+    mathEngine: profile?.mathEngine || 'katex',
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -254,6 +255,38 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                     <option value="Commerce">Commerce</option>
                     <option value="Arts">Arts</option>
                   </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#7A4900] flex items-center space-x-2 ml-1">
+                    <Settings className="w-4 h-4" />
+                    <span>Mathematical Equation Rendering Engine</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, mathEngine: 'katex' })}
+                      className={`px-5 py-4 rounded-2xl border-2 transition-all font-bold text-sm ${
+                        formData.mathEngine === 'katex'
+                          ? 'border-[#7A4900] bg-[#7A4900]/10 text-[#7A4900]'
+                          : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
+                      }`}
+                    >
+                      KaTeX (Faster)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, mathEngine: 'mathjax' })}
+                      className={`px-5 py-4 rounded-2xl border-2 transition-all font-bold text-sm ${
+                        formData.mathEngine === 'mathjax'
+                          ? 'border-[#7A4900] bg-[#7A4900]/10 text-[#7A4900]'
+                          : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
+                      }`}
+                    >
+                      MathJax (Better Quality)
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-1 ml-1">Choose 'MathJax' if equations do not render properly with KaTeX.</p>
                 </div>
 
                 <div className="md:col-span-2 space-y-2">

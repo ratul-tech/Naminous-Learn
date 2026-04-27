@@ -697,7 +697,7 @@ export default function Events({ profile }: EventsProps) {
                           <div key={i} className={`p-3 rounded-xl border text-xs flex justify-between items-start ${editingQuestionIndex === i ? 'bg-yellow-50 border-[#D4AF37]' : 'bg-white'}`}>
                             <div className="flex-1 truncate pr-4">
                               <span className="font-bold text-[#D4AF37] mr-1">{i + 1}.</span>
-                              <MathRenderer content={q.text} className="text-gray-600 inline" />
+                              <MathRenderer content={q.text} className="text-gray-600 inline" engine={profile?.mathEngine} />
                             </div>
                             <div className="flex space-x-1 shrink-0">
                               <button type="button" onClick={() => handleEditQuestion(i)} className="text-blue-500 hover:text-blue-700">

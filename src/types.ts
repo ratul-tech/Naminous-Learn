@@ -26,6 +26,7 @@ export interface FirestoreErrorInfo {
   }
 }
 
+export type MathEngine = 'katex' | 'mathjax';
 export type UserRole = 'student' | 'admin';
 export type AdminType = 'full' | 'question_holder';
 export type Gender = 'Male' | 'Female' | 'Other';
@@ -47,6 +48,7 @@ export interface UserProfile {
   role: UserRole;
   adminType?: AdminType;
   status?: 'pending' | 'active';
+  mathEngine?: MathEngine;
   createdAt: string;
 }
 

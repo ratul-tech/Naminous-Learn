@@ -326,7 +326,7 @@ export default function Exam({ profile }: ExamProps) {
             </div>
             
             <div className="text-2xl md:text-3xl font-bold text-[#7A4900] mb-12 font-serif leading-relaxed">
-              <MathRenderer content={currentQuestion?.text || ''} />
+              <MathRenderer content={currentQuestion?.text || ''} engine={profile?.mathEngine} />
             </div>
 
             <div className="grid grid-cols-1 gap-6">
@@ -347,7 +347,7 @@ export default function Exam({ profile }: ExamProps) {
                   }`}>
                     {String.fromCharCode(65 + i)}
                   </div>
-                  <MathRenderer content={option} className="font-bold text-xl" />
+                  <MathRenderer content={option} className="font-bold text-xl" engine={profile?.mathEngine} />
                 </button>
               ))}
             </div>
