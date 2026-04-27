@@ -69,12 +69,18 @@ export default function Exam({ profile }: ExamProps) {
           setLoading(false);
           return;
         }
+        
         const eventData = { id: eventDoc.id, ...eventDoc.data() } as ExamEvent;
         setEvent(eventData);
 
-        // 4. Use questions from event
-        if (eventData.questions && eventData.questions.length > 0) {
-          setQuestions(eventData.questions as Question[]);
+        // 4. Load questions directly from the event's internal questions array
+        // This is synchronized with the Admin panel which saves full question objects into the event.
+        if (eventData.questions && Array.isArray(eventData.questions) && eventData.questions.length > 0) {
+          setQuestions(eventData.questions);
+        } else {
+          setError('Technical Error: No questions found within this exam event. Please contact administration.');
+          setLoading(false);
+          return;
         }
 
         setLoading(false);
