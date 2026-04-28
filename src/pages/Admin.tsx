@@ -552,6 +552,9 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const pendingAdmins = admins.filter(a => a.status === 'pending');
+  const activeAdmins = admins.filter(a => a.status !== 'pending');
+
   const handleUpdateRole = async (uid: string, newType: 'full' | 'question_holder') => {
     try {
       await updateDoc(doc(db, 'admins', uid), { adminType: newType });
@@ -585,7 +588,6 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
 
       await setDoc(doc(db, 'admins', user.uid), newAdmin);
       
-      // Sign out from secondary app to clean up
       await signOut(secondaryAuth);
       
       setShowAdd(false);
@@ -601,105 +603,162 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-[#7A4900]">Manage Admins ({admins.length})</h2>
-        <button onClick={() => setShowAdd(true)} className="bg-[#7A4900] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-black transition-all">
-          <Plus className="w-4 h-4" />
-          <span>Add New Admin</span>
-        </button>
-      </div>
-
-      {showAdd && (
-        <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-[#7A4900]">
-          <form onSubmit={handleCreateAdmin} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="px-4 py-3 rounded-xl border outline-none" required />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="px-4 py-3 rounded-xl border outline-none" required />
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="px-4 py-3 rounded-xl border outline-none" required minLength={6} />
-              <select 
-                value={adminType} 
-                onChange={(e) => setAdminType(e.target.value as any)}
-                className="px-4 py-3 rounded-xl border outline-none font-bold text-[#7A4900]"
-              >
-                <option value="full">Full Admin</option>
-                <option value="question_holder">Question Holder</option>
-              </select>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
+      {/* Pending Requests Section */}
+      {pendingAdmins.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2 text-[#7A4900]">
+            <AlertCircle className="w-6 h-6 animate-pulse" />
+            <h2 className="text-xl font-bold">Access Requests ({pendingAdmins.length})</h2>
+          </div>
+          <div className="bg-amber-50 rounded-3xl border-2 border-[#D4AF37] overflow-hidden shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-[#D4AF37] text-white uppercase text-xs font-bold">
+                  <tr>
+                    <th className="px-6 py-4">Candidate</th>
+                    <th className="px-6 py-4">Email</th>
+                    <th className="px-6 py-4">Request Date</th>
+                    <th className="px-6 py-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#D4AF37]/20">
+                  {pendingAdmins.map((a) => (
+                    <tr key={a.uid} className="bg-white/50 hover:bg-white transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <img src={a.photoURL} alt="" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                          <span className="font-bold text-[#7A4900]">{a.displayName}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-[#545454] font-medium">{a.email}</td>
+                      <td className="px-6 py-4 text-xs text-gray-400">{new Date(a.createdAt).toLocaleString()}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <button 
+                            onClick={() => onActivate(a.uid)}
+                            className="bg-green-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-green-700 shadow-md transition-all flex items-center space-x-2"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Approve</span>
+                          </button>
+                          <button 
+                            onClick={() => onDelete(a.uid)}
+                            className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-all flex items-center space-x-2"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            <span>Reject</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
-            <div className="flex justify-end space-x-4">
-              <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-gray-500 font-bold">Cancel</button>
-              <button type="submit" disabled={loading} className="bg-[#7A4900] text-white px-6 py-2 rounded-lg font-bold disabled:opacity-50">
-                {loading ? 'Creating...' : 'Create Admin Account'}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
-            <tr>
-              <th className="px-6 py-4">Admin</th>
-              <th className="px-6 py-4">Type</th>
-              <th className="px-6 py-4">Email</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Joined</th>
-              <th className="px-6 py-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {admins.map((a) => (
-              <tr key={a.uid} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-3">
-                    <img src={a.photoURL || undefined} alt="" className="w-8 h-8 rounded-full border border-gray-200" referrerPolicy="no-referrer" />
-                    <span className="font-bold text-[#7A4900]">{a.displayName}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <select
-                    value={a.adminType}
-                    onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
-                    className="text-[10px] font-bold px-2 py-1 rounded-full uppercase outline-none border-none bg-gray-50 cursor-pointer"
+      {/* Admin List Section */}
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-[#7A4900]">Active Administrators ({activeAdmins.length})</h2>
+          <button onClick={() => setShowAdd(true)} className="bg-[#7A4900] text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:bg-black shadow-lg transition-all transform hover:-translate-y-1">
+            <Plus className="w-5 h-5" />
+            <span>Add Admin Directly</span>
+          </button>
+        </div>
+
+        {showAdd && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-8 rounded-[2.5rem] shadow-xl border-4 border-[#7A4900]/10">
+            <form onSubmit={handleCreateAdmin} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Full Name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Email Address</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Initial Password</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium" required minLength={6} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Permission Level</label>
+                  <select 
+                    value={adminType} 
+                    onChange={(e) => setAdminType(e.target.value as any)}
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-bold text-[#7A4900]"
                   >
-                    <option value="full">Full Admin</option>
-                    <option value="question_holder">Question Holder</option>
+                    <option value="full">Full Administrator</option>
+                    <option value="question_holder">Question Holder Only</option>
                   </select>
-                </td>
-                <td className="px-6 py-4 text-sm text-[#545454]">{a.email}</td>
-                <td className="px-6 py-4">
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                    a.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
-                  }`}>
-                    {a.status || 'active'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-xs text-gray-400">{new Date(a.createdAt).toLocaleDateString()}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    {a.status === 'pending' && (
-                      <button 
-                        onClick={() => onActivate(a.uid)}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                        title="Activate Admin"
+                </div>
+              </div>
+              {error && <p className="text-red-500 text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100">{error}</p>}
+              <div className="flex justify-end space-x-4">
+                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-gray-500 font-bold hover:text-gray-700 transition-colors">Cancel</button>
+                <button type="submit" disabled={loading} className="bg-[#7A4900] text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-amber-900/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
+                  {loading ? 'Creating...' : 'Confirm Account Creation'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+
+        <div className="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-gray-100">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[800px]">
+              <thead className="bg-[#fcfcfa] text-[#7A4900] uppercase text-xs font-black tracking-widest border-b">
+                <tr>
+                  <th className="px-8 py-6">Administrator</th>
+                  <th className="px-8 py-6">Privileges</th>
+                  <th className="px-8 py-6">Email</th>
+                  <th className="px-8 py-6">Joined</th>
+                  <th className="px-8 py-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {activeAdmins.map((a) => (
+                  <tr key={a.uid} className="hover:bg-[#fcfcfa] transition-colors">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center space-x-4">
+                        <img src={a.photoURL || undefined} alt="" className="w-12 h-12 rounded-2xl border-2 border-gray-50 shadow-sm" referrerPolicy="no-referrer" />
+                        <div>
+                          <p className="font-bold text-[#7A4900]">{a.displayName}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">ID: {a.uid.slice(0, 8)}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <select
+                        value={a.adminType}
+                        onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
+                        className={`text-[10px] font-black px-4 py-2 rounded-xl uppercase outline-none border transition-all cursor-pointer ${
+                          a.adminType === 'full' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                        }`}
                       >
-                        <CheckCircle2 className="w-5 h-5" />
+                        <option value="full">Full Admin</option>
+                        <option value="question_holder">Question Holder</option>
+                      </select>
+                    </td>
+                    <td className="px-8 py-6 text-sm font-medium text-[#545454]">{a.email}</td>
+                    <td className="px-8 py-6 text-xs font-bold text-gray-300">{new Date(a.createdAt).toLocaleDateString()}</td>
+                    <td className="px-8 py-6 text-right">
+                      <button onClick={() => onDelete(a.uid)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group">
+                        <Trash2 className="w-6 h-6 group-hover:scale-110 transition-transform" />
                       </button>
-                    )}
-                    <button onClick={() => onDelete(a.uid)} className="p-2 text-red-400 hover:text-red-600 rounded-lg transition-all">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </div>
     </motion.div>
   );
 }

@@ -355,13 +355,13 @@ function Landing() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link
-              to="/login"
-              className="w-full sm:w-auto bg-[#D4AF37] text-white px-10 py-5 rounded-[2rem] font-bold text-xl hover:bg-[#B8860B] shadow-2xl shadow-amber-200 transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-3"
+            <button
+              onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-full sm:w-auto bg-[#D4AF37] text-white px-10 py-5 rounded-[2rem] font-bold text-xl hover:bg-[#B8860B] shadow-2xl shadow-amber-200 transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-3 cursor-pointer"
             >
               <LogIn className="w-6 h-6" />
-              <span>Start Your Journey</span>
-            </Link>
+              <span>Enter Portal</span>
+            </button>
             <Link
               to="/leaderboard"
               className="w-full sm:w-auto bg-white text-[#7A4900] border-2 border-[#7A4900]/10 px-10 py-5 rounded-[2rem] font-bold text-xl hover:border-[#7A4900] hover:bg-gray-50 transition-all flex items-center justify-center space-x-3"
@@ -439,7 +439,7 @@ function Landing() {
       </section>
 
       {/* Portal Access */}
-      <section className="bg-white rounded-[4rem] p-12 md:p-20 shadow-xl border border-gray-50 flex flex-col items-center">
+      <section id="portals" className="bg-white rounded-[4rem] p-12 md:p-20 shadow-xl border border-gray-50 flex flex-col items-center">
         <h2 className="text-center font-serif text-4xl md:text-5xl font-bold text-[#7A4900] mb-16">Choose Your Portal</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-5xl">
           <Link
