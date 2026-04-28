@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -109,6 +109,9 @@ export default function App() {
 function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserProfile | null, onLogout: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const showNavBack = location.pathname !== '/';
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -123,6 +126,16 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-4">
+            {showNavBack && (
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 mr-2 hover:bg-[#D4AF37]/10 rounded-xl transition-all text-[#7A4900] flex items-center space-x-1 font-bold group"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+                <span className="hidden sm:inline text-xs uppercase tracking-wider">Back</span>
+              </button>
+            )}
             <Link to="/" className="flex items-center space-x-3">
               <img src={LOGO_URL} alt="Numinous Learn" className="h-12 w-12 rounded-xl shadow-md object-cover" referrerPolicy="no-referrer" />
               <span className="text-2xl font-bold text-[#7A4900]">Numinous Learn</span>
@@ -488,12 +501,12 @@ function Landing() {
         <p className="text-xl text-[#545454] max-w-xl mx-auto mb-12 opacity-80">
           Join Numinous Learn today and transform the way you prepare for your academic future.
         </p>
-        <Link
-          to="/login"
-          className="inline-block bg-[#D4AF37] text-white px-16 py-6 rounded-full font-bold text-2xl hover:bg-[#B8860B] shadow-2xl transition-all shadow-amber-200"
+        <button
+          onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}
+          className="inline-block bg-[#D4AF37] text-white px-16 py-6 rounded-full font-bold text-2xl hover:bg-[#B8860B] shadow-2xl transition-all shadow-amber-200 cursor-pointer"
         >
           Create Free Account
-        </Link>
+        </button>
       </section>
     </div>
   );

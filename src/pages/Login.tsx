@@ -27,11 +27,15 @@ export default function Login() {
     if (roleParam === 'admin') {
       setSelectedRole('admin');
       setAuthMode('login');
+      setHasPreselectedRole(true);
     } else if (roleParam === 'student') {
       setSelectedRole('student');
       setAuthMode('login');
+      setHasPreselectedRole(true);
     }
   }, [searchParams]);
+
+  const [hasPreselectedRole, setHasPreselectedRole] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,20 +151,22 @@ export default function Login() {
           </p>
         </div>
 
-        <div className="flex bg-[#f5f5f0] p-1 rounded-2xl mb-8">
-          <button
-            onClick={() => { setSelectedRole('student'); setAuthMode('login'); setError(''); setMessage(''); }}
-            className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'student' ? 'bg-white text-[#D4AF37] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            Student Account
-          </button>
-          <button
-            onClick={() => { setSelectedRole('admin'); setAuthMode('login'); setError(''); setMessage(''); }}
-            className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'admin' ? 'bg-white text-[#7A4900] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            Admin Account
-          </button>
-        </div>
+        {!hasPreselectedRole && (
+          <div className="flex bg-[#f5f5f0] p-1 rounded-2xl mb-8">
+            <button
+              onClick={() => { setSelectedRole('student'); setAuthMode('login'); setError(''); setMessage(''); }}
+              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'student' ? 'bg-white text-[#D4AF37] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Student Account
+            </button>
+            <button
+              onClick={() => { setSelectedRole('admin'); setAuthMode('login'); setError(''); setMessage(''); }}
+              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'admin' ? 'bg-white text-[#7A4900] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Admin Account
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {(authMode !== 'login') && (
