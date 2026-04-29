@@ -7,7 +7,7 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType, Resource } from '../types';
@@ -17,13 +17,11 @@ interface AdminProps {
   profile: UserProfile | null;
 }
 
-type AdminTab = 'dashboard' | 'users' | 'payments' | 'events' | 'questions' | 'feedback' | 'admins' | 'submissions' | 'resources';
+type AdminTab = 'menu' | 'dashboard' | 'users' | 'payments' | 'events' | 'questions' | 'feedback' | 'admins' | 'submissions' | 'resources' | 'profile';
 
 export default function Admin({ profile }: AdminProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<AdminTab>(
-    profile?.adminType === 'question_holder' ? 'questions' : 'dashboard'
-  );
+  const [activeTab, setActiveTab] = useState<AdminTab>('menu');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [admins, setAdmins] = useState<UserProfile[]>([]);
@@ -192,139 +190,199 @@ export default function Admin({ profile }: AdminProps) {
     </div>
   );
 
+  const handlePreview = () => {
+    // We'll use a local storage flag or a state in App.tsx that StudentShell respects
+    localStorage.setItem('admin_preview_mode', 'true');
+    window.location.href = '/dashboard';
+  };
+
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { id: 'users', label: 'Students', icon: Users, color: 'text-green-500', bg: 'bg-green-500/10', fullAdminOnly: true },
+    { id: 'admins', label: 'Admins', icon: Shield, color: 'text-purple-500', bg: 'bg-purple-500/10', fullAdminOnly: true },
+    { id: 'questions', label: 'Questions', icon: Database, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
+    { id: 'payments', label: 'Payments', icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-500/10', fullAdminOnly: true },
+    { id: 'events', label: 'Events', icon: Calendar, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+    { id: 'submissions', label: 'Submissions', icon: Activity, color: 'text-pink-500', bg: 'bg-pink-500/10' },
+    { id: 'feedback', label: 'Feedback', icon: MessageSquare, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+    { id: 'resources', label: 'PDF', icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { id: 'profile', label: 'Profile', icon: UserCircle, color: 'text-gray-400', bg: 'bg-white/5' },
+  ];
+
   return (
-    <div className="min-h-screen -mx-4 -mt-8 flex flex-col lg:flex-row bg-[#0a0a0a] text-white overflow-hidden">
-      {/* Sidebar Navigation */}
-      <div className="w-full lg:w-64 bg-[#141414] border-b lg:border-r border-white/5 flex flex-col shrink-0">
-        <div className="p-6 border-b border-white/5">
-          <div className="flex items-center space-x-3 mb-1">
-            <Shield className="w-6 h-6 text-[#D4AF37]" />
-            <h1 className="text-xl font-black uppercase tracking-tighter italic">ADMIN OPS</h1>
-          </div>
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Global Terminal v2.0</p>
-        </div>
-
-        <nav className="flex-1 p-4 overflow-y-auto space-y-1">
-          <NavItem active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="System Metrics" />
-          <div className="pt-4 pb-2 px-4 text-[10px] font-black text-gray-600 uppercase tracking-widest">Management</div>
-          {isFullAdmin && (
-            <>
-              <NavItem active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Student Fleet" />
-              <NavItem active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admin Core" />
-            </>
-          )}
-          <NavItem active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} icon={Database} label="Question Hive" />
-          <NavItem active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Exam Grid" />
-          <NavItem active={activeTab === 'resources'} onClick={() => setActiveTab('resources')} icon={FileText} label="PDF Storehouse" />
-          
-          <div className="pt-4 pb-2 px-4 text-[10px] font-black text-gray-600 uppercase tracking-widest">Financials & Data</div>
-          {isFullAdmin && (
-            <NavItem active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Revenue Log" />
-          )}
-          <NavItem active={activeTab === 'submissions'} onClick={() => setActiveTab('submissions')} icon={Activity} label="Activity Logs" />
-          <NavItem active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Comms Feed" />
-        </nav>
-
-        <div className="p-4 border-t border-white/5 bg-black/20">
-          <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-            <img src={profile?.photoURL} alt="" className="w-8 h-8 rounded-lg border border-white/10 group-hover:border-[#D4AF37]/50 transition-all" referrerPolicy="no-referrer" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold truncate">{profile?.displayName}</p>
-              <p className="text-[9px] text-gray-500 truncate lowercase">{profile?.email}</p>
-            </div>
-            <LogOut className="w-4 h-4 text-gray-600 group-hover:text-red-500" onClick={() => auth.signOut()} />
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-black p-4 sm:p-8 lg:p-12 scroll-smooth">
-        <header className="mb-8 sm:mb-12">
-          <div className="flex items-center space-x-2 text-[#D4AF37] mb-2 sm:mb-4">
-            <Activity className="w-4 h-4" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Operational Status: Optimized</span>
-          </div>
-          <h2 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter italic">
-            {activeTab.replace(/([A-Z])/g, ' $1').trim()}
-          </h2>
-        </header>
-
-        <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8 sm:space-y-12 pb-20">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
-                <ModernStatCard label="Total Students" value={users.length} icon={Users} trend="+12% this week" />
-                <ModernStatCard label="Active Events" value={events.filter(e => e.status === 'ongoing').length} icon={Activity} trend="Live Tracking" highlight />
-                <ModernStatCard label="Question Bank" value={questions.length} icon={Database} trend="HSC 2026 Ready" />
-                <ModernStatCard label="System Load" value="Normal" icon={Shield} trend="All systems nominal" />
+    <div className="min-h-screen -mx-4 -mt-8 bg-[#0a0a0a] text-white">
+      {activeTab === 'menu' ? (
+        <div className="p-4 sm:p-8 lg:p-12 max-w-7xl mx-auto">
+          <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <Shield className="w-8 h-8 text-[#D4AF37]" />
+                <h1 className="text-3xl font-black uppercase tracking-tighter italic">Admin Control Center</h1>
               </div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Global Operations Terminal v2.5</p>
+            </div>
+            
+            <button 
+              onClick={handlePreview}
+              className="group flex items-center space-x-3 bg-white/5 hover:bg-[#D4AF37] px-6 py-3 rounded-2xl border border-white/10 transition-all"
+            >
+              <Eye className="w-5 h-5 text-[#D4AF37] group-hover:text-black" />
+              <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-black">Preview Student View</span>
+            </button>
+          </header>
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 sm:gap-12">
-                <section className="bg-[#141414] rounded-3xl p-6 sm:p-8 border border-white/5">
-                  <div className="flex justify-between items-center mb-6 sm:mb-8">
-                    <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight italic">Upcoming Deployments</h3>
-                    <button onClick={() => setActiveTab('events')} className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest hover:underline">View Roadmap</button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {navItems.map((item) => {
+              if (item.fullAdminOnly && !isFullAdmin) return null;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as AdminTab)}
+                  className="group relative flex flex-col items-start p-8 bg-[#141414] border border-white/5 rounded-[2.5rem] hover:border-[#D4AF37]/40 hover:bg-[#1a1a1a] transition-all text-left shadow-xl"
+                >
+                  <div className={`p-4 rounded-2xl ${item.bg} ${item.color} mb-6 group-hover:scale-110 transition-transform`}>
+                    <item.icon className="w-8 h-8" />
                   </div>
-                  <div className="space-y-4 sm:space-y-6">
-                    {events.slice(0, 4).map(e => (
-                      <div key={e.id} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5 hover:border-white/20 transition-all">
-                        <div className="flex items-center space-x-4">
-                          <div className={`p-3 rounded-xl ${e.status === 'ongoing' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                            <Calendar className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm sm:text-base">{e.title}</p>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase">{new Date(e.startTime).toLocaleDateString()} • {e.class}</p>
+                  <h3 className="text-xl font-black uppercase italic tracking-tight">{item.label}</h3>
+                  <div className="mt-4 flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-[#D4AF37] transition-colors">
+                    <span>Manage Access</span>
+                    <ChevronRight className="w-3 h-3 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-12 p-8 bg-[#141414] rounded-[2.5rem] border border-white/5 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <img src={profile?.photoURL} alt="" className="w-12 h-12 rounded-xl border border-white/10" referrerPolicy="no-referrer" />
+              <div>
+                <p className="font-bold text-lg">{profile?.displayName}</p>
+                <p className="text-xs text-gray-500 lowercase tracking-wider">{profile?.email}</p>
+              </div>
+            </div>
+            <button onClick={() => auth.signOut()} className="flex items-center space-x-2 text-red-500 hover:text-red-400 font-bold uppercase text-[10px] tracking-widest px-6 py-2 rounded-xl hover:bg-red-500/10 transition-all">
+              <LogOut className="w-4 h-4" />
+              <span>Terminate Session</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col h-screen">
+          <header className="p-4 sm:p-6 bg-[#141414] border-b border-white/5 flex items-center justify-between z-50">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setActiveTab('menu')}
+                className="p-3 bg-black rounded-xl border border-white/10 text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter">
+                  {navItems.find(i => i.id === activeTab)?.label}
+                </h2>
+                <div className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Active Console</span>
+                </div>
+              </div>
+            </div>
+            {activeTab !== 'profile' && (
+              <button 
+                onClick={handlePreview}
+                className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all"
+              >
+                <Eye className="w-4 h-4 text-[#D4AF37]" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Quick Preview</span>
+              </button>
+            )}
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 scroll-smooth bg-black">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="pb-20"
+              >
+                {activeTab === 'dashboard' && (
+                  <div className="space-y-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                      <ModernStatCard label="Total Students" value={users.length} icon={Users} trend="+12% this week" />
+                      <ModernStatCard label="Active Events" value={events.filter(e => e.status === 'ongoing').length} icon={Activity} trend="Live Tracking" highlight />
+                      <ModernStatCard label="Question Bank" value={questions.length} icon={Database} trend="HSC 2026 Ready" />
+                      <ModernStatCard label="System Load" value="Normal" icon={Shield} trend="All systems nominal" />
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+                      <section className="bg-[#141414] rounded-[2.5rem] p-8 border border-white/5 shadow-xl">
+                        <div className="flex justify-between items-center mb-8">
+                          <h3 className="text-xl font-black uppercase tracking-tight italic">Upcoming Deployments</h3>
+                          <button onClick={() => setActiveTab('events')} className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest hover:underline">View Roadmap</button>
+                        </div>
+                        <div className="space-y-4">
+                          {events.slice(0, 4).map(e => (
+                            <div key={e.id} className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-white/20 transition-all">
+                              <div className="flex items-center space-x-4">
+                                <div className={`p-4 rounded-xl ${e.status === 'ongoing' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                  <Calendar className="w-6 h-6" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-base">{e.title}</p>
+                                  <p className="text-[10px] text-gray-500 font-bold uppercase">{new Date(e.startTime).toLocaleDateString()} • {e.class}</p>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-gray-600" />
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="bg-[#141414] rounded-[2.5rem] p-8 border border-white/5 shadow-xl">
+                        <div className="flex justify-between items-center mb-8">
+                          <h3 className="text-xl font-black uppercase tracking-tight italic">Comms Relay</h3>
+                          <div className="flex space-x-2">
+                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                             <span className="text-[9px] font-black text-gray-500 uppercase">Live Buffer</span>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-gray-600" />
-                      </div>
-                    ))}
-                    {events.length === 0 && <p className="text-center py-10 text-gray-600 uppercase text-[10px] font-black">No Deployments</p>}
-                  </div>
-                </section>
-
-                <section className="bg-[#141414] rounded-3xl p-6 sm:p-8 border border-white/5">
-                  <div className="flex justify-between items-center mb-6 sm:mb-8">
-                    <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight italic">Comms Relay</h3>
-                    <div className="flex space-x-2">
-                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                       <span className="text-[9px] font-black text-gray-500 uppercase">Live Buffer</span>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar">
+                          {feedback.map(f => (
+                            <div key={f.id} className="p-5 bg-black/40 rounded-2xl border border-white/5">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${f.type === 'Issue' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'}`}>{f.type}</span>
+                                <span className="text-[10px] font-mono text-gray-600">{new Date(f.createdAt).toLocaleTimeString()}</span>
+                              </div>
+                              <p className="text-[11px] text-gray-400 leading-relaxed italic">"{f.message}"</p>
+                              <div className="mt-4 flex items-center space-x-2">
+                                <div className="w-5 h-5 rounded-full bg-white/10" />
+                                <span className="text-[10px] font-bold text-gray-500">{f.displayName}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
                     </div>
                   </div>
-                  <div className="space-y-4 sm:space-y-6 max-h-[400px] overflow-y-auto no-scrollbar">
-                    {feedback.map(f => (
-                      <div key={f.id} className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${f.type === 'Issue' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'}`}>{f.type}</span>
-                          <span className="text-[9px] font-mono text-gray-600">{new Date(f.createdAt).toLocaleTimeString()}</span>
-                        </div>
-                        <p className="text-[11px] text-gray-400 leading-relaxed italic">"{f.message}"</p>
-                        <div className="mt-3 flex items-center space-x-2">
-                          <div className="w-4 h-4 rounded-full bg-white/10" />
-                          <span className="text-[9px] font-bold text-gray-500">{f.displayName}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {feedback.length === 0 && <p className="text-center py-12 text-gray-600 uppercase text-[10px] font-black tracking-widest">No Incoming Comms</p>}
-                  </div>
-                </section>
-              </div>
-            </motion.div>
-          )}
-
-          <div className="admin-content-wrapper pb-20">
-            {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
-            {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
-            {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
-            {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-            {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
-            {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} mathEngine={profile?.mathEngine} />}
-            {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
-            {activeTab === 'resources' && <ResourceManager key="resources" resources={resources} onDelete={handleDeleteResource} />}
+                )}
+                
+                {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
+                {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
+                {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
+                {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
+                {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
+                {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} mathEngine={profile?.mathEngine} />}
+                {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
+                {activeTab === 'resources' && <ResourceManager key="resources" resources={resources} onDelete={handleDeleteResource} />}
+                {activeTab === 'profile' && navigate('/profile')}
+              </motion.div>
+            </AnimatePresence>
           </div>
-        </AnimatePresence>
-      </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       <AnimatePresence>

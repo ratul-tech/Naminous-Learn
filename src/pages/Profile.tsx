@@ -171,8 +171,24 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     }
   };
 
+  const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
+  const isAdmin = profile?.role === 'admin';
+
   return (
-    <div className="space-y-6 pb-20">
+    <div className={`space-y-6 pb-20 pt-4 ${isAdmin && !isPreviewMode ? 'mt-8' : ''}`}>
+      {isAdmin && !isPreviewMode && (
+        <div className="max-w-2xl mx-auto px-1">
+          <button 
+            onClick={() => navigate('/admin')}
+            className="flex items-center space-x-3 text-gray-500 hover:text-[#7A4900] transition-colors mb-2 group"
+          >
+            <div className="p-2 bg-white rounded-xl shadow-sm border border-gray-100 group-hover:border-[#D4AF37]/30 transition-all">
+              <ArrowLeft className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Control Center</span>
+          </button>
+        </div>
+      )}
       {/* Dynamic Header */}
       <header className="relative overflow-hidden bg-white px-6 py-10 rounded-[2rem] shadow-sm border border-gray-100 text-center">
         <div className="relative z-10">

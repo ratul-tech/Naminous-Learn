@@ -51,6 +51,18 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
       );
     }
 
+    const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
+
+    if (profile?.role === 'admin' && !isPreviewMode) {
+      return (
+        <Routes>
+          <Route path="/admin" element={<Admin profile={profile} />} />
+          <Route path="/profile" element={<Profile profile={profile} setProfile={setProfile} />} />
+          <Route path="*" element={<Navigate to="/admin" />} />
+        </Routes>
+      );
+    }
+
     const Shell = StudentShell;
 
     return (
@@ -65,7 +77,6 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
           <Route path="/resources" element={<Resources profile={profile} />} />
           <Route path="/feedback" element={<FeedbackForm profile={profile} />} />
           <Route path="/questions" element={profile?.role === 'admin' ? <Questions profile={profile} /> : <Navigate to="/dashboard" />} />
-          <Route path="/admin" element={profile?.role === 'admin' ? <Admin profile={profile} /> : <Navigate to="/dashboard" />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Shell>

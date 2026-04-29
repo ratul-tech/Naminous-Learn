@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Calendar, User as UserIcon, MessageSquare, FileText, Shield } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Calendar, User as UserIcon, MessageSquare, FileText, Shield, LogOut, ArrowLeft } from 'lucide-react';
 import { UserProfile } from '../types';
 import { motion } from 'motion/react';
 
@@ -14,22 +14,43 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
 
   if (!profile) return <>{children}</>;
 
+  const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
+
+  const exitPreview = () => {
+    localStorage.removeItem('admin_preview_mode');
+    window.location.href = '/admin';
+  };
+
   const menuItems = [
-    { icon: Calendar, path: '/events', label: 'Live Exam' },
-    { icon: BookOpen, path: '/practice', label: 'Practice Exam' },
+    { icon: LayoutDashboard, path: '/dashboard', label: 'Home' },
+    { icon: Calendar, path: '/events', label: 'Exam' },
+    { icon: BookOpen, path: '/practice', label: 'Topic' },
     { icon: FileText, path: '/resources', label: 'PDF' },
   ];
 
-  // Add Admin Dashboard if user is admin
-  if (profile.role === 'admin') {
-    menuItems.push({ icon: Shield, path: '/admin', label: 'Admin' });
-  }
-
-  // Always keep Profile at the end (far right)
+  // Profile always visible
   menuItems.push({ icon: UserIcon, path: '/profile', label: 'Profile' });
 
   return (
-    <div className="max-w-2xl mx-auto pb-32 lg:pb-12 pt-4">
+    <div className="max-w-2xl mx-auto pb-32 lg:pb-12 pt-4 relative">
+      {isPreviewMode && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-black text-white px-4 py-3 flex items-center justify-between shadow-2xl border-b border-[#D4AF37]/30">
+          <div className="flex items-center space-x-3">
+            <div className="bg-[#D4AF37] p-1.5 rounded-lg">
+              <Shield className="w-4 h-4 text-black" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest italic">Viewing as Student</span>
+          </div>
+          <button 
+            onClick={exitPreview}
+            className="flex items-center space-x-2 bg-white text-black px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#D4AF37] transition-all"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            <span>Return to Terminal</span>
+          </button>
+        </div>
+      )}
+
       {/* Integrated App Header */}
       <div className="flex items-center justify-between mb-8 px-4">
         <div className="flex items-center space-x-2">
