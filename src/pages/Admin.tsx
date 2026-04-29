@@ -34,6 +34,12 @@ export default function Admin({ profile }: AdminProps) {
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
   const isFullAdmin = profile?.role === 'admin';
+  
+  useEffect(() => {
+    if (activeTab === 'profile') {
+      navigate('/profile');
+    }
+  }, [activeTab, navigate]);
 
   useEffect(() => {
     const unsubQuestions = onSnapshot(query(collection(db, 'questions'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -377,7 +383,6 @@ export default function Admin({ profile }: AdminProps) {
                 {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} mathEngine={profile?.mathEngine} />}
                 {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
                 {activeTab === 'resources' && <ResourceManager key="resources" resources={resources} onDelete={handleDeleteResource} />}
-                {activeTab === 'profile' && navigate('/profile')}
               </motion.div>
             </AnimatePresence>
           </div>
