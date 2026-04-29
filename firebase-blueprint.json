@@ -122,6 +122,19 @@
         "questionsCount": { "type": "number" },
         "eventsCount": { "type": "number" }
       }
+    },
+    "Resource": {
+      "title": "Academic Resource",
+      "description": "Information about a downloadable PDF study guide.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "category": { "type": "string" },
+        "size": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "url", "category"]
     }
   },
   "firestore": {
@@ -156,6 +169,10 @@
     "/feedback/{feedbackId}": {
       "schema": "Feedback",
       "description": "User feedback submissions"
+    },
+    "/resources/{resourceId}": {
+      "schema": "Resource",
+      "description": "Academic PDF resources"
     }
   }
 }

@@ -128,3 +128,12 @@ export interface Feedback {
   message: string;
   createdAt: string;
 }
+
+export interface Resource {
+  id: string;
+  title: string;
+  url: string;
+  category: string;
+  size?: string;
+  createdAt: string;
+}

@@ -1,78 +1,139 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { FileText, Download, ExternalLink, Search } from 'lucide-react';
-import { UserProfile } from '../types';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { FileText, Download, Search, Filter } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+import { UserProfile, Resource } from '../types';
 
 interface ResourcesProps {
   profile: UserProfile | null;
 }
 
-const RESOURCES = [
-  { id: '1', title: 'Mathematics Grade 10 - Semester 1', category: 'Math', size: '4.2 MB', date: '2024-03-20' },
-  { id: '2', title: 'English Grammar & Composition', category: 'English', size: '2.8 MB', date: '2024-03-15' },
-  { id: '3', title: 'Physics Fundamentals - Part 1', category: 'Science', size: '5.1 MB', date: '2024-03-10' },
-  { id: '4', title: 'General Knowledge 2024 Edition', category: 'GK', size: '1.5 MB', date: '2024-03-05' },
-  { id: '5', title: 'Chemistry Lab Manual', category: 'Science', size: '3.3 MB', date: '2024-03-01' },
-];
-
 export default function Resources({ profile }: ResourcesProps) {
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+  useEffect(() => {
+    const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setResources(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const categories = ['All', ...new Set(resources.map(r => r.category))];
+
+  const filteredResources = resources.filter(res => {
+    const matchesSearch = res.title.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || res.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
-    <div className="space-y-8 px-2 sm:px-0">
-      <header>
-        <h1 className="text-3xl font-bold text-[#7A4900] font-serif mb-2">Resource Library</h1>
-        <p className="text-[#545454] font-medium opacity-70">Download academic PDFs and study guides</p>
+    <div className="space-y-8 pb-10">
+      <header className="px-1">
+        <h1 className="text-4xl font-black text-[#7A4900] uppercase tracking-tighter italic mb-1">Knowledge Hub</h1>
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Access Restricted Asset Nodes</p>
       </header>
 
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input 
-          type="text" 
-          placeholder="Search for study materials..."
-          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-gray-100 shadow-sm outline-none focus:border-[#D4AF37] transition-all"
-        />
+      <div className="space-y-4">
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#D4AF37] transition-colors" />
+          <input 
+            type="text" 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Scan for encrypted datasheets..."
+            className="w-full pl-12 pr-4 py-5 rounded-[2rem] bg-white border-2 border-transparent shadow-sm outline-none focus:border-[#D4AF37]/30 focus:shadow-xl transition-all font-bold placeholder-gray-300"
+          />
+        </div>
+
+        <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar pb-2 px-1">
+          <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-100 shrink-0">
+            <Filter className="w-4 h-4 text-gray-400" />
+          </div>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0 shadow-sm border ${
+                selectedCategory === cat 
+                  ? 'bg-[#7A4900] text-white border-[#7A4900] shadow-amber-900/10' 
+                  : 'bg-white text-gray-400 border-gray-100 hover:border-[#D4AF37]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {RESOURCES.map((res, i) => (
-          <motion.div
-            key={res.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white p-5 rounded-3xl shadow-sm border border-gray-50 flex items-center justify-between hover:shadow-md transition-all group"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-amber-50 text-[#D4AF37] rounded-2xl flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#7A4900] truncate max-w-[200px] sm:max-w-md">{res.title}</h3>
-                <div className="flex items-center space-x-3 mt-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400">{res.category}</span>
-                  <span className="w-1 h-1 bg-gray-200 rounded-full" />
-                  <span className="text-[10px] font-black uppercase text-gray-400">{res.size}</span>
+      <div className="grid grid-cols-1 gap-4">
+        <AnimatePresence mode="popLayout">
+          {filteredResources.map((res, i) => (
+            <motion.div
+              layout
+              key={res.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, delay: i * 0.05 }}
+              className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-xl hover:border-[#D4AF37]/20 transition-all group overflow-hidden relative"
+            >
+              <div className="flex items-center space-x-5 flex-1 min-w-0">
+                <div className="w-14 h-14 bg-amber-50 text-[#D4AF37] rounded-3xl flex items-center justify-center shrink-0 shadow-inner group-hover:bg-[#D4AF37] group-hover:text-white transition-all transform group-hover:rotate-6">
+                  <FileText className="w-7 h-7" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-black text-[#7A4900] text-lg leading-tight uppercase tracking-tight mb-1 truncate">{res.title}</h3>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-[9px] font-black uppercase text-[#D4AF37] px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-100">{res.category}</span>
+                    <span className="w-1 h-1 bg-gray-200 rounded-full" />
+                    <span className="text-[9px] font-black uppercase text-gray-400">{res.size || 'Auto Size'}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <button 
-              className="p-3 bg-[#7A4900]/5 text-[#7A4900] rounded-xl hover:bg-[#7A4900] hover:text-white transition-all shadow-sm"
-              onClick={() => alert('Download started for ' + res.title)}
-            >
-              <Download className="w-5 h-5" />
-            </button>
-          </motion.div>
-        ))}
+              <a 
+                href={res.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-4 p-4 bg-[#7A4900] text-white rounded-2xl hover:bg-black hover:scale-110 active:scale-95 transition-all shadow-lg shadow-amber-900/10"
+              >
+                <Download className="w-6 h-6" />
+              </a>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+            <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Syncing Hub...</p>
+          </div>
+        ) : filteredResources.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
+            <FileText className="w-16 h-16 text-gray-100 mx-auto mb-4" />
+            <p className="text-gray-400 font-black uppercase text-xs tracking-widest">Archive Empty</p>
+          </div>
+        )}
       </div>
 
-      <div className="bg-[#7A4900] p-8 rounded-[2.5rem] text-white text-center shadow-xl shadow-amber-900/20 relative overflow-hidden group">
+      <div className="bg-[#141414] p-10 rounded-[3rem] text-white relative overflow-hidden group shadow-2xl border border-white/5">
         <div className="relative z-10">
-          <h3 className="text-xl font-bold mb-2">Request Materials?</h3>
-          <p className="text-white/70 text-sm mb-6">Need a specific book or guide that isn't listed here?</p>
-          <button className="bg-[#D4AF37] text-white px-8 py-3 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all">
-            Contact Academic Office
+          <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.3em] mb-2">Sync Request</p>
+          <h3 className="text-2xl font-black uppercase tracking-tighter italic mb-3">Manifest Missing?</h3>
+          <p className="text-gray-500 text-xs font-bold leading-relaxed mb-8 max-w-[200px]">Signal our terminal if a specific datasheet is required for your mission.</p>
+          <button className="bg-white text-black px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#D4AF37] transition-all shadow-xl active:scale-95">
+            Open Uplink
           </button>
         </div>
-        <ExternalLink className="absolute -bottom-4 -right-4 w-32 h-32 text-white/5 group-hover:scale-110 transition-transform" />
+        <div className="absolute top-0 right-0 p-8">
+           <div className="w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-3xl" />
+        </div>
+        <FileText className="absolute -bottom-6 -right-6 w-48 h-48 text-white/5 opacity-40 group-hover:scale-110 transition-transform transform rotate-12" />
       </div>
     </div>
   );

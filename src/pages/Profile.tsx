@@ -36,7 +36,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteTimer, setDeleteTimer] = useState(5);
+  const [deleteTimer, setDeleteTimer] = useState(0);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [admins, setAdmins] = useState<any[]>([]);
@@ -54,9 +54,9 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
 
   useEffect(() => {
     let timer: any;
-    if (showDeleteConfirm && deleteTimer > 0) {
+    if (showDeleteConfirm && deleteTimer < 5) {
       timer = setInterval(() => {
-        setDeleteTimer((prev) => prev - 1);
+        setDeleteTimer((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(timer);
@@ -494,9 +494,9 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
               <div className="space-y-4">
                 <button
                   onClick={handleDeleteAccount}
-                  disabled={deleting || deleteTimer > 0}
+                  disabled={deleting || deleteTimer < 5}
                   className={`w-full py-5 rounded-[2rem] font-bold transition-all flex items-center justify-center space-x-3 shadow-xl ${
-                    deleteTimer > 0 
+                    deleteTimer < 5 
                     ? 'bg-gray-100 text-gray-400 opacity-50' 
                     : 'bg-red-600 text-white hover:bg-red-700 active:scale-95'
                   }`}
@@ -506,7 +506,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                   ) : (
                     <>
                       <ShieldCheck className="w-6 h-6" />
-                      <span>{deleteTimer > 0 ? `Confirm (0 to ${5 - deleteTimer}) wait ${deleteTimer}s` : 'Delete My Record Permanently'}</span>
+                      <span>{deleteTimer < 5 ? `Safety Protocol: Synchronizing (${deleteTimer}/5)` : 'Confirm Permanent Deletion'}</span>
                       {deleteTimer > 0 && <span className="text-sm opacity-50">{deleteTimer}s</span>}
                     </>
                   )}

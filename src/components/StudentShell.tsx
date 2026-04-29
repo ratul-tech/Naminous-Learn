@@ -32,7 +32,17 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
     <div className="max-w-2xl mx-auto pb-32 lg:pb-12 pt-4">
       {/* Integrated App Header */}
       <div className="flex items-center justify-between mb-8 px-4">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          <Link to="/feedback" className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100 text-[#7A4900] hover:bg-gray-50 transition-all relative">
+            <MessageSquare className="w-5 h-5" />
+            <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
+          </Link>
+        </div>
+        <div className="flex items-center space-x-4 text-right">
+          <div>
+            <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.2em]">{profile.role === 'admin' ? 'Curator' : 'Scholar'}</p>
+            <h2 className="text-xl font-bold text-[#7A4900] truncate max-w-[200px]">{profile.displayName.split(' ')[0]}</h2>
+          </div>
           <Link to="/dashboard" className="relative group">
             <img 
               src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.displayName}`} 
@@ -41,22 +51,12 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
               referrerPolicy="no-referrer"
             />
             {profile.role === 'admin' ? (
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-600 border-2 border-white rounded-full flex items-center justify-center shadow-sm">
+              <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-purple-600 border-2 border-white rounded-full flex items-center justify-center shadow-sm">
                 <Shield className="w-2.5 h-2.5 text-white" />
               </div>
             ) : (
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" />
+              <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" />
             )}
-          </Link>
-          <div>
-            <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.2em]">{profile.role === 'admin' ? 'Curator' : 'Scholar'}</p>
-            <h2 className="text-xl font-bold text-[#7A4900] truncate max-w-[200px]">{profile.displayName.split(' ')[0]}</h2>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Link to="/feedback" className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100 text-[#7A4900] hover:bg-gray-50 transition-all relative">
-            <MessageSquare className="w-5 h-5" />
-            <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
           </Link>
         </div>
       </div>

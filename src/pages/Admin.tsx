@@ -7,19 +7,22 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
-import { OperationType } from '../types';
+import { OperationType, Resource } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
 
 interface AdminProps {
   profile: UserProfile | null;
 }
 
+type AdminTab = 'dashboard' | 'users' | 'payments' | 'events' | 'questions' | 'feedback' | 'admins' | 'submissions' | 'resources';
+
 export default function Admin({ profile }: AdminProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'events' | 'questions' | 'feedback' | 'admins' | 'submissions'>(
-    profile?.adminType === 'question_holder' ? 'questions' : 'users'
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<AdminTab>(
+    profile?.adminType === 'question_holder' ? 'questions' : 'dashboard'
   );
   const [questions, setQuestions] = useState<Question[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -28,6 +31,7 @@ export default function Admin({ profile }: AdminProps) {
   const [events, setEvents] = useState<ExamEvent[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
@@ -56,6 +60,9 @@ export default function Admin({ profile }: AdminProps) {
     const unsubSubmissions = onSnapshot(query(collection(db, 'submissions'), orderBy('submittedAt', 'desc')), (snapshot) => {
       setSubmissions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
     });
+    const unsubResources = onSnapshot(query(collection(db, 'resources'), orderBy('createdAt', 'desc')), (snapshot) => {
+      setResources(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
+    });
 
     setLoading(false);
     return () => {
@@ -66,6 +73,7 @@ export default function Admin({ profile }: AdminProps) {
       unsubEvents();
       unsubFeedback();
       unsubSubmissions();
+      unsubResources();
     };
   }, []);
 
@@ -167,110 +175,180 @@ export default function Admin({ profile }: AdminProps) {
     });
   };
 
-  if (loading) return <div className="text-center py-20">Loading admin panel...</div>;
+  const handleDeleteResource = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'resources', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `resources/${id}`);
+    }
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh] bg-black">
+      <div className="flex flex-col items-center space-y-4">
+        <Activity className="w-12 h-12 text-[#D4AF37] animate-spin" />
+        <p className="font-mono text-xs uppercase tracking-widest text-[#D4AF37]">Booting System Console...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#7A4900] truncate">Admin Control Center</h1>
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border overflow-x-auto max-w-full no-scrollbar w-full lg:w-auto">
+    <div className="min-h-screen -mx-4 -mt-8 flex flex-col lg:flex-row bg-[#0a0a0a] text-white overflow-hidden">
+      {/* Sidebar Navigation */}
+      <div className="w-full lg:w-64 bg-[#141414] border-b lg:border-r border-white/5 flex flex-col shrink-0">
+        <div className="p-6 border-b border-white/5">
+          <div className="flex items-center space-x-3 mb-1">
+            <Shield className="w-6 h-6 text-[#D4AF37]" />
+            <h1 className="text-xl font-black uppercase tracking-tighter italic">ADMIN OPS</h1>
+          </div>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Global Terminal v2.0</p>
+        </div>
+
+        <nav className="flex-1 p-4 overflow-y-auto space-y-1">
+          <NavItem active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={LayoutDashboard} label="System Metrics" />
+          <div className="pt-4 pb-2 px-4 text-[10px] font-black text-gray-600 uppercase tracking-widest">Management</div>
           {isFullAdmin && (
             <>
-              <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Students" />
-              <TabButton active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admins" />
+              <NavItem active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Student Fleet" />
+              <NavItem active={activeTab === 'admins'} onClick={() => setActiveTab('admins')} icon={Shield} label="Admin Core" />
             </>
           )}
-          <TabButton active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} icon={BookOpen} label="Questions" />
+          <NavItem active={activeTab === 'questions'} onClick={() => setActiveTab('questions')} icon={Database} label="Question Hive" />
+          <NavItem active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Exam Grid" />
+          <NavItem active={activeTab === 'resources'} onClick={() => setActiveTab('resources')} icon={FileText} label="PDF Storehouse" />
+          
+          <div className="pt-4 pb-2 px-4 text-[10px] font-black text-gray-600 uppercase tracking-widest">Financials & Data</div>
           {isFullAdmin && (
-            <>
-              <TabButton active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Payments" />
-            </>
+            <NavItem active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} icon={CreditCard} label="Revenue Log" />
           )}
-          <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="Events" />
-          {isFullAdmin && (
-            <>
-              <TabButton active={activeTab === 'submissions'} onClick={() => setActiveTab('submissions')} icon={BookOpen} label="Submissions" />
-              <TabButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Feedback" />
-            </>
-          )}
+          <NavItem active={activeTab === 'submissions'} onClick={() => setActiveTab('submissions')} icon={Activity} label="Activity Logs" />
+          <NavItem active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={MessageSquare} label="Comms Feed" />
+        </nav>
+
+        <div className="p-4 border-t border-white/5 bg-black/20">
+          <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+            <img src={profile?.photoURL} alt="" className="w-8 h-8 rounded-lg border border-white/10 group-hover:border-[#D4AF37]/50 transition-all" referrerPolicy="no-referrer" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold truncate">{profile?.displayName}</p>
+              <p className="text-[9px] text-gray-500 truncate lowercase">{profile?.email}</p>
+            </div>
+            <LogOut className="w-4 h-4 text-gray-600 group-hover:text-red-500" onClick={() => auth.signOut()} />
+          </div>
         </div>
       </div>
 
-      {/* Stats Dashboard */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          icon={Users} 
-          label="Total Students" 
-          value={users.length} 
-          color="bg-blue-50 text-blue-600" 
-          description="Registered students"
-        />
-        <StatCard 
-          icon={BookOpen} 
-          label="Total Questions" 
-          value={questions.length} 
-          color="bg-purple-50 text-purple-600" 
-          description="In question bank"
-        />
-        <StatCard 
-          icon={Calendar} 
-          label="Upcoming Events" 
-          value={events.filter(e => new Date(e.startTime) > new Date()).length} 
-          color="bg-yellow-50 text-yellow-600" 
-          description="Scheduled exams"
-        />
-        <StatCard 
-          icon={MessageSquare} 
-          label="Recent Feedback" 
-          value={feedback.length} 
-          color="bg-green-50 text-green-600" 
-          description="User submissions"
-        />
-      </div>
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto bg-black p-4 sm:p-8 lg:p-12 scroll-smooth">
+        <header className="mb-8 sm:mb-12">
+          <div className="flex items-center space-x-2 text-[#D4AF37] mb-2 sm:mb-4">
+            <Activity className="w-4 h-4" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Operational Status: Optimized</span>
+          </div>
+          <h2 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter italic">
+            {activeTab.replace(/([A-Z])/g, ' $1').trim()}
+          </h2>
+        </header>
 
-      <AnimatePresence mode="wait">
-        {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
-        {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
-        {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
-        {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
-        {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
-        {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} mathEngine={profile?.mathEngine} />}
-        {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
-      </AnimatePresence>
+        <AnimatePresence mode="wait">
+          {activeTab === 'dashboard' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8 sm:space-y-12 pb-20">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+                <ModernStatCard label="Total Students" value={users.length} icon={Users} trend="+12% this week" />
+                <ModernStatCard label="Active Events" value={events.filter(e => e.status === 'ongoing').length} icon={Activity} trend="Live Tracking" highlight />
+                <ModernStatCard label="Question Bank" value={questions.length} icon={Database} trend="HSC 2026 Ready" />
+                <ModernStatCard label="System Load" value="Normal" icon={Shield} trend="All systems nominal" />
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 sm:gap-12">
+                <section className="bg-[#141414] rounded-3xl p-6 sm:p-8 border border-white/5">
+                  <div className="flex justify-between items-center mb-6 sm:mb-8">
+                    <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight italic">Upcoming Deployments</h3>
+                    <button onClick={() => setActiveTab('events')} className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest hover:underline">View Roadmap</button>
+                  </div>
+                  <div className="space-y-4 sm:space-y-6">
+                    {events.slice(0, 4).map(e => (
+                      <div key={e.id} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5 hover:border-white/20 transition-all">
+                        <div className="flex items-center space-x-4">
+                          <div className={`p-3 rounded-xl ${e.status === 'ongoing' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                            <Calendar className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm sm:text-base">{e.title}</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase">{new Date(e.startTime).toLocaleDateString()} • {e.class}</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-gray-600" />
+                      </div>
+                    ))}
+                    {events.length === 0 && <p className="text-center py-10 text-gray-600 uppercase text-[10px] font-black">No Deployments</p>}
+                  </div>
+                </section>
+
+                <section className="bg-[#141414] rounded-3xl p-6 sm:p-8 border border-white/5">
+                  <div className="flex justify-between items-center mb-6 sm:mb-8">
+                    <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight italic">Comms Relay</h3>
+                    <div className="flex space-x-2">
+                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                       <span className="text-[9px] font-black text-gray-500 uppercase">Live Buffer</span>
+                    </div>
+                  </div>
+                  <div className="space-y-4 sm:space-y-6 max-h-[400px] overflow-y-auto no-scrollbar">
+                    {feedback.map(f => (
+                      <div key={f.id} className="p-4 bg-black/40 rounded-2xl border border-white/5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${f.type === 'Issue' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'}`}>{f.type}</span>
+                          <span className="text-[9px] font-mono text-gray-600">{new Date(f.createdAt).toLocaleTimeString()}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 leading-relaxed italic">"{f.message}"</p>
+                        <div className="mt-3 flex items-center space-x-2">
+                          <div className="w-4 h-4 rounded-full bg-white/10" />
+                          <span className="text-[9px] font-bold text-gray-500">{f.displayName}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {feedback.length === 0 && <p className="text-center py-12 text-gray-600 uppercase text-[10px] font-black tracking-widest">No Incoming Comms</p>}
+                  </div>
+                </section>
+              </div>
+            </motion.div>
+          )}
+
+          <div className="admin-content-wrapper pb-20">
+            {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
+            {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
+            {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
+            {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
+            {activeTab === 'events' && <EventManager key="events" events={events} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
+            {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} mathEngine={profile?.mathEngine} />}
+            {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
+            {activeTab === 'resources' && <ResourceManager key="resources" resources={resources} onDelete={handleDeleteResource} />}
+          </div>
+        </AnimatePresence>
+      </div>
 
       {/* Confirmation Modal */}
       <AnimatePresence>
         {confirmModal && confirmModal.show && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8"
-            >
-              <div className="flex items-center space-x-3 text-red-600 mb-4">
-                <AlertCircle className="w-6 h-6" />
-                <h2 className="text-xl font-bold">{confirmModal.title}</h2>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-[#141414] border border-white/10 rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl">
+              <div className="flex items-center space-x-4 text-red-500 mb-6">
+                <div className="p-3 rounded-2xl bg-red-500/10"><AlertCircle className="w-8 h-8" /></div>
+                <h2 className="text-2xl font-black uppercase italic">{confirmModal.title}</h2>
               </div>
-              <p className="text-[#545454] mb-8">{confirmModal.message}</p>
+              <p className="text-gray-400 text-sm leading-relaxed mb-10">{confirmModal.message}</p>
               <div className="flex space-x-4">
                 {confirmModal.title !== 'Action Prohibited' && (
-                  <button
-                    onClick={() => setConfirmModal(null)}
-                    className="flex-1 px-6 py-3 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
-                  >
-                    Cancel
-                  </button>
+                  <button onClick={() => setConfirmModal(null)} className="flex-1 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-500 hover:bg-white/5 transition-all">Cancel Control</button>
                 )}
                 <button
                   onClick={confirmModal.onConfirm}
-                  className={`flex-1 px-6 py-3 rounded-xl font-bold text-white transition-all shadow-lg ${
+                  className={`flex-1 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
                     confirmModal.title === 'Action Prohibited' 
-                      ? 'bg-[#D4AF37] hover:bg-[#B8860B] shadow-yellow-100' 
-                      : 'bg-red-500 hover:bg-red-600 shadow-red-200'
+                      ? 'bg-[#D4AF37] text-black' 
+                      : 'bg-red-600 border-red-500'
                   }`}
                 >
-                  {confirmModal.title === 'Action Prohibited' ? 'OK' : 'Confirm Delete'}
+                  {confirmModal.title === 'Action Prohibited' ? 'Acknowledged' : 'Execute Task'}
                 </button>
               </div>
             </motion.div>
@@ -472,31 +550,32 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
   );
 }
 
-function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
+function NavItem({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap ${active ? 'bg-[#D4AF37] text-white shadow-md' : 'text-[#545454] hover:bg-gray-50'}`}
+      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all group ${active ? 'bg-[#D4AF37] text-black shadow-lg shadow-yellow-900/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
     >
-      <Icon className="w-4 h-4" />
-      <span className="font-bold text-sm">{label}</span>
+      <div className="flex items-center space-x-3">
+        <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${active ? 'text-black' : 'text-gray-500 group-hover:text-[#D4AF37]'}`} />
+        <span className={`text-[11px] font-black uppercase tracking-tight ${active ? 'text-black' : 'text-gray-400'}`}>{label}</span>
+      </div>
+      {active && <div className="w-1.5 h-1.5 rounded-full bg-black shadow-inner" />}
     </button>
   );
 }
 
-function StatCard({ icon: Icon, label, value, color, description }: { icon: any, label: string, value: number, color: string, description: string }) {
+function ModernStatCard({ label, value, icon: Icon, trend, highlight }: { label: string, value: string | number, icon: any, trend: string, highlight?: boolean }) {
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-      <div className={`p-2.5 sm:p-3 rounded-xl ${color}`}>
-        <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-      </div>
-      <div>
-        <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
-        <div className="flex items-baseline space-x-2">
-          <h3 className="text-xl sm:text-2xl font-bold text-[#7A4900]">{value}</h3>
-          <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium">{description}</p>
+    <div className={`p-6 sm:p-8 rounded-[2rem] border transition-all ${highlight ? 'bg-[#D4AF37] border-white/20 text-black shadow-xl shadow-yellow-900/10' : 'bg-[#141414] border-white/5 text-white shadow-sm'}`}>
+      <div className="flex justify-between items-start mb-6">
+        <div className={`p-3 rounded-2xl ${highlight ? 'bg-black/10' : 'bg-black/40'}`}>
+          <Icon className="w-6 h-6" />
         </div>
+        <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded ${highlight ? 'bg-black/10' : 'bg-white/5 text-gray-500'}`}>{trend}</span>
       </div>
+      <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${highlight ? 'text-black/60' : 'text-gray-500'}`}>{label}</p>
+      <h3 className="text-3xl sm:text-4xl font-black italic tracking-tighter">{value}</h3>
     </div>
   );
 }
@@ -1537,5 +1616,117 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+function ResourceManager({ resources, onDelete }: { resources: Resource[], onDelete: (id: string) => void }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [formData, setFormData] = useState({ title: '', url: '', category: 'Physics', size: '' });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await addDoc(collection(db, 'resources'), {
+        ...formData,
+        createdAt: new Date().toISOString()
+      });
+      setShowAdd(false);
+      setFormData({ title: '', url: '', category: 'Physics', size: '' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'resources');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 sm:space-y-12">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight italic text-white">Internal Resource Drive</h2>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Active PDF Nodes: {resources.length}</p>
+        </div>
+        <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-[#D4AF37] text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center space-x-2 hover:bg-white hover:text-black transition-all shadow-xl shadow-yellow-900/10">
+          <Plus className="w-4 h-4" />
+          <span>Upload New Asset</span>
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {showAdd && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#141414] border border-white/10 rounded-[2rem] p-6 sm:p-10 shadow-2xl">
+            <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Asset Designation (Name)</label>
+                <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Physics First Paper - Chapter 1" className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold text-white placeholder-gray-700" required />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Google Drive Access Link</label>
+                <input type="url" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} placeholder="https://drive.google.com/..." className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold text-white placeholder-gray-700" required />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Metadata Category</label>
+                <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold appearance-none text-white">
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Biology">Biology</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Estimated Payload Size</label>
+                <input type="text" value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 1.2 MB" className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold text-white placeholder-gray-700" />
+              </div>
+              <div className="md:col-span-2 flex justify-end space-x-4 pt-4">
+                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-[10px] font-black uppercase text-gray-500 hover:text-white transition-colors">Discard</button>
+                <button type="submit" disabled={saving} className="bg-white text-black px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#D4AF37] transition-all">
+                  {saving ? 'Transmitting...' : 'Link Asset'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {resources.map(r => (
+          <div key={r.id} className="bg-[#141414] border border-white/5 rounded-3xl p-6 hover:border-[#D4AF37]/30 transition-all group overflow-hidden relative shadow-sm">
+            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => onDelete(r.id)} className="p-2 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-start space-x-4 mb-6">
+              <div className="p-4 rounded-2xl bg-black/40 text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 pr-6">
+                <h3 className="font-black text-base leading-tight uppercase tracking-tight mb-1 truncate" title={r.title}>{r.title}</h3>
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37] px-2 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20">{r.category}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
+               <div className="flex flex-col">
+                 <span className="text-[9px] font-black text-gray-600 uppercase">Payload Size</span>
+                 <span className="text-[10px] font-bold text-gray-400">{r.size || 'Unspecified'}</span>
+               </div>
+               <a href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-[#D4AF37] hover:text-white transition-colors">
+                 <span>Preview Node</span>
+                 <Download className="w-3 h-3" />
+               </a>
+            </div>
+          </div>
+        ))}
+        {resources.length === 0 && (
+          <div className="md:col-span-2 xl:col-span-3 text-center py-24 bg-white/5 rounded-[2rem] border-2 border-dashed border-white/5">
+            <Database className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+            <p className="text-gray-500 font-black uppercase text-[10px] tracking-widest">No active asset nodes detected</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

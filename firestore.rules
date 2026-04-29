@@ -105,9 +105,20 @@ service cloud.firestore {
              data.message is string && data.message.size() < 2000;
     }
 
+    function isValidResource(data) {
+      return data.keys().hasAll(['title', 'url', 'category']) &&
+             data.title is string && data.url is string &&
+             data.category is string;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
+
+    match /resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
 
     match /students/{userId} {
       allow read: if isAuthenticated();
