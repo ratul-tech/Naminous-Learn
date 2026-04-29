@@ -7,7 +7,7 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle, PlusCircle, Filter, Trophy, Clock, AlertTriangle, ExternalLink, ShieldPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType, Resource } from '../types';
@@ -188,10 +188,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh] bg-black">
+    <div className="flex items-center justify-center min-h-[60vh] bg-slate-950">
       <div className="flex flex-col items-center space-y-4">
-        <Activity className="w-12 h-12 text-[#D4AF37] animate-spin" />
-        <p className="font-mono text-xs uppercase tracking-widest text-[#D4AF37]">Booting System Console...</p>
+        <Activity className="w-12 h-12 text-indigo-500 animate-spin" />
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-indigo-400">Booting System Console...</p>
       </div>
     </div>
   );
@@ -203,37 +203,39 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { id: 'users', label: 'Students', icon: Users, color: 'text-green-500', bg: 'bg-green-500/10', fullAdminOnly: true },
-    { id: 'admins', label: 'Admins', icon: Shield, color: 'text-purple-500', bg: 'bg-purple-500/10', fullAdminOnly: true },
-    { id: 'questions', label: 'Questions', icon: Database, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
-    { id: 'payments', label: 'Payments', icon: CreditCard, color: 'text-emerald-500', bg: 'bg-emerald-500/10', fullAdminOnly: true },
-    { id: 'events', label: 'Events', icon: Calendar, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-    { id: 'submissions', label: 'Submissions', icon: Activity, color: 'text-pink-500', bg: 'bg-pink-500/10' },
-    { id: 'feedback', label: 'Feedback', icon: MessageSquare, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
-    { id: 'resources', label: 'PDF', icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { id: 'profile', label: 'Profile', icon: UserCircle, color: 'text-gray-400', bg: 'bg-white/5' },
+    { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+    { id: 'users', label: 'Students', icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10', fullAdminOnly: true },
+    { id: 'admins', label: 'Team', icon: Shield, color: 'text-purple-500', bg: 'bg-purple-500/10', fullAdminOnly: true },
+    { id: 'questions', label: 'Question Bank', icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { id: 'payments', label: 'Billing', icon: CreditCard, color: 'text-amber-500', bg: 'bg-amber-500/10', fullAdminOnly: true },
+    { id: 'events', label: 'Exams', icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+    { id: 'submissions', label: 'Analytics', icon: Activity, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+    { id: 'feedback', label: 'Support', icon: MessageSquare, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+    { id: 'resources', label: 'Library', icon: FileText, color: 'text-slate-400', bg: 'bg-slate-400/10' },
+    { id: 'profile', label: 'Settings', icon: UserCircle, color: 'text-slate-400', bg: 'bg-white/5' },
   ];
 
   return (
-    <div className="min-h-screen -mx-4 -mt-8 bg-[#0a0a0a] text-white">
+    <div className="min-h-screen -mx-4 -mt-8 bg-[#0f172a] text-slate-200">
       {activeTab === 'menu' ? (
         <div className="p-4 sm:p-8 lg:p-12 max-w-7xl mx-auto">
           <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
-              <div className="flex items-center space-x-3 mb-2">
-                <Shield className="w-8 h-8 text-[#D4AF37]" />
-                <h1 className="text-3xl font-black uppercase tracking-tighter italic">Admin Control Center</h1>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight text-white font-sans">Admin Control Center</h1>
               </div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Global Operations Terminal v2.5</p>
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-[0.2em] ml-1">Management Suite v3.0 • Enterprise Edition</p>
             </div>
             
             <button 
               onClick={handlePreview}
-              className="group flex items-center space-x-3 bg-white/5 hover:bg-[#D4AF37] px-6 py-3 rounded-2xl border border-white/10 transition-all"
+              className="group flex items-center space-x-3 bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all shadow-xl"
             >
-              <Eye className="w-5 h-5 text-[#D4AF37] group-hover:text-black" />
-              <span className="text-[11px] font-black uppercase tracking-widest group-hover:text-black">Preview Student View</span>
+              <Eye className="w-5 h-5 text-indigo-400" />
+              <span className="text-xs font-bold tracking-wide text-slate-300">Preview Student View</span>
             </button>
           </header>
 
@@ -244,14 +246,18 @@ export default function Admin({ profile }: AdminProps) {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as AdminTab)}
-                  className="group relative flex flex-col items-start p-8 bg-[#141414] border border-white/5 rounded-[2.5rem] hover:border-[#D4AF37]/40 hover:bg-[#1a1a1a] transition-all text-left shadow-xl"
+                  className="group relative flex flex-col items-start p-8 bg-slate-900 border border-slate-800 rounded-3xl hover:border-indigo-500/40 hover:bg-slate-800/80 transition-all text-left shadow-lg overflow-hidden"
                 >
-                  <div className={`p-4 rounded-2xl ${item.bg} ${item.color} mb-6 group-hover:scale-110 transition-transform`}>
-                    <item.icon className="w-8 h-8" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-500/10 transition-all" />
+                  
+                  <div className={`p-4 rounded-2xl ${item.bg} ${item.color} mb-6 group-hover:scale-105 transition-transform`}>
+                    <item.icon className="w-7 h-7" />
                   </div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tight">{item.label}</h3>
-                  <div className="mt-4 flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-[#D4AF37] transition-colors">
-                    <span>Manage Access</span>
+                  <h3 className="text-xl font-bold text-white tracking-tight">{item.label}</h3>
+                  <p className="mt-2 text-xs text-slate-500 font-medium leading-relaxed">System parameters, data flow benchmarks, and security protocols managed here.</p>
+                  
+                  <div className="mt-6 flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors">
+                    <span>Manage Module</span>
                     <ChevronRight className="w-3 h-3 ml-1 transform group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>
@@ -259,15 +265,27 @@ export default function Admin({ profile }: AdminProps) {
             })}
           </div>
 
-          <div className="mt-12 p-8 bg-[#141414] rounded-[2.5rem] border border-white/5 flex items-center justify-between">
+          <div className="mt-12 p-6 bg-slate-900/50 rounded-3xl border border-slate-800 flex flex-wrap items-center justify-between gap-6">
             <div className="flex items-center space-x-4">
-              <img src={profile?.photoURL} alt="" className="w-12 h-12 rounded-xl border border-white/10" referrerPolicy="no-referrer" />
+              <div className="relative">
+                <img src={profile?.photoURL} alt="" className="w-12 h-12 rounded-2xl border-2 border-slate-800 shadow-sm" referrerPolicy="no-referrer" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+              </div>
               <div>
-                <p className="font-bold text-lg">{profile?.displayName}</p>
-                <p className="text-xs text-gray-500 lowercase tracking-wider">{profile?.email}</p>
+                <p className="font-bold text-slate-100">{profile?.displayName}</p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-xs text-slate-500 lowercase">{profile?.email}</p>
+                  <span className="w-1 h-1 rounded-full bg-slate-700" />
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isFullAdmin ? 'text-indigo-400' : 'text-amber-400'}`}>
+                    {isFullAdmin ? 'Super Admin' : 'Question Holder'}
+                  </span>
+                </div>
               </div>
             </div>
-            <button onClick={() => auth.signOut()} className="flex items-center space-x-2 text-red-500 hover:text-red-400 font-bold uppercase text-[10px] tracking-widest px-6 py-2 rounded-xl hover:bg-red-500/10 transition-all">
+            <button 
+              onClick={() => auth.signOut()} 
+              className="flex items-center space-x-2 text-slate-400 hover:text-rose-500 font-bold uppercase text-[10px] tracking-[0.15em] px-6 py-2.5 rounded-xl hover:bg-rose-500/5 border border-slate-800 hover:border-rose-500/20 transition-all"
+            >
               <LogOut className="w-4 h-4" />
               <span>Terminate Session</span>
             </button>
@@ -275,100 +293,131 @@ export default function Admin({ profile }: AdminProps) {
         </div>
       ) : (
         <div className="flex flex-col h-screen">
-          <header className="p-4 sm:p-6 bg-[#141414] border-b border-white/5 flex items-center justify-between z-50">
-            <div className="flex items-center space-x-4">
+          <header className="px-6 py-4 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between z-50 sticky top-0">
+            <div className="flex items-center space-x-6">
               <button 
                 onClick={() => setActiveTab('menu')}
-                className="p-3 bg-black rounded-xl border border-white/10 text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all"
+                className="p-2.5 bg-slate-950 rounded-xl border border-slate-800 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all shadow-inner"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
+              <div className="h-8 w-px bg-slate-800" />
               <div>
-                <h2 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter">
-                  {navItems.find(i => i.id === activeTab)?.label}
-                </h2>
                 <div className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Active Console</span>
+                  <h2 className="text-xl font-bold text-white tracking-tight">
+                    {navItems.find(i => i.id === activeTab)?.label}
+                  </h2>
+                </div>
+                <div className="flex items-center space-x-2 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Terminal</span>
                 </div>
               </div>
             </div>
-            {activeTab !== 'profile' && (
-              <button 
-                onClick={handlePreview}
-                className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all"
-              >
-                <Eye className="w-4 h-4 text-[#D4AF37]" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Quick Preview</span>
-              </button>
-            )}
+            
+            <div className="flex items-center space-x-4">
+              {activeTab !== 'profile' && (
+                <button 
+                  onClick={handlePreview}
+                  className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 rounded-xl border border-slate-800 text-slate-400 transition-all shadow-sm"
+                >
+                  <Eye className="w-4 h-4 text-indigo-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Preview Mode</span>
+                </button>
+              )}
+              <div className="h-6 w-px bg-slate-800 mx-2" />
+              <img src={profile?.photoURL} alt="" className="w-8 h-8 rounded-lg border border-slate-800" referrerPolicy="no-referrer" />
+            </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 scroll-smooth bg-black">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 scroll-smooth bg-slate-950">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="pb-20"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="pb-24 max-w-7xl mx-auto"
               >
                 {activeTab === 'dashboard' && (
-                  <div className="space-y-12">
+                  <div className="space-y-10">
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                      <ModernStatCard label="Total Students" value={users.length} icon={Users} trend="+12% this week" />
-                      <ModernStatCard label="Active Events" value={events.filter(e => e.status === 'ongoing').length} icon={Activity} trend="Live Tracking" highlight />
-                      <ModernStatCard label="Question Bank" value={questions.length} icon={Database} trend="HSC 2026 Ready" />
-                      <ModernStatCard label="System Load" value="Normal" icon={Shield} trend="All systems nominal" />
+                      <ModernStatCard label="Total Students" value={users.length} icon={Users} trend="+12% this month" />
+                      <ModernStatCard label="Live Exams" value={events.filter(e => e.status === 'ongoing').length} icon={Activity} trend="Operational" highlight />
+                      <ModernStatCard label="Question Index" value={questions.length} icon={Database} trend="Verified" />
+                      <ModernStatCard label="System Security" value="Nominal" icon={Shield} trend="Active" />
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
-                      <section className="bg-[#141414] rounded-[2.5rem] p-8 border border-white/5 shadow-xl">
-                        <div className="flex justify-between items-center mb-8">
-                          <h3 className="text-xl font-black uppercase tracking-tight italic">Upcoming Deployments</h3>
-                          <button onClick={() => setActiveTab('events')} className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest hover:underline">View Roadmap</button>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                      <section className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-xl overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-8 opacity-10">
+                          <Calendar className="w-32 h-32" />
                         </div>
-                        <div className="space-y-4">
+                        <div className="flex justify-between items-center mb-10 relative">
+                          <div>
+                            <h3 className="text-xl font-bold text-white tracking-tight">Deployment Pipeline</h3>
+                            <p className="text-xs text-slate-500 font-medium">Upcoming Exams & Events</p>
+                          </div>
+                          <button onClick={() => setActiveTab('events')} className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center space-x-1">
+                            <span>Manage Fleet</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="space-y-3 relative">
                           {events.slice(0, 4).map(e => (
-                            <div key={e.id} className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-white/20 transition-all">
+                            <div key={e.id} className="group flex items-center justify-between p-4 bg-slate-950/50 hover:bg-slate-950 rounded-2xl border border-slate-800 hover:border-indigo-500/30 transition-all cursor-pointer">
                               <div className="flex items-center space-x-4">
-                                <div className={`p-4 rounded-xl ${e.status === 'ongoing' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                                  <Calendar className="w-6 h-6" />
+                                <div className={`p-3 rounded-xl ${e.status === 'ongoing' ? 'bg-emerald-500/10 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-slate-800/50 text-slate-400'}`}>
+                                  <Calendar className="w-5 h-5" />
                                 </div>
-                                <div>
-                                  <p className="font-bold text-base">{e.title}</p>
-                                  <p className="text-[10px] text-gray-500 font-bold uppercase">{new Date(e.startTime).toLocaleDateString()} • {e.class}</p>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-slate-200 truncate">{e.title}</p>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{new Date(e.startTime).toLocaleDateString()}</span>
+                                    <span className="w-1 h-1 rounded-full bg-slate-700" />
+                                    <span className="text-[10px] text-indigo-500/80 font-bold uppercase">{e.class}</span>
+                                  </div>
                                 </div>
                               </div>
-                              <ChevronRight className="w-4 h-4 text-gray-600" />
+                              <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 transition-colors" />
                             </div>
                           ))}
+                          {events.length === 0 && <p className="text-center py-10 text-slate-600 uppercase text-[10px] font-bold tracking-widest bg-slate-950/30 rounded-2xl border border-dashed border-slate-800">No scheduled deployments</p>}
                         </div>
                       </section>
 
-                      <section className="bg-[#141414] rounded-[2.5rem] p-8 border border-white/5 shadow-xl">
-                        <div className="flex justify-between items-center mb-8">
-                          <h3 className="text-xl font-black uppercase tracking-tight italic">Comms Relay</h3>
-                          <div className="flex space-x-2">
-                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                             <span className="text-[9px] font-black text-gray-500 uppercase">Live Buffer</span>
+                      <section className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-xl overflow-hidden relative">
+                         <div className="absolute top-0 right-0 p-8 opacity-10">
+                          <MessageSquare className="w-32 h-32" />
+                        </div>
+                        <div className="flex justify-between items-center mb-10 relative">
+                          <div>
+                            <h3 className="text-xl font-bold text-white tracking-tight">Signal Relay</h3>
+                            <p className="text-xs text-slate-500 font-medium">Recent Student Communications</p>
+                          </div>
+                          <div className="flex items-center space-x-2 bg-emerald-500/10 px-3 py-1 rounded-full">
+                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                             <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Real-time</span>
                           </div>
                         </div>
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar">
+                        <div className="space-y-3 max-h-[380px] overflow-y-auto no-scrollbar relative">
                           {feedback.map(f => (
-                            <div key={f.id} className="p-5 bg-black/40 rounded-2xl border border-white/5">
+                            <div key={f.id} className="p-4 bg-slate-950/50 rounded-2xl border border-slate-800">
                               <div className="flex items-center justify-between mb-3">
-                                <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${f.type === 'Issue' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'}`}>{f.type}</span>
-                                <span className="text-[10px] font-mono text-gray-600">{new Date(f.createdAt).toLocaleTimeString()}</span>
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${f.type === 'Issue' ? 'bg-rose-500/10 text-rose-500' : 'bg-indigo-500/10 text-indigo-500'}`}>{f.type}</span>
+                                <span className="text-[9px] font-mono text-slate-600 font-bold">{new Date(f.createdAt).toLocaleTimeString()}</span>
                               </div>
-                              <p className="text-[11px] text-gray-400 leading-relaxed italic">"{f.message}"</p>
+                              <p className="text-xs text-slate-400 leading-relaxed font-medium italic">"{f.message}"</p>
                               <div className="mt-4 flex items-center space-x-2">
-                                <div className="w-5 h-5 rounded-full bg-white/10" />
-                                <span className="text-[10px] font-bold text-gray-500">{f.displayName}</span>
+                                <div className="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center">
+                                  <UserCircle className="w-4 h-4 text-slate-500" />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-500">{f.displayName}</span>
                               </div>
                             </div>
                           ))}
+                          {feedback.length === 0 && <p className="text-center py-12 text-slate-600 uppercase text-[10px] font-bold tracking-widest bg-slate-950/30 rounded-2xl border border-dashed border-slate-800">No signals detected</p>}
                         </div>
                       </section>
                     </div>
@@ -407,8 +456,8 @@ export default function Admin({ profile }: AdminProps) {
                   onClick={confirmModal.onConfirm}
                   className={`flex-1 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
                     confirmModal.title === 'Action Prohibited' 
-                      ? 'bg-[#D4AF37] text-black' 
-                      : 'bg-red-600 border-red-500'
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' 
+                      : 'bg-rose-600 text-white shadow-lg shadow-rose-900/20'
                   }`}
                 >
                   {confirmModal.title === 'Action Prohibited' ? 'Acknowledged' : 'Execute Task'}
@@ -432,57 +481,76 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">User Submissions ({filteredSubmissions.length})</h2>
-        <select 
-          value={filterEvent} 
-          onChange={(e) => setFilterEvent(e.target.value)}
-          className="w-full sm:w-auto px-4 py-2 rounded-xl border outline-none font-bold text-[#7A4900] bg-white shadow-sm text-sm"
-        >
-          <option value="all">All Events</option>
-          {events.map(e => (
-            <option key={e.id} value={e.id}>{e.title}</option>
-          ))}
-        </select>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Intelligence Yield</h2>
+          <p className="text-xs text-slate-500 font-medium">Verify incoming datasets and student throughput</p>
+        </div>
+        <div className="flex items-center space-x-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Filter className="w-4 h-4" />
+            </div>
+            <select 
+              value={filterEvent} 
+              onChange={(e) => setFilterEvent(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs uppercase tracking-widest text-slate-300 appearance-none shadow-inner"
+            >
+              <option value="all">Unfiltered Streams</option>
+              {events.map(e => (
+                <option key={e.id} value={e.id}>{e.title}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
-        <div className="overflow-x-auto">
+      <div className="bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-800">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left min-w-[600px] lg:min-w-[800px]">
-            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
+            <thead className="bg-slate-950 text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em] border-b border-slate-800">
               <tr>
-                <th className="px-4 sm:px-6 py-4">Student</th>
-                <th className="px-4 sm:px-6 py-4">Event</th>
-                <th className="px-4 sm:px-6 py-4">Score</th>
-                <th className="px-4 sm:px-6 py-4">Actions</th>
+                <th className="px-8 py-5">Origin (Student)</th>
+                <th className="px-6 py-5">Source Protocol</th>
+                <th className="px-6 py-5">Yield Metric</th>
+                <th className="px-8 py-5 text-right">Review</th>
               </tr>
             </thead>
-            <tbody className="divide-y text-xs sm:text-sm">
+            <tbody className="divide-y divide-slate-800/40 text-sm">
               {filteredSubmissions.map((s) => {
                 const user = users.find(u => u.uid === s.uid);
                 const event = events.find(e => e.id === s.eventId);
                 return (
-                  <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 sm:px-6 py-4">
-                      <p className="font-bold text-[#7A4900] truncate max-w-[150px]">{user?.displayName || 'Unknown'}</p>
-                      <p className="text-[10px] text-[#545454] truncate max-w-[150px]">{user?.email}</p>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      <p className="font-medium truncate max-w-[150px]">{event?.title || 'Unknown Event'}</p>
-                      <p className="text-[10px] text-gray-400 font-mono">{new Date(s.submittedAt).toLocaleDateString()}</p>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-[#D4AF37]">{s.score} pts</span>
-                        <span className="text-[9px] text-gray-400">Correct</span>
+                  <tr key={s.id} className="hover:bg-slate-800/20 transition-colors group">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 font-mono text-[10px] text-slate-500">
+                           {user?.displayName?.slice(0, 2).toUpperCase() || '??'}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-200">{user?.displayName || 'Unknown proxy'}</p>
+                          <p className="text-[10px] text-slate-500 font-mono">{user?.email}</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 sm:px-6 py-4">
+                    <td className="px-6 py-6">
+                      <div className="flex flex-col">
+                        <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">{event?.title || 'External Event'}</p>
+                        <p className="text-[10px] text-slate-600 mt-1 font-mono">{new Date(s.submittedAt).toLocaleDateString()}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg font-black text-indigo-400">{s.score}</span>
+                        <span className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">Yield / Points</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-right">
                       <button 
                         onClick={() => setSelectedSubmission(s)}
-                        className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-blue-100 transition-all whitespace-nowrap"
+                        className="px-4 py-2 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
                       >
-                        Review
+                        Launch Review
                       </button>
                     </td>
                   </tr>
@@ -490,7 +558,7 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
               })}
               {filteredSubmissions.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-center py-20 text-gray-400">No submissions found.</td>
+                  <td colSpan={5} className="text-center py-24 text-slate-600 uppercase text-[10px] font-bold tracking-[0.2em] bg-slate-950/20">No intelligence streams detected</td>
                 </tr>
               )}
             </tbody>
@@ -498,105 +566,104 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
         </div>
       </div>
 
-      {/* Submission Detail Modal */}
       <AnimatePresence>
         {selectedSubmission && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-slate-900 rounded-[3rem] shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col border border-slate-800 overflow-hidden"
             >
-              <div className="p-4 sm:p-8 border-b flex justify-between items-center bg-[#fdfaf5]">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="text-[8px] sm:text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider">Detailed Submission Review</span>
-                    <span className="hidden sm:inline w-1 h-1 rounded-full bg-gray-300" />
-                    <span className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">ID: {selectedSubmission.id}</span>
+              <div className="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-950/40">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] px-2 py-1 bg-indigo-500/10 rounded-lg">Operational Entry</span>
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">ID: {selectedSubmission.id.slice(0, 12)}...</span>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-[#7A4900] font-serif truncate">
-                    {users.find(u => u.uid === selectedSubmission.uid)?.displayName}'s Entry
+                  <h2 className="text-2xl font-bold text-white tracking-tight">
+                    {users.find(u => u.uid === selectedSubmission.uid)?.displayName || 'Entity'}'s Performance
                   </h2>
-                  <p className="text-xs sm:text-sm text-[#545454] truncate">{events.find(e => e.id === selectedSubmission.eventId)?.title}</p>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-widest mt-1">{events.find(e => e.id === selectedSubmission.eventId)?.title}</p>
                 </div>
-                <button onClick={() => setSelectedSubmission(null)} className="p-2 hover:bg-white rounded-full shadow-sm shrink-0 ml-4">
-                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
+                <button onClick={() => setSelectedSubmission(null)} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-slate-400 hover:text-white transition-all">
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 sm:space-y-8 bg-gray-50/30">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                  <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase mb-1 sm:mb-2">Final Score</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-[#D4AF37]">{selectedSubmission.score}</p>
-                    <p className="text-[10px] text-gray-500 mt-1">out of {events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 'N/A'}</p>
+              <div className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="bg-slate-950 p-6 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform"><Trophy className="w-12 h-12 text-indigo-400" /></div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Final Yield Core</p>
+                    <p className="text-4xl font-black text-indigo-400 tracking-tighter">{selectedSubmission.score}</p>
+                    <p className="text-[10px] text-slate-600 font-bold uppercase mt-2 tracking-widest">Cap: {events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || '0'}</p>
                   </div>
-                  <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase mb-1 sm:mb-2">Completion Time</p>
-                    <p className="text-base sm:text-lg font-bold text-[#7A4900]">
-                      {new Date(selectedSubmission.submittedAt).toLocaleTimeString()}
+                  <div className="bg-slate-950 p-6 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform"><Clock className="w-12 h-12 text-emerald-400" /></div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Uplink Timestamp</p>
+                    <p className="text-xl font-bold text-white tracking-tight">
+                      {new Date(selectedSubmission.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    <p className="text-[10px] text-gray-500 mt-1">{new Date(selectedSubmission.submittedAt).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-slate-600 font-bold uppercase mt-2 tracking-widest">{new Date(selectedSubmission.submittedAt).toLocaleDateString()}</p>
                   </div>
-                  <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase mb-1 sm:mb-2">Success Rate</p>
-                    <p className="text-xl sm:text-2xl font-bold text-emerald-600">
+                  <div className="bg-slate-950 p-6 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform"><Activity className="w-12 h-12 text-amber-400" /></div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Success Ratio</p>
+                    <p className="text-2xl font-black text-emerald-400 tracking-tighter">
                       {Math.round((selectedSubmission.score / (events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 1)) * 100)}%
                     </p>
+                    <p className="text-[10px] text-slate-600 font-bold uppercase mt-2 tracking-widest">Verified Efficiency</p>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-bold text-[#7A4900] uppercase tracking-widest text-[10px] sm:text-xs mb-4">Question Breakdown</h3>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-white uppercase tracking-widest text-xs">Question Dissection</h3>
+                    <div className="h-px flex-1 bg-slate-800/50 mx-6" />
+                  </div>
+                  
                   {events.find(e => e.id === selectedSubmission.eventId)?.questions?.map((q: Question, idx: number) => {
                     const userAnswer = selectedSubmission.answers[q.id];
                     const isCorrect = userAnswer === q.correctAnswer;
                     
                     return (
-                      <div key={q.id} className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 bg-white transition-all ${isCorrect ? 'border-emerald-50' : 'border-red-50'}`}>
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                            <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-[#7A4900] text-xs sm:text-sm shrink-0">{idx + 1}</span>
+                      <div key={idx} className={`p-8 rounded-[2rem] border-2 bg-slate-950/30 transition-all ${isCorrect ? 'border-emerald-500/10' : 'border-rose-500/10'}`}>
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="flex items-center space-x-4 min-w-0">
+                            <span className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-slate-400 text-sm shrink-0">{idx + 1}</span>
                             <div className="min-w-0">
-                              <MathRenderer content={q.text} className="font-bold text-[#7A4900] text-sm sm:text-lg" engine={mathEngine} />
+                              <MathRenderer content={q.text} className="font-bold text-white text-lg tracking-tight" engine={mathEngine} />
                             </div>
                           </div>
-                          {isCorrect ? (
-                            <div className="flex items-center text-emerald-600 bg-emerald-50 px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase shrink-0 ml-2">
-                              <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
-                              Correct
-                            </div>
-                          ) : (
-                            <div className="flex items-center text-red-600 bg-red-50 px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase shrink-0 ml-2">
-                              <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
-                              Incorrect
-                            </div>
-                          )}
+                          <div className={`flex items-center px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest shrink-0 ml-4 ${isCorrect ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-rose-500 bg-rose-500/10 border border-rose-500/20'}`}>
+                            {isCorrect ? <CheckCircle2 className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
+                            {isCorrect ? 'Positive Match' : 'System Deficit'}
+                          </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {q.options.map((opt, i) => (
                             <div 
                               key={i} 
-                              className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border text-xs sm:text-sm flex items-center space-x-3 ${
+                              className={`p-5 rounded-2xl border transition-all text-sm flex items-center space-x-4 group/opt ${
                                 i === q.correctAnswer 
-                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' 
+                                  ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400 font-bold' 
                                   : i === userAnswer 
-                                    ? 'bg-red-50 border-red-200 text-red-700' 
-                                    : 'bg-gray-50 border-gray-200 text-gray-400'
+                                    ? 'bg-rose-500/5 border-rose-500/30 text-rose-400 font-medium' 
+                                    : 'bg-slate-900/50 border-slate-800 text-slate-500'
                               }`}
                             >
-                              <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-[8px] sm:text-[10px] font-bold shrink-0 ${
-                                i === q.correctAnswer ? 'bg-emerald-600 text-white' : i === userAnswer ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-500'
+                              <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm ${
+                                i === q.correctAnswer ? 'bg-emerald-500 text-slate-900' : i === userAnswer ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-400'
                               }`}>
                                 {String.fromCharCode(65 + i)}
                               </span>
                               <div className="min-w-0 flex-1">
                                 <MathRenderer content={opt} engine={mathEngine} />
                               </div>
-                              {i === q.correctAnswer && <span className="ml-auto text-[8px] sm:text-[10px] uppercase font-black shrink-0">Official</span>}
-                              {i === userAnswer && i !== q.correctAnswer && <span className="ml-auto text-[8px] sm:text-[10px] uppercase font-black shrink-0">Yours</span>}
+                              {i === q.correctAnswer && <span className="ml-auto text-[8px] font-black uppercase tracking-[0.2em] opacity-40">Master</span>}
+                              {i === userAnswer && i !== q.correctAnswer && <span className="ml-auto text-[8px] font-black uppercase tracking-[0.2em] opacity-40">Input</span>}
                             </div>
                           ))}
                         </div>
@@ -617,28 +684,33 @@ function NavItem({ active, onClick, icon: Icon, label }: { active: boolean, onCl
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all group ${active ? 'bg-[#D4AF37] text-black shadow-lg shadow-yellow-900/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all group ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' : 'text-slate-500 hover:bg-slate-800/40 hover:text-white'}`}
     >
       <div className="flex items-center space-x-3">
-        <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${active ? 'text-black' : 'text-gray-500 group-hover:text-[#D4AF37]'}`} />
-        <span className={`text-[11px] font-black uppercase tracking-tight ${active ? 'text-black' : 'text-gray-400'}`}>{label}</span>
+        <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${active ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
+        <span className={`text-[11px] font-black uppercase tracking-tight ${active ? 'text-white' : 'text-slate-400'}`}>{label}</span>
       </div>
-      {active && <div className="w-1.5 h-1.5 rounded-full bg-black shadow-inner" />}
+      {active && <div className="w-1.5 h-1.5 rounded-full bg-white shadow-inner" />}
     </button>
   );
 }
 
 function ModernStatCard({ label, value, icon: Icon, trend, highlight }: { label: string, value: string | number, icon: any, trend: string, highlight?: boolean }) {
   return (
-    <div className={`p-6 sm:p-8 rounded-[2rem] border transition-all ${highlight ? 'bg-[#D4AF37] border-white/20 text-black shadow-xl shadow-yellow-900/10' : 'bg-[#141414] border-white/5 text-white shadow-sm'}`}>
-      <div className="flex justify-between items-start mb-6">
-        <div className={`p-3 rounded-2xl ${highlight ? 'bg-black/10' : 'bg-black/40'}`}>
+    <div className={`p-8 rounded-3xl border transition-all relative overflow-hidden group shadow-lg ${highlight ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-100'}`}>
+      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        <Icon className="w-20 h-20" />
+      </div>
+      <div className="flex justify-between items-start mb-8 relative">
+        <div className={`p-3.5 rounded-2xl shadow-sm ${highlight ? 'bg-white/20 text-white' : 'bg-slate-800 text-indigo-400'}`}>
           <Icon className="w-6 h-6" />
         </div>
-        <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded ${highlight ? 'bg-black/10' : 'bg-white/5 text-gray-500'}`}>{trend}</span>
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg ${highlight ? 'bg-white/20 text-white' : 'bg-indigo-500/10 text-indigo-400'}`}>{trend}</span>
       </div>
-      <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${highlight ? 'text-black/60' : 'text-gray-500'}`}>{label}</p>
-      <h3 className="text-3xl sm:text-4xl font-black italic tracking-tighter">{value}</h3>
+      <div className="relative">
+        <p className={`text-xs font-bold uppercase tracking-[0.15em] mb-2 ${highlight ? 'text-indigo-100' : 'text-slate-500'}`}>{label}</p>
+        <h3 className="text-4xl font-bold tracking-tight">{value}</h3>
+      </div>
     </div>
   );
 }
@@ -646,38 +718,59 @@ function ModernStatCard({ label, value, icon: Icon, trend, highlight }: { label:
 function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <h2 className="text-xl font-bold text-[#7A4900]">User Feedback ({feedback.length})</h2>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
+        <div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Signal Analysis</h2>
+          <p className="text-xs text-slate-500 font-medium">Intercepted user feedback and system issue reports</p>
+        </div>
+        <div className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+          <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Receiver: Active</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {feedback.map((f) => (
-          <div key={f.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${f.type === 'Issue' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                  {f.type === 'Issue' ? <AlertCircle className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+          <div key={f.id} className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 hover:border-indigo-500/30 transition-all group relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
+              {f.type === 'Issue' ? <AlertTriangle className="w-32 h-32 text-rose-500" /> : <MessageSquare className="w-32 h-32 text-indigo-400" />}
+            </div>
+            
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center space-x-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all ${f.type === 'Issue' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
+                  {f.type === 'Issue' ? <AlertCircle className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#7A4900]">{f.displayName}</h3>
-                  <p className="text-xs text-gray-400">{f.email}</p>
+                  <h3 className="font-bold text-white tracking-tight">{f.displayName}</h3>
+                  <p className="text-[10px] text-slate-500 font-mono tracking-tighter uppercase">{f.email}</p>
                 </div>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${f.type === 'Issue' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+              <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${f.type === 'Issue' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
                 {f.type}
               </span>
             </div>
-            <p className="text-[#545454] bg-gray-50 p-4 rounded-xl text-sm leading-relaxed">
-              {f.message}
-            </p>
-            <div className="mt-4 text-right">
-              <span className="text-[10px] text-gray-400 font-mono">
-                {new Date(f.createdAt).toLocaleString()}
-              </span>
+
+            <div className="bg-slate-950/80 p-6 rounded-3xl border border-slate-800/50 mb-6 relative">
+              <p className="text-slate-300 text-sm leading-relaxed relative z-10 italic">"{f.message}"</p>
+            </div>
+
+            <div className="flex justify-between items-center pt-6 border-t border-slate-800/50">
+               <div className="flex items-center space-x-2">
+                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Metadata Verified</p>
+               </div>
+               <span className="text-[10px] text-slate-600 font-mono tracking-widest">
+                 {new Date(f.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
+               </span>
             </div>
           </div>
         ))}
         {feedback.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-            <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-400">No feedback submitted yet.</p>
+          <div className="lg:col-span-2 text-center py-32 bg-slate-950/30 rounded-[3rem] border-2 border-dashed border-slate-800">
+            <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-800">
+               <MessageSquare className="w-8 h-8 text-slate-700" />
+            </div>
+            <p className="text-slate-600 uppercase text-[10px] font-bold tracking-[0.2em]">Zero Signal Detected in current frequency</p>
           </div>
         )}
       </div>
@@ -729,7 +822,6 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
       };
 
       await setDoc(doc(db, 'admins', user.uid), newAdmin);
-      
       await signOut(secondaryAuth);
       
       setShowAdd(false);
@@ -746,54 +838,44 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
-      {/* Pending Requests Section */}
       {pendingAdmins.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center space-x-2 text-[#7A4900]">
-            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
-            <h2 className="text-lg sm:text-xl font-bold">Access Requests ({pendingAdmins.length})</h2>
+          <div className="flex items-center space-x-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl">
+            <AlertCircle className="w-6 h-6 text-rose-500 animate-pulse" />
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight">Security Alerts: Pending Access ({pendingAdmins.length})</h2>
+              <p className="text-xs text-rose-500/70 font-medium uppercase tracking-widest">Unauthorized credentials awaiting verification</p>
+            </div>
           </div>
-          <div className="bg-amber-50 rounded-2xl sm:rounded-3xl border-2 border-[#D4AF37] overflow-hidden shadow-lg">
+          <div className="bg-slate-900 rounded-3xl border border-rose-500/20 overflow-hidden shadow-xl">
             <div className="overflow-x-auto no-scrollbar">
-              <table className="w-full text-left min-w-[500px] sm:min-w-[600px]">
-                <thead className="bg-[#D4AF37] text-white uppercase text-[10px] sm:text-xs font-bold">
+              <table className="w-full text-left">
+                <thead className="bg-[#1e1b1b] text-slate-400 uppercase text-[10px] font-bold tracking-widest border-b border-rose-500/10">
                   <tr>
-                    <th className="px-4 sm:px-6 py-4">Candidate</th>
-                    <th className="px-4 sm:px-6 py-4">Status</th>
-                    <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
+                    <th className="px-8 py-5">Candidate</th>
+                    <th className="px-6 py-5">Status</th>
+                    <th className="px-8 py-5 text-right">Verification</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#D4AF37]/20 text-xs sm:text-sm">
+                <tbody className="divide-y divide-rose-500/5 text-sm">
                   {pendingAdmins.map((a) => (
-                    <tr key={a.uid} className="bg-white/50 hover:bg-white transition-colors">
-                      <td className="px-4 sm:px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          <img src={a.photoURL} alt="" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white shadow-sm shrink-0" />
-                          <div className="min-w-0">
-                            <p className="font-bold text-[#7A4900] truncate">{a.displayName}</p>
-                            <p className="text-[10px] text-[#545454] truncate">{a.email}</p>
+                    <tr key={a.uid} className="hover:bg-rose-500/5 transition-colors">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center space-x-4">
+                          <img src={a.photoURL} alt="" className="w-10 h-10 rounded-xl border border-slate-700" />
+                          <div>
+                            <p className="font-bold text-slate-200">{a.displayName}</p>
+                            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tighter">{a.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
-                        <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">PENDING</span>
+                      <td className="px-6 py-5">
+                        <span className="bg-rose-500/20 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-bold tracking-widest uppercase">Awaiting Clear</span>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button 
-                            onClick={() => onActivate(a.uid)}
-                            className="bg-green-600 text-white p-2 rounded-xl text-xs font-bold hover:bg-green-700 shadow-md transition-all shrink-0"
-                            title="Approve"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => onDelete(a.uid)}
-                            className="bg-red-50 text-red-600 p-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-all shrink-0"
-                            title="Reject"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex items-center justify-end space-x-3">
+                          <button onClick={() => onActivate(a.uid)} className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all"><CheckCircle2 className="w-5 h-5" /></button>
+                          <button onClick={() => onDelete(a.uid)} className="bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white p-2.5 rounded-xl transition-all border border-slate-700 hover:border-transparent"><XCircle className="w-5 h-5" /></button>
                         </div>
                       </td>
                     </tr>
@@ -805,94 +887,101 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
         </div>
       )}
 
-      {/* Admin List Section */}
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">Active Administrators ({activeAdmins.length})</h2>
-          <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-[#7A4900] text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:bg-black shadow-lg transition-all transform hover:-translate-y-1">
-            <Plus className="w-5 h-5" />
-            <span>Add Admin</span>
+        <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Administrative Team</h2>
+            <p className="text-xs text-slate-500 font-medium">Manage permissions and team structural integrity</p>
+          </div>
+          <button onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center space-x-2 shadow-lg shadow-indigo-500/20 transition-all">
+            <Plus className="w-4 h-4" />
+            <span>Provision User</span>
           </button>
         </div>
 
         {showAdd && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-xl border-4 border-[#7A4900]/10">
-            <form onSubmit={handleCreateAdmin} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900 p-8 rounded-[2rem] border border-indigo-500/30 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+               <Shield className="w-32 h-32 text-indigo-500" />
+            </div>
+            <form onSubmit={handleCreateAdmin} className="space-y-6 relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Full Name</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium text-sm sm:text-base" required />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Profile Legal Name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-medium text-slate-200" required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Email Address</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium text-sm sm:text-base" required />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">System Liaison Email</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@nexus.com" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-medium text-slate-200" required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Initial Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium text-sm sm:text-base" required minLength={6} />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Authorization Credential</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-mono text-slate-200" required minLength={6} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Permission Level</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Privilege Tier</label>
                   <select 
                     value={adminType} 
                     onChange={(e) => setAdminType(e.target.value as any)}
-                    className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-bold text-[#7A4900] text-sm sm:text-base"
+                    className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-indigo-400 appearance-none cursor-pointer"
                   >
-                    <option value="full">Full Administrator</option>
-                    <option value="question_holder">Question Holder Only</option>
+                    <option value="full">Nexus Superintendent (Full)</option>
+                    <option value="question_holder">Data Custodian (Questions)</option>
                   </select>
                 </div>
               </div>
-              {error && <p className="text-red-500 text-xs sm:text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100">{error}</p>}
-              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
-                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-gray-500 font-bold hover:text-gray-700 transition-colors order-2 sm:order-1">Cancel</button>
-                <button type="submit" disabled={loading} className="bg-[#7A4900] text-white px-8 py-4 rounded-xl sm:rounded-2xl font-bold shadow-xl shadow-amber-900/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 order-1 sm:order-2">
-                  {loading ? 'Creating...' : 'Create Account'}
+              {error && <p className="text-rose-500 text-xs font-bold bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">{error}</p>}
+              <div className="flex justify-end gap-4">
+                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors">Discard</button>
+                <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
+                  {loading ? 'Processing...' : 'Engage Creation Protocol'}
                 </button>
               </div>
             </form>
           </motion.div>
         )}
 
-        <div className="bg-white rounded-2xl sm:rounded-[2.5rem] shadow-sm overflow-hidden border border-gray-100">
+        <div className="bg-slate-900 rounded-3xl shadow-xl border border-slate-800 overflow-hidden">
           <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left min-w-[600px] lg:min-w-[800px]">
-              <thead className="bg-[#fcfcfa] text-[#7A4900] uppercase text-[10px] sm:text-xs font-black tracking-widest border-b">
+            <table className="w-full text-left">
+              <thead className="bg-slate-950 text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em] border-b border-slate-800">
                 <tr>
-                  <th className="px-4 sm:px-8 py-4 sm:py-6">Administrator</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-6">Privileges</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-6">Email</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-6 text-right">Actions</th>
+                  <th className="px-8 py-5 text-slate-400">Team Member</th>
+                  <th className="px-8 py-5">Privileges</th>
+                  <th className="px-8 py-5">System ID</th>
+                  <th className="px-8 py-5 text-right">Operations</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 text-xs sm:text-sm">
+              <tbody className="divide-y divide-slate-800/40 text-sm">
                 {activeAdmins.map((a) => (
-                  <tr key={a.uid} className="hover:bg-[#fcfcfa] transition-colors">
-                    <td className="px-4 sm:px-8 py-4 sm:py-6">
-                      <div className="flex items-center space-x-3 sm:space-x-4">
-                        <img src={a.photoURL || undefined} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border-2 border-gray-50 shadow-sm shrink-0" referrerPolicy="no-referrer" />
-                        <div className="min-w-0">
-                          <p className="font-bold text-[#7A4900] truncate">{a.displayName}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter truncate">ID: {a.uid.slice(0, 8)}</p>
+                  <tr key={a.uid} className="hover:bg-slate-800/20 transition-colors group">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center space-x-4">
+                        <img src={a.photoURL || undefined} alt="" className="w-12 h-12 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/40 transition-colors shadow-sm" referrerPolicy="no-referrer" />
+                        <div>
+                          <p className="font-bold text-slate-100">{a.displayName}</p>
+                          <p className="text-xs text-slate-500 font-medium">{a.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-6">
+                    <td className="px-8 py-6">
                       <select
                         value={a.adminType}
                         onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
-                        className={`text-[9px] sm:text-[10px] font-black px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl uppercase outline-none border transition-all cursor-pointer ${
-                          a.adminType === 'full' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                        className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider outline-none border transition-all cursor-pointer ${
+                          a.adminType === 'full' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'
                         }`}
                       >
-                        <option value="full">Full Admin</option>
-                        <option value="question_holder">Question Holder</option>
+                        <option value="full">Superintendent</option>
+                        <option value="question_holder">Custodian</option>
                       </select>
                     </td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-6 font-medium text-[#545454] truncate max-w-[150px]">{a.email}</td>
-                    <td className="px-4 sm:px-8 py-4 sm:py-6 text-right">
-                      <button onClick={() => onDelete(a.uid)} className="p-2 sm:p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group">
-                        <Trash2 className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" />
+                    <td className="px-8 py-6">
+                       <code className="text-[10px] font-mono text-slate-600 bg-slate-950 px-2 py-1 rounded-md">{a.uid.slice(0, 12)}...</code>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <button onClick={() => onDelete(a.uid)} className="p-3 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-500/20">
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </td>
                   </tr>
@@ -910,59 +999,64 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
   const navigate = useNavigate();
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">Question Bank ({questions.length})</h2>
+      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
+        <div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Question Archive</h2>
+          <p className="text-xs text-slate-500 font-medium">Central data repository for all exam materials</p>
+        </div>
         <button 
           onClick={() => navigate('/questions')} 
-          className="w-full sm:w-auto bg-[#D4AF37] text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-[#B8860B] transition-all"
+          className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center space-x-2 transition-all shadow-lg"
         >
           <Edit className="w-4 h-4" />
-          <span>Full Management</span>
+          <span>Launch Management</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
+      <div className="bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-800">
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left min-w-[500px] sm:min-w-[600px] lg:min-w-[800px]">
-            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
+            <thead className="bg-slate-950 text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em] border-b border-slate-800">
               <tr>
-                <th className="px-4 sm:px-6 py-4">Question</th>
-                <th className="hidden sm:table-cell px-6 py-4">Metadata</th>
-                <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
+                <th className="px-8 py-5">Intel Core</th>
+                <th className="hidden sm:table-cell px-8 py-5">Classification</th>
+                <th className="px-8 py-5 text-right">Operations</th>
               </tr>
             </thead>
-            <tbody className="divide-y text-xs sm:text-sm">
+            <tbody className="divide-y divide-slate-800/40 text-sm">
               {questions.slice(0, 10).map((q) => (
-                <tr key={q.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 sm:px-6 py-4">
+                <tr key={q.id} className="hover:bg-slate-800/20 transition-colors group">
+                  <td className="px-8 py-5">
                     <div className="min-w-0 max-w-[200px] sm:max-w-md">
-                      <MathRenderer content={q.text} className="font-medium line-clamp-1 truncate" engine={mathEngine} />
-                      <div className="sm:hidden mt-1 flex flex-wrap gap-1">
-                        <span className="text-[8px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 uppercase">{q.category}</span>
-                        <span className="text-[8px] px-1.5 py-0.5 bg-[#D4AF37]/10 rounded text-[#7A4900] uppercase">{q.subject}</span>
+                      <MathRenderer content={q.text} className="text-slate-200 font-medium line-clamp-1 truncate" engine={mathEngine} />
+                      <div className="sm:hidden mt-2 flex flex-wrap gap-2">
+                        <span className="text-[8px] font-bold px-2 py-0.5 bg-slate-800 rounded uppercase text-slate-400 tracking-widest">{q.category}</span>
+                        <span className="text-[8px] font-bold px-2 py-0.5 bg-indigo-500/10 rounded text-indigo-400 uppercase tracking-widest">{q.subject}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="hidden sm:table-cell px-6 py-4">
-                    <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 rounded-full uppercase text-gray-500 mr-2">{q.category}</span>
-                    <span className="text-[10px] font-bold px-2 py-1 bg-[#D4AF37]/10 rounded-full uppercase text-[#7A4900]">{q.subject}</span>
+                  <td className="hidden sm:table-cell px-8 py-5">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[9px] font-bold px-2.5 py-1 bg-slate-800 rounded-lg uppercase text-slate-400 tracking-tighter">{q.category}</span>
+                      <span className="text-[9px] font-bold px-2.5 py-1 bg-indigo-500/10 rounded-lg uppercase text-indigo-400 tracking-tighter">{q.subject}</span>
+                    </div>
                   </td>
-                  <td className="px-4 sm:px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-1 sm:space-x-2">
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-center justify-end space-x-2">
                       <button 
                         onClick={() => navigate('/questions', { state: { editQuestion: q } })}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                        title="Edit"
+                        className="p-2.5 text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all border border-transparent hover:border-indigo-500/30"
+                        title="Modify Intel"
                       >
-                        <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <Edit className="w-5 h-5" />
                       </button>
                       {isFullAdmin && (
                         <button 
                           onClick={() => onDelete(q.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          title="Delete"
+                          className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/30"
+                          title="Purge Record"
                         >
-                          <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       )}
                     </div>
@@ -971,16 +1065,16 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
               ))}
               {questions.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="text-center py-20 text-gray-400">No questions found.</td>
+                  <td colSpan={3} className="text-center py-32 text-slate-600 uppercase text-[10px] font-bold tracking-[0.2em] bg-slate-950/20">No question data floating in archive</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
         {questions.length > 10 && (
-          <div className="p-4 border-t text-center">
-            <button onClick={() => navigate('/questions')} className="text-[#D4AF37] font-bold text-xs hover:underline">
-              View All {questions.length} Questions
+          <div className="p-5 border-t border-slate-800 bg-slate-950/30 text-center">
+            <button onClick={() => navigate('/questions')} className="text-indigo-400 font-bold text-xs uppercase tracking-widest hover:text-indigo-300 transition-colors">
+              Access Entire Repository ({questions.length} Units)
             </button>
           </div>
         )}
@@ -1020,146 +1114,184 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">Student Management ({users.length})</h2>
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
+      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
+        <div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Student Management</h2>
+          <p className="text-xs text-slate-500 font-medium">Configure pupil profiles and access levels</p>
+        </div>
+        <div className="px-4 py-2 bg-slate-950 rounded-xl border border-slate-800">
+          <span className="text-xs font-bold text-indigo-400">{users.length} Active Records</span>
+        </div>
+      </div>
+
+      <div className="bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-800">
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left min-w-[700px] lg:min-w-[800px]">
-            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
+            <thead className="bg-slate-950/50 text-slate-400 uppercase text-[10px] font-bold tracking-widest border-b border-slate-800">
               <tr>
-                <th className="px-4 sm:px-6 py-4">Student</th>
-                <th className="px-4 sm:px-6 py-4">Class/Group</th>
-                <th className="px-4 sm:px-6 py-4">Institution</th>
-                <th className="px-4 sm:px-6 py-4">Phone</th>
-                <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
+                <th className="px-8 py-5">Profile</th>
+                <th className="px-6 py-5">Academic Info</th>
+                <th className="px-6 py-5">Institution</th>
+                <th className="px-6 py-5">Contact</th>
+                <th className="px-8 py-5 text-right">Operations</th>
               </tr>
             </thead>
-            <tbody className="divide-y text-xs sm:text-sm">
+            <tbody className="divide-y divide-slate-800/50 text-sm">
               {users.map((u) => (
-                <tr key={u.uid} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 sm:px-6 py-4">
-                    <div className="flex items-center space-x-3">
+                <tr key={u.uid} className="hover:bg-slate-800/30 transition-colors group">
+                  <td className="px-8 py-5">
+                    <div className="flex items-center space-x-4">
                       {u.photoURL ? (
-                        <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full border border-gray-100 shrink-0" referrerPolicy="no-referrer" />
+                        <div className="relative">
+                          <img src={u.photoURL} alt="" className="w-10 h-10 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/50 transition-colors shrink-0" referrerPolicy="no-referrer" />
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+                        </div>
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                          <User className="w-4 h-4 text-gray-400" />
+                        <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
+                          <User className="w-5 h-5 text-slate-600" />
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="font-bold text-[#7A4900] truncate max-w-[120px]">{u.displayName}</p>
-                        <p className="text-[10px] text-[#545454] truncate max-w-[120px]">{u.email}</p>
+                        <p className="font-bold text-slate-200 truncate">{u.displayName}</p>
+                        <p className="text-[10px] text-slate-500 font-medium truncate">{u.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 sm:px-6 py-4">
-                    <p className="font-medium whitespace-nowrap">{u.class}</p>
-                    <p className="text-[10px] text-[#545454] truncate max-w-[100px]">{u.group}</p>
+                  <td className="px-6 py-5">
+                    <p className="font-bold text-indigo-400 text-xs">{u.class}</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter mt-0.5">{u.group}</p>
                   </td>
-                  <td className="px-4 sm:px-6 py-4">
-                    <p className="truncate max-w-[150px]" title={u.school}>{u.school}</p>
+                  <td className="px-6 py-5">
+                    <p className="text-slate-400 font-medium truncate max-w-[200px]" title={u.school}>{u.school}</p>
                   </td>
-                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">{u.phone || 'N/A'}</td>
-                  <td className="px-4 sm:px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-1 sm:space-x-2">
-                      <button onClick={() => handleEdit(u)} className="p-2 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all" title="Edit">
-                        <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <td className="px-6 py-5">
+                    <p className="text-slate-300 font-mono text-xs">{u.phone || '— Unspecified —'}</p>
+                  </td>
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button 
+                        onClick={() => handleEdit(u)} 
+                        className="p-2.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all border border-transparent hover:border-indigo-500/20" 
+                        title="Configure Profile"
+                      >
+                        <Edit className="w-5 h-5" />
                       </button>
-                      <button onClick={() => onDelete(u.uid)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="Delete">
-                        <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <button 
+                        onClick={() => onDelete(u.uid)} 
+                        className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20" 
+                        title="Revoke Access"
+                      >
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-32 text-slate-600 uppercase text-[10px] font-bold tracking-[0.2em] bg-slate-950/20">No user parameters identified</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Edit User Modal */}
+      {/* Professional Edit User Modal */}
       <AnimatePresence>
         {editingUser && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-xl w-full border border-slate-800 overflow-hidden"
             >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-[#7A4900]">Edit Student</h2>
-                <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-gray-100 rounded-full">
-                  <X className="w-6 h-6 text-gray-400" />
+              <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/30">
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Configure Record</h2>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Ref: {editingUser.uid.slice(0, 12)}...</p>
+                </div>
+                <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-slate-800 rounded-full text-slate-500 hover:text-white transition-colors">
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-2">Display Name</label>
+              <div className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Identity Display Name</label>
                   <input
                     type="text"
                     value={editData.displayName}
                     onChange={(e) => setEditData({ ...editData, displayName: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                    className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 text-slate-200 font-medium transition-all"
+                    placeholder="Enter full legal name"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-[#7A4900] mb-2">Class</label>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Academic Tier</label>
                     <select
                       value={editData.class}
                       onChange={(e) => setEditData({ ...editData, class: e.target.value })}
-                      className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37] font-bold"
+                      className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 text-slate-200 font-bold transition-all appearance-none cursor-pointer"
                     >
-                      <option value="Class 9">Class 9</option>
+                      <option value="Class 9 text-slate-400">Class 9</option>
                       <option value="Class 10">Class 10</option>
                       <option value="SSC Candidate">SSC Candidate</option>
                       <option value="College Admission">College Admission</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-[#7A4900] mb-2">Group</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Curriculum Group</label>
                     <input
                       type="text"
                       value={editData.group}
                       onChange={(e) => setEditData({ ...editData, group: e.target.value as any })}
-                      className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                      className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 text-slate-200 font-medium transition-all"
+                      placeholder="Science, Commerce..."
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-2">School/College</label>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Educational Institution</label>
                   <input
                     type="text"
                     value={editData.school}
                     onChange={(e) => setEditData({ ...editData, school: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                    className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 text-slate-200 font-medium transition-all"
+                    placeholder="Search for institution..."
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-2">Phone</label>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Secure Comms Uplink (Phone)</label>
                   <input
                     type="text"
                     value={editData.phone}
                     onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                    className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 text-slate-200 font-mono transition-all"
+                    placeholder="+880..."
                   />
                 </div>
 
-                <div className="pt-6 flex space-x-4">
+                <div className="pt-6 flex gap-4">
                   <button
                     onClick={() => setEditingUser(null)}
-                    className="flex-1 px-6 py-3 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
+                    className="flex-1 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest text-slate-400 bg-slate-950 hover:bg-slate-800 border border-slate-800 transition-all"
                   >
-                    Cancel
+                    Abort Changes
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex-1 px-6 py-3 rounded-xl font-bold text-white bg-[#D4AF37] hover:bg-[#B8860B] transition-all flex items-center justify-center space-x-2"
+                    className="flex-1 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
                   >
-                    <Save className="w-5 h-5" />
-                    <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                    {saving ? (
+                      <Activity className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    <span>{saving ? 'Processing...' : 'Commit Protocol'}</span>
                   </button>
                 </div>
               </div>
@@ -1173,51 +1305,88 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
 
 function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[], onApprove: (id: string) => void, onReject: (id: string) => void }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white rounded-2xl shadow-sm overflow-hidden border">
-      <div className="overflow-x-auto no-scrollbar">
-        <table className="w-full text-left min-w-[600px]">
-          <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
-          <tr>
-            <th className="px-4 sm:px-6 py-4">User</th>
-            <th className="px-4 sm:px-6 py-4">Method</th>
-            <th className="px-4 sm:px-6 py-4">Status</th>
-            <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y text-xs sm:text-sm">
-          {payments.map((p) => (
-            <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 sm:px-6 py-4">
-                <p className="font-mono text-[10px] sm:text-xs text-gray-500">ID: {p.uid.slice(0, 8)}...</p>
-                <p className="font-mono text-[10px] text-gray-400">Trx: {p.trxId}</p>
-              </td>
-              <td className="px-4 sm:px-6 py-4 font-bold text-[#7A4900]">{p.method}</td>
-              <td className="px-4 sm:px-6 py-4">
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                  p.status === 'approved' ? 'bg-green-100 text-green-600' :
-                  p.status === 'rejected' ? 'bg-red-100 text-red-600' :
-                  'bg-yellow-100 text-yellow-600'
-                }`}>
-                  {p.status}
-                </span>
-              </td>
-              <td className="px-4 sm:px-6 py-4 text-right">
-                {p.status === 'pending' && (
-                  <div className="flex items-center justify-end space-x-2">
-                    <button onClick={() => onApprove(p.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg border border-green-100 transition-all" title="Approve"><CheckCircle2 className="w-5 h-5" /></button>
-                    <button onClick={() => onReject(p.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg border border-red-100 transition-all" title="Reject"><XCircle className="w-5 h-5" /></button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-          {payments.length === 0 && (
-            <tr>
-              <td colSpan={4} className="text-center py-20 text-gray-400">No payment records found.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
+        <div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Financial Operations</h2>
+          <p className="text-xs text-slate-500 font-medium">Verify transaction integrity and revenue flow</p>
+        </div>
+        <div className="flex items-center space-x-3">
+           <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+             <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">System Clear</span>
+           </div>
+        </div>
+      </div>
+
+      <div className="bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-800">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left min-w-[700px] lg:min-w-[900px]">
+            <thead className="bg-slate-950 text-slate-500 uppercase text-[10px] font-bold tracking-[0.2em] border-b border-slate-800">
+              <tr>
+                <th className="px-8 py-5">Origin / User</th>
+                <th className="px-6 py-5">Fiscal Data</th>
+                <th className="px-6 py-5">Clearance Status</th>
+                <th className="px-8 py-5 text-right">Verification</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/40 text-sm">
+              {payments.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-800/20 transition-colors group">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700">
+                        <User className="w-5 h-5 text-slate-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">ID: {p.uid.slice(0, 8)}...</p>
+                        <p className="text-[10px] font-mono text-slate-600 mt-0.5 tracking-tighter">TRX: {p.trxId}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-6 transition-all group-hover:pl-8">
+                    <p className="text-lg font-black text-emerald-400 leading-none group-hover:scale-110 origin-left transition-transform">{p.method}</p>
+                  </td>
+                  <td className="px-6 py-6">
+                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                      p.status === 'approved' 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                        : p.status === 'rejected'
+                        ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                        : 'bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+                    }`}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    {p.status === 'pending' && (
+                      <div className="flex items-center justify-end space-x-2">
+                        <button 
+                          onClick={() => onApprove(p.id)} 
+                          className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all border border-transparent hover:border-emerald-500/20" 
+                          title="Authorize Flow"
+                        >
+                          <CheckCircle2 className="w-6 h-6" />
+                        </button>
+                        <button 
+                          onClick={() => onReject(p.id)} 
+                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20" 
+                          title="Deny Clearance"
+                        >
+                          <XCircle className="w-6 h-6" />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {payments.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="text-center py-32 text-slate-600 uppercase text-[10px] font-bold tracking-[0.2em] bg-slate-950/20">No fiscal records detected</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </motion.div>
   );
@@ -1287,7 +1456,6 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
           status: 'upcoming',
           createdAt: new Date().toISOString(),
         });
-        // Increment global events count (persistent even if event deleted)
         await setDoc(doc(db, 'global_stats', 'counters'), { 
           eventsCount: increment(1) 
         }, { merge: true });
@@ -1387,297 +1555,289 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-[#7A4900]">Manage Events ({events.length})</h2>
+      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
+        <div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Timeline Management</h2>
+          <p className="text-xs text-slate-500 font-medium">Coordinate upcoming milestones and exam protocols</p>
+        </div>
         {isFullAdmin && (
-          <button onClick={() => setShowForm(true)} className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B]">
+          <button onClick={() => setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center space-x-2 transition-all shadow-lg active:scale-95">
             <Plus className="w-4 h-4" />
-            <span>Create Event</span>
+            <span>Provision Event</span>
           </button>
         )}
       </div>
 
-      {showForm && (
-        <div className="bg-white p-8 rounded-3xl shadow-xl border-2 border-[#D4AF37]">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-2xl font-bold text-[#7A4900]">{editingEvent ? 'Edit Event' : 'New Event'}</h3>
-            <button onClick={resetForm} className="p-2 hover:bg-gray-100 rounded-full">
-              <X className="w-6 h-6 text-gray-400" />
-            </button>
-          </div>
-          <form onSubmit={handleSaveEvent} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+          >
+            <div className="bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-5xl w-full border border-slate-800 overflow-hidden max-h-[90vh] flex flex-col">
+              <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/30">
                 <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Event Title</label>
-                  <input type="text" value={eventData.title} onChange={(e) => setEventData({ ...eventData, title: e.target.value })} placeholder="e.g. Mega Mock Test 2026" className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
+                  <h3 className="text-xl font-bold text-white tracking-tight">{editingEvent ? 'Regulate Event Parameters' : 'Initialize New Entry'}</h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Operational Lifecycle Configuration</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Description</label>
-                  <textarea value={eventData.description} onChange={(e) => setEventData({ ...eventData, description: e.target.value })} placeholder="Event details and rules..." className="w-full px-4 py-3 rounded-xl border outline-none h-32 focus:ring-2 focus:ring-[#D4AF37]" required />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Entry Fee (Tk)</label>
-                    <input type="number" value={eventData.entryFee} onChange={(e) => setEventData({ ...eventData, entryFee: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Duration (min)</label>
-                    <input type="number" value={eventData.duration} onChange={(e) => setEventData({ ...eventData, duration: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Start Time</label>
-                    <input type="datetime-local" value={eventData.startTime} onChange={(e) => setEventData({ ...eventData, startTime: e.target.value })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">End Time</label>
-                    <input type="datetime-local" value={eventData.endTime} onChange={(e) => setEventData({ ...eventData, endTime: e.target.value })} className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Prize Details</label>
-                  <input type="text" value={eventData.prize} onChange={(e) => setEventData({ ...eventData, prize: e.target.value })} placeholder="e.g. 5000 Tk + Certificate" className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37]" required />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-[#7A4900] mb-2 uppercase tracking-wider">Target Level</label>
-                  <select 
-                    value={eventData.class} 
-                    onChange={(e) => setEventData({ ...eventData, class: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2 focus:ring-[#D4AF37] font-bold"
-                  >
-                    <option value="Class 9">Class 9</option>
-                    <option value="Class 10">Class 10</option>
-                    <option value="SSC Candidate">SSC Candidate</option>
-                    <option value="College Admission">College Admission</option>
-                  </select>
-                </div>
+                <button onClick={resetForm} className="p-2 hover:bg-slate-800 rounded-full text-slate-500 hover:text-white transition-colors">
+                  <X className="w-6 h-6" />
+                </button>
               </div>
-
-              <div className="space-y-6">
-                <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                  <h4 className="font-bold text-[#7A4900] mb-4 flex items-center">
-                    {editingQuestionIndex !== null ? <Edit className="w-5 h-5 mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
-                    {editingQuestionIndex !== null ? 'Edit Question' : 'Add Question Separately'}
-                  </h4>
-                  <div className="space-y-4">
-                    <textarea 
-                      value={currentQuestion.text} 
-                      onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })} 
-                      placeholder="Question Text (Supports LaTeX)" 
-                      className="w-full px-4 py-3 rounded-xl border outline-none text-sm"
-                    />
-                    <div className="grid grid-cols-1 gap-2">
-                      {currentQuestion.options?.map((opt, i) => (
-                        <div key={i} className="flex items-center space-x-2">
-                          <input 
-                            type="radio" 
-                            name="correctOpt" 
-                            checked={currentQuestion.correctAnswer === i} 
-                            onChange={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: i })}
-                          />
-                          <input 
-                            type="text" 
-                            value={opt} 
-                            onChange={(e) => {
-                              const newOpts = [...(currentQuestion.options || [])];
-                              newOpts[i] = e.target.value;
-                              setCurrentQuestion({ ...currentQuestion, options: newOpts });
-                            }} 
-                            placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                            className="flex-1 px-4 py-2 rounded-lg border outline-none text-sm"
-                          />
-                        </div>
-                      ))}
+              
+              <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
+                <form id="event-form" onSubmit={handleSaveEvent} className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Event Identification</label>
+                       <input type="text" value={eventData.title} onChange={(e) => setEventData({ ...eventData, title: e.target.value })} placeholder="Title of Protocol" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200" required />
                     </div>
-                    <div className="flex space-x-2">
-                      <button 
-                        type="button" 
-                        onClick={addOrUpdateQuestion}
-                        className="flex-1 py-3 bg-[#7A4900] text-white rounded-xl font-bold text-sm hover:bg-black transition-all"
-                      >
-                        {editingQuestionIndex !== null ? 'Update Question' : 'Add Question to List'}
-                      </button>
-                      {editingQuestionIndex !== null && (
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Supplementary Intelligence (Description)</label>
+                       <textarea value={eventData.description} onChange={(e) => setEventData({ ...eventData, description: e.target.value })} placeholder="Details and operational rules..." className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none h-32 text-slate-300 font-medium resize-none transition-all" required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fee (৳)</label>
+                        <input type="number" value={eventData.entryFee} onChange={(e) => setEventData({ ...eventData, entryFee: parseInt(e.target.value) || 0 })} className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none text-emerald-400 font-bold transition-all" required />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Duration (Min)</label>
+                        <input type="number" value={eventData.duration} onChange={(e) => setEventData({ ...eventData, duration: parseInt(e.target.value) || 0 })} className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none text-indigo-400 font-bold transition-all" required />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Uplink (Start)</label>
+                        <input type="datetime-local" value={eventData.startTime} onChange={(e) => setEventData({ ...eventData, startTime: e.target.value })} className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none text-slate-200 font-mono text-xs transition-all" required />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Downlink (End)</label>
+                        <input type="datetime-local" value={eventData.endTime} onChange={(e) => setEventData({ ...eventData, endTime: e.target.value })} className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none text-slate-200 font-mono text-xs transition-all" required />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-8">
+                    <div className="bg-slate-950/50 p-6 rounded-3xl border border-slate-800 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform">
+                        {editingQuestionIndex !== null ? <Edit className="w-16 h-16 text-indigo-500" /> : <PlusCircle className="w-16 h-16 text-indigo-500" />}
+                      </div>
+                      <h4 className="font-bold text-indigo-400 mb-6 flex items-center text-xs uppercase tracking-widest">
+                        {editingQuestionIndex !== null ? <Edit className="w-4 h-4 mr-2" /> : <ShieldPlus className="w-4 h-4 mr-2" />}
+                        {editingQuestionIndex !== null ? 'Modify Payload' : 'Inject Intelligence'}
+                      </h4>
+                      <div className="space-y-4">
+                        <textarea 
+                          value={currentQuestion.text} 
+                          onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })} 
+                          placeholder="Cipher / Question Input" 
+                          className="w-full bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800 outline-none text-slate-200 font-medium text-sm focus:border-indigo-500 h-24 resize-none transition-all"
+                        />
+                        <div className="grid grid-cols-1 gap-3">
+                          {currentQuestion.options?.map((opt, i) => (
+                            <div key={i} className="flex items-center space-x-3 group/opt">
+                              <div className="relative">
+                                <input 
+                                  type="radio" 
+                                  name="correctOpt" 
+                                  checked={currentQuestion.correctAnswer === i} 
+                                  onChange={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: i })}
+                                  className="peer absolute opacity-0 w-full h-full cursor-pointer z-10"
+                                />
+                                <div className="w-5 h-5 rounded-full border-2 border-slate-700 peer-checked:border-indigo-500 peer-checked:bg-indigo-500 transition-all flex items-center justify-center">
+                                   <div className="w-1.5 h-1.5 bg-slate-900 rounded-full scale-0 peer-checked:scale-100 transition-transform" />
+                                </div>
+                              </div>
+                              <input 
+                                type="text" 
+                                value={opt} 
+                                onChange={(e) => {
+                                  const newOpts = [...(currentQuestion.options || [])];
+                                  newOpts[i] = e.target.value;
+                                  setCurrentQuestion({ ...currentQuestion, options: newOpts });
+                                }} 
+                                placeholder={`Branch ${String.fromCharCode(65 + i)}`}
+                                className="flex-1 bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-800 outline-none text-xs text-slate-300 focus:border-indigo-500/50 transition-all"
+                              />
+                            </div>
+                          ))}
+                        </div>
                         <button 
                           type="button" 
-                          onClick={() => {
-                            setEditingQuestionIndex(null);
-                            setCurrentQuestion({ text: '', options: ['', '', '', ''], correctAnswer: 0 });
-                          }}
-                          className="px-4 py-3 bg-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-300 transition-all"
+                          onClick={addOrUpdateQuestion}
+                          className="w-full mt-4 py-3 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
                         >
-                          Cancel
+                          {editingQuestionIndex !== null ? 'Sync Payload' : 'Merge into Registry'}
                         </button>
-                      )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Payload Registry ({eventData.questions?.length || 0})</p>
+                       <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 no-scrollbar">
+                         {eventData.questions?.map((q, idx) => (
+                           <div key={idx} className="flex items-center justify-between p-3 bg-slate-950/30 rounded-xl border border-slate-800 hover:border-slate-600 transition-all group">
+                             <p className="text-xs text-slate-400 truncate flex-1 pr-4">{idx + 1}. {q.text}</p>
+                             <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <button type="button" onClick={() => handleEditQuestion(idx)} className="p-1.5 text-indigo-400 hover:bg-slate-800 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
+                               <button type="button" onClick={() => removeQuestion(idx)} className="p-1.5 text-rose-500 hover:bg-slate-800 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
                     </div>
                   </div>
-                </div>
+                </form>
+              </div>
 
-                <div className="space-y-3">
-                  <h4 className="font-bold text-[#7A4900] text-sm uppercase">Added Questions ({eventData.questions?.length})</h4>
-                  <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
-                    {eventData.questions?.map((q, i) => (
-                      <div key={i} className={`p-3 rounded-xl border text-xs flex justify-between items-start transition-all ${editingQuestionIndex === i ? 'bg-yellow-50 border-[#D4AF37]' : 'bg-white'}`}>
-                        <div className="flex-1">
-                          <span className="font-bold text-[#D4AF37] mr-1">{i + 1}.</span>
-                          <MathRenderer content={q.text} className="text-[#545454] line-clamp-2 inline" engine={mathEngine} />
-                        </div>
-                        <div className="flex space-x-1 ml-2">
-                          <button type="button" onClick={() => handleEditQuestion(i)} className="text-blue-400 hover:text-blue-600">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button type="button" onClick={() => removeQuestion(i)} className="text-red-400 hover:text-red-600">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {(!eventData.questions || eventData.questions.length === 0) && (
-                      <p className="text-center py-6 text-gray-400 text-sm">No questions added yet.</p>
-                    )}
-                  </div>
-                </div>
+              <div className="p-8 border-t border-slate-800 bg-slate-950/20 flex gap-4">
+                 <button type="button" onClick={resetForm} className="flex-1 py-4 bg-slate-950 text-slate-500 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all border border-slate-800">Abort Operation</button>
+                 <button form="event-form" type="submit" className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-500 shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98]">Deploy Synchronized Event</button>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <div className="pt-6 border-t flex justify-end space-x-4">
-              <button type="button" onClick={resetForm} className="px-8 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
-              <button type="submit" className="px-10 py-3 bg-[#D4AF37] text-white rounded-xl font-bold shadow-lg shadow-yellow-100 hover:bg-[#B8860B] transition-all">
-                {editingEvent ? 'Update Event' : 'Create Event'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <AnimatePresence>
+        {viewingResults && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+                <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/20">
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-tight">Performance Analytics</h3>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Cross-sectional Evaluation Grid</p>
+                    </div>
+                    <button onClick={() => setViewingResults(null)} className="p-2 hover:bg-slate-800 rounded-full text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto no-scrollbar p-0">
+                    {loadingResults ? (
+                      <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Aggregating Records...</p>
+                      </div>
+                    ) : eventResults.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-32 space-y-4 opacity-50">
+                        <AlertCircle className="w-16 h-16 text-slate-700" />
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">No Intelligence Data Collected</p>
+                      </div>
+                    ) : (
+                      <table className="w-full text-left">
+                        <thead className="sticky top-0 bg-slate-950 text-slate-500 uppercase text-[9px] font-bold tracking-[0.2em] border-b border-slate-800 z-10">
+                            <tr>
+                              <th className="px-8 py-4">Identity</th>
+                              <th className="px-6 py-4 text-center">Score Metric</th>
+                              <th className="px-6 py-4">Date</th>
+                              <th className="px-8 py-4 text-right">Clearance</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/40 text-sm">
+                            {eventResults.map((res, i) => {
+                              const student = users.find(u => u.uid === res.uid);
+                              return (
+                                <tr key={res.id} className="hover:bg-slate-800/20 transition-colors">
+                                  <td className="px-8 py-5">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-[10px] text-slate-600">{i+1}</div>
+                                        <div>
+                                          <p className="font-bold text-slate-100">{res.displayName || 'Unknown Proxy'}</p>
+                                          <p className="text-[10px] text-slate-500">{student?.email || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-5 text-center">
+                                    <div className="inline-flex flex-col items-center">
+                                        <span className="text-lg font-black text-indigo-400">{res.score}%</span>
+                                        <span className="text-[10px] text-slate-600 font-bold uppercase mt-1">{res.correctCount}/{res.totalQuestions} Correct</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-5">
+                                    <p className="text-[10px] font-mono text-slate-400 tracking-tighter uppercase">{new Date(res.createdAt).toLocaleDateString()}</p>
+                                  </td>
+                                  <td className="px-8 py-5 text-right">
+                                    <div className="inline-flex px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">Archived</div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    )}
+                </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {events.map((e) => (
-          <div key={e.id} className="bg-white p-6 rounded-2xl shadow-sm border hover:border-[#D4AF37] transition-all group relative">
-            <div className="absolute top-4 right-4 flex space-x-1">
-              <button onClick={() => startEdit(e)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Edit Event">
-                <Edit className="w-5 h-5" />
-              </button>
-              {isFullAdmin && (
-                <button onClick={() => onDelete(e.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete Event">
-                  <Trash2 className="w-5 h-5" />
+          <div key={e.id} className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 hover:border-indigo-500/30 transition-all group relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
+                <Trophy className="w-32 h-32" />
+            </div>
+            
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center space-x-2">
+                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                  e.status === 'upcoming' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                  e.status === 'ongoing' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 animate-pulse' :
+                  'bg-slate-800 text-slate-500 border-slate-700'
+                }`}>
+                  {e.status}
+                </span>
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">{e.maxCandidates} Capacity</span>
+              </div>
+              <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => startEdit(e)} className="p-2 text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all border border-transparent hover:border-indigo-500/20" title="Regulate Config">
+                  <Edit className="w-5 h-5" />
                 </button>
-              )}
+                {isFullAdmin && (
+                  <button onClick={() => onDelete(e.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20" title="Purge Record">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center space-x-2 mb-2">
-              <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                e.status === 'upcoming' ? 'bg-blue-50 text-blue-600' :
-                e.status === 'ongoing' ? 'bg-green-50 text-green-600' :
-                'bg-gray-50 text-gray-600'
-              }`}>
-                {e.status}
-              </span>
-              <span className="text-[10px] font-bold text-gray-400 uppercase">{e.maxCandidates} Slots</span>
-            </div>
-            <h3 className="font-bold text-[#7A4900] text-lg mb-1">{e.title}</h3>
-            <p className="text-[10px] font-bold text-[#D4AF37] mb-2 uppercase tracking-widest">{e.class || 'All Levels'}</p>
-            <p className="text-sm text-[#545454] mb-4 line-clamp-2">{e.description}</p>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400 uppercase">Start</span>
-                <span className="text-[#D4AF37]">{new Date(e.startTime).toLocaleString()}</span>
+
+            <h3 className="font-bold text-white text-xl mb-1 tracking-tight group-hover:text-indigo-400 transition-colors">{e.title}</h3>
+            <p className="text-[10px] font-bold text-indigo-500 mb-4 uppercase tracking-widest">{e.class || 'Universal Protocol'}</p>
+            <p className="text-sm text-slate-400 mb-6 line-clamp-2 leading-relaxed">{e.description}</p>
+            
+            <div className="space-y-3 pt-6 border-t border-slate-800/50">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-slate-500">Execution Time</span>
+                <span className="text-slate-200">{new Date(e.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
               </div>
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400 uppercase">Duration</span>
-                <span className="text-[#7A4900]">{e.duration} Minutes</span>
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-slate-500">Temporal Length</span>
+                <span className="text-indigo-400">{e.duration} Units (Min)</span>
               </div>
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-gray-400 uppercase">Questions</span>
-                <span className="text-[#7A4900]">{e.questions?.length || 0} Manual MCQs</span>
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-slate-500">Payload Density</span>
+                <span className="text-emerald-400">{e.questions?.length || 0} Intelligence Units</span>
               </div>
-              <div className="pt-4 flex space-x-2">
+              
+              <div className="pt-6 flex gap-3">
                 <button 
                   onClick={() => setViewingResults(e.id)}
-                  className="flex-1 bg-blue-50 text-blue-600 py-3 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all"
+                  className="flex-1 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-lg active:scale-[0.98]"
                 >
-                  View Performance
+                  Analyze Yield
                 </button>
                 <button 
                   onClick={() => startEdit(e)}
-                  className="flex-1 bg-orange-50 text-orange-600 py-3 rounded-xl text-xs font-bold hover:bg-orange-100 transition-all"
+                  className="flex-1 bg-slate-950 text-slate-500 border border-slate-800 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-white hover:bg-slate-800 transition-all active:scale-[0.98]"
                 >
-                  Modify Event
+                  Regulate
                 </button>
               </div>
             </div>
           </div>
         ))}
       </div>
-
-      {/* Results Modal */}
-      <AnimatePresence>
-        {viewingResults && (
-           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-             <motion.div
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0, scale: 0.9 }}
-               className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
-             >
-               <div className="p-8 border-b flex justify-between items-center">
-                 <div>
-                   <h2 className="text-2xl font-bold text-[#7A4900]">Performance Report</h2>
-                   <p className="text-sm text-[#545454]">{events.find(e => e.id === viewingResults)?.title}</p>
-                 </div>
-                 <button onClick={() => setViewingResults(null)} className="p-2 hover:bg-gray-100 rounded-full">
-                   <X className="w-6 h-6 text-gray-400" />
-                 </button>
-               </div>
-
-               <div className="flex-1 overflow-y-auto p-8">
-                 {loadingResults ? (
-                   <div className="text-center py-10">Loading results...</div>
-                 ) : eventResults.length === 0 ? (
-                   <div className="text-center py-10 text-gray-400">No student performance recorded yet.</div>
-                 ) : (
-                   <div className="overflow-x-auto">
-                     <table className="w-full text-left">
-                       <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
-                         <tr>
-                           <th className="px-6 py-4">Student</th>
-                           <th className="px-6 py-4">Contact</th>
-                           <th className="px-6 py-4 text-center">Score</th>
-                           <th className="px-6 py-4">Date</th>
-                         </tr>
-                       </thead>
-                       <tbody className="divide-y">
-                         {eventResults.map((r) => {
-                           const student = users.find(u => u.uid === r.uid);
-                           return (
-                             <tr key={r.id} className="hover:bg-gray-50">
-                               <td className="px-6 py-4">
-                                 <p className="font-bold text-[#7A4900]">{r.displayName}</p>
-                                 <p className="text-[10px] text-gray-400">{r.school}</p>
-                               </td>
-                               <td className="px-6 py-4 text-xs">
-                                 <p>{student?.email || 'N/A'}</p>
-                                 <p className="text-gray-400">{student?.phone || 'N/A'}</p>
-                               </td>
-                               <td className="px-6 py-4 text-center">
-                                 <span className="text-lg font-bold text-[#D4AF37]">{r.score}%</span>
-                                 <div className="text-[10px] text-gray-400">{r.correctCount}/{r.totalQuestions} Correct</div>
-                               </td>
-                               <td className="px-6 py-4 text-[10px] text-gray-400">
-                                 {new Date(r.createdAt).toLocaleString()}
-                               </td>
-                             </tr>
-                           );
-                         })}
-                       </tbody>
-                     </table>
-                   </div>
-                 )}
-               </div>
-             </motion.div>
-           </div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
@@ -1705,91 +1865,123 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
   };
 
   return (
-    <div className="space-y-8 sm:space-y-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
         <div className="space-y-1">
-          <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight italic text-white">Internal Resource Drive</h2>
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Active PDF Nodes: {resources.length}</p>
+          <h2 className="text-xl font-bold text-white tracking-tight">Active Asset Registry</h2>
+          <p className="text-xs text-slate-500 font-medium font-mono uppercase tracking-[0.1em]">Total PDF Nodes: {resources.length}</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-[#D4AF37] text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center space-x-2 hover:bg-white hover:text-black transition-all shadow-xl shadow-yellow-900/10">
+        <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95">
           <Plus className="w-4 h-4" />
-          <span>Upload New Asset</span>
+          <span>Ingest New Asset</span>
         </button>
       </div>
 
       <AnimatePresence>
         {showAdd && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#141414] border border-white/10 rounded-[2rem] p-6 sm:p-10 shadow-2xl">
-            <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Asset Designation (Name)</label>
-                <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Physics First Paper - Chapter 1" className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold text-white placeholder-gray-700" required />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 10 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.95, y: 10 }} 
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+          >
+            <div className="bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-2xl w-full border border-slate-800 overflow-hidden">
+              <div className="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/40">
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">Provision External Asset</h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Resource Drive Configuration</p>
+                </div>
+                <button onClick={() => setShowAdd(false)} className="p-2 hover:bg-slate-800 rounded-full text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Google Drive Access Link</label>
-                <input type="url" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} placeholder="https://drive.google.com/..." className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold text-white placeholder-gray-700" required />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Metadata Category</label>
-                <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold appearance-none text-white">
-                  <option value="Physics">Physics</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="Biology">Biology</option>
-                  <option value="Mathematics">Mathematics</option>
-                  <option value="General">General</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Estimated Payload Size</label>
-                <input type="text" value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 1.2 MB" className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#D4AF37] transition-all text-sm font-bold text-white placeholder-gray-700" />
-              </div>
-              <div className="md:col-span-2 flex justify-end space-x-4 pt-4">
-                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-[10px] font-black uppercase text-gray-500 hover:text-white transition-colors">Discard</button>
-                <button type="submit" disabled={saving} className="bg-white text-black px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#D4AF37] transition-all">
-                  {saving ? 'Transmitting...' : 'Link Asset'}
-                </button>
-              </div>
-            </form>
+              
+              <form onSubmit={handleSave} className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Asset Designation</label>
+                    <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Physics Ch1 Drive" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200" required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Cloud Link (URL)</label>
+                    <input type="url" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} placeholder="https://drive.google.com/..." className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200" required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Classification Target</label>
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200 appearance-none">
+                      <option value="Physics">Physics</option>
+                      <option value="Chemistry">Chemistry</option>
+                      <option value="Biology">Biology</option>
+                      <option value="Mathematics">Mathematics</option>
+                      <option value="General">General</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Payload Size</label>
+                    <input type="text" value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 1.2 MB" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200" />
+                  </div>
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button type="button" onClick={() => setShowAdd(false)} className="flex-1 py-4 bg-slate-950 text-slate-500 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all border border-slate-800">Abort</button>
+                  <button type="submit" disabled={saving} className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-500 shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98]">
+                    {saving ? 'Transmitting...' : 'Link Asset Node'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {resources.map(r => (
-          <div key={r.id} className="bg-[#141414] border border-white/5 rounded-3xl p-6 hover:border-[#D4AF37]/30 transition-all group overflow-hidden relative shadow-sm">
-            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => onDelete(r.id)} className="p-2 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
+          <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-[2rem] p-8 hover:border-indigo-500/30 transition-all group overflow-hidden relative shadow-xl">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
+              <FileText className="w-32 h-32" />
+            </div>
+            
+            <div className="flex justify-between items-start mb-6 relative z-10">
+              <div className={`p-4 rounded-2xl transition-all ${r.category === 'Physics' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-slate-800 text-slate-400'} group-hover:bg-indigo-600 group-hover:text-white`}>
+                 <FileText className="w-6 h-6" />
+              </div>
+              <button 
+                onClick={() => onDelete(r.id)} 
+                className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20 opacity-0 group-hover:opacity-100"
+                title="Decommission Asset"
+              >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex items-start space-x-4 mb-6">
-              <div className="p-4 rounded-2xl bg-black/40 text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div className="min-w-0 pr-6">
-                <h3 className="font-black text-base leading-tight uppercase tracking-tight mb-1 truncate" title={r.title}>{r.title}</h3>
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37] px-2 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20">{r.category}</span>
+
+            <div className="relative z-10">
+              <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-1 italic">{r.category}</p>
+              <h3 className="text-lg font-bold text-white mb-2 line-clamp-1 tracking-tight group-hover:text-indigo-400 transition-colors">{r.title}</h3>
+              <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-500">
+                 <span className="px-1.5 py-0.5 bg-slate-950 rounded border border-slate-800">{r.size || '?? KB'}</span>
+                 <span className="w-1 h-1 rounded-full bg-slate-800" />
+                 <span>ACTIVE NODE</span>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
-               <div className="flex flex-col">
-                 <span className="text-[9px] font-black text-gray-600 uppercase">Payload Size</span>
-                 <span className="text-[10px] font-bold text-gray-400">{r.size || 'Unspecified'}</span>
-               </div>
-               <a href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-[#D4AF37] hover:text-white transition-colors">
-                 <span>Preview Node</span>
-                 <Download className="w-3 h-3" />
+
+            <div className="mt-8 pt-6 border-t border-slate-800/50 flex items-center justify-between relative z-10">
+               <a 
+                 href={r.url} 
+                 target="_blank" 
+                 rel="noopener noreferrer" 
+                 className="flex items-center space-x-2 text-indigo-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest group/link"
+               >
+                 <span>Access Drive</span>
+                 <ExternalLink className="w-3 h-3 group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
                </a>
+               <span className="text-[9px] font-mono text-slate-600 uppercase">Ver. 1.0</span>
             </div>
           </div>
         ))}
         {resources.length === 0 && (
-          <div className="md:col-span-2 xl:col-span-3 text-center py-24 bg-white/5 rounded-[2rem] border-2 border-dashed border-white/5">
-            <Database className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-            <p className="text-gray-500 font-black uppercase text-[10px] tracking-widest">No active asset nodes detected</p>
+          <div className="lg:col-span-3 text-center py-24 bg-slate-950/30 rounded-[3rem] border-2 border-dashed border-slate-800">
+            <Database className="w-16 h-16 text-slate-700 mx-auto mb-4" />
+            <p className="text-slate-600 font-bold uppercase text-[10px] tracking-[0.2em]">Zero asset nodes registered in frequency</p>
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

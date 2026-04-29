@@ -34,19 +34,22 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
   return (
     <div className="max-w-2xl mx-auto pb-32 lg:pb-12 pt-4 relative">
       {isPreviewMode && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-black text-white px-4 py-3 flex items-center justify-between shadow-2xl border-b border-[#D4AF37]/30">
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow-2xl border-b border-indigo-500/20 backdrop-blur-md bg-slate-900/90">
           <div className="flex items-center space-x-3">
-            <div className="bg-[#D4AF37] p-1.5 rounded-lg">
-              <Shield className="w-4 h-4 text-black" />
+            <div className="bg-indigo-600 p-1.5 rounded-lg">
+              <Shield className="w-4 h-4 text-white" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest italic">Viewing as Student</span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white">Simulation Active</span>
+              <span className="text-[8px] font-medium text-slate-400 uppercase tracking-[0.2em]">Viewing as Scholar</span>
+            </div>
           </div>
           <button 
             onClick={exitPreview}
-            className="flex items-center space-x-2 bg-white text-black px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#D4AF37] transition-all"
+            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
           >
             <ArrowLeft className="w-3 h-3" />
-            <span>Return to Terminal</span>
+            <span>Terminal Access</span>
           </button>
         </div>
       )}
