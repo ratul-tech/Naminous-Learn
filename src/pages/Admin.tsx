@@ -32,8 +32,19 @@ export default function Admin({ profile }: AdminProps) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+  const [countdown, setCountdown] = useState(0);
 
   const isFullAdmin = profile?.role === 'admin';
+  
+  useEffect(() => {
+    let timer: any;
+    if (confirmModal && confirmModal.show && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [confirmModal, countdown]);
   
   useEffect(() => {
     if (activeTab === 'profile') {
@@ -106,6 +117,7 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteEvent = async (id: string) => {
+    setCountdown(5);
     setConfirmModal({
       show: true,
       title: 'Delete Event',
@@ -122,6 +134,7 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteQuestion = async (id: string) => {
+    setCountdown(5);
     setConfirmModal({
       show: true,
       title: 'Delete Question',
@@ -138,6 +151,7 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteStudent = async (uid: string) => {
+    setCountdown(5);
     setConfirmModal({
       show: true,
       title: 'Delete Student',
@@ -155,6 +169,7 @@ export default function Admin({ profile }: AdminProps) {
 
   const handleDeleteAdmin = async (uid: string) => {
     if (uid === auth.currentUser?.uid) {
+      setCountdown(0);
       setConfirmModal({
         show: true,
         title: 'Action Prohibited',
@@ -164,6 +179,7 @@ export default function Admin({ profile }: AdminProps) {
       return;
     }
 
+    setCountdown(5);
     setConfirmModal({
       show: true,
       title: 'Delete Admin',
@@ -180,11 +196,20 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteResource = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'resources', id));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `resources/${id}`);
-    }
+    setCountdown(5);
+    setConfirmModal({
+      show: true,
+      title: 'Decommission Resource',
+      message: 'Are you sure you want to decommission this asset node? It will be removed from the library permanently.',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'resources', id));
+          setConfirmModal(null);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `resources/${id}`);
+        }
+      }
+    });
   };
 
   if (loading) return (
@@ -454,13 +479,20 @@ export default function Admin({ profile }: AdminProps) {
                 )}
                 <button
                   onClick={confirmModal.onConfirm}
+                  disabled={confirmModal.title !== 'Action Prohibited' && countdown > 0}
                   className={`flex-1 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
                     confirmModal.title === 'Action Prohibited' 
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' 
-                      : 'bg-rose-600 text-white shadow-lg shadow-rose-900/20'
+                      : countdown > 0
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                        : 'bg-rose-600 text-white shadow-lg shadow-rose-900/20 active:scale-95'
                   }`}
                 >
-                  {confirmModal.title === 'Action Prohibited' ? 'Acknowledged' : 'Execute Task'}
+                  {confirmModal.title === 'Action Prohibited' 
+                    ? 'Acknowledged' 
+                    : countdown > 0 
+                      ? `Authorizing (${countdown}s)` 
+                      : 'Execute Task'}
                 </button>
               </div>
             </motion.div>

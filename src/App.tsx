@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, getDocFromServer } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
 import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -102,6 +102,19 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'global_stats', 'counters'));
+      } catch (error: any) {
+        if (error?.message?.includes('the client is offline')) {
+          console.error("Firestore is offline. Check your configuration.");
+        }
+      }
+    }
+    testConnection();
+  }, []);
 
   const refreshUser = async () => {
     if (auth.currentUser) {
