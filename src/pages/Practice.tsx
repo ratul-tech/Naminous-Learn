@@ -181,19 +181,19 @@ export default function Practice({ profile }: PracticeProps) {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden bg-white p-10 md:p-16 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+      <header className="relative overflow-hidden bg-white p-6 sm:p-10 md:p-16 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
         <div className="relative z-10">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-block px-4 py-1.5 bg-[#7A4900]/5 text-[#7A4900] rounded-full text-xs font-bold uppercase tracking-widest mb-6"
+            className="inline-block px-4 py-1.5 bg-[#7A4900]/5 text-[#7A4900] rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"
           >
             Elite Training Station
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#7A4900] mb-6 font-serif">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#7A4900] mb-4 md:mb-6 font-serif leading-tight px-4">
             Practice Modules
           </h1>
-          <p className="text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed px-4">
             Sharpen your intellect with specialized modules tailored for excellence.
           </p>
         </div>
@@ -526,18 +526,18 @@ export default function Practice({ profile }: PracticeProps) {
               <h1 className="text-4xl font-bold text-[#7A4900] mb-2">Exam Completed!</h1>
               <p className="text-[#545454] mb-12">Here is how you performed in {config.subject}</p>
 
-              <div className="grid grid-cols-3 gap-6 mb-12">
-                <div className="p-6 bg-gray-50 rounded-3xl">
-                  <p className="text-xs text-gray-400 uppercase font-bold mb-1">Score</p>
-                  <p className="text-3xl font-bold text-[#7A4900]">{examState.results.score}%</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 md:mb-12">
+                <div className="p-4 sm:p-6 bg-gray-50 rounded-2xl sm:rounded-3xl">
+                  <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Score</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-[#7A4900]">{examState.results.score}%</p>
                 </div>
-                <div className="p-6 bg-green-50 rounded-3xl">
-                  <p className="text-xs text-green-400 uppercase font-bold mb-1">Correct</p>
-                  <p className="text-3xl font-bold text-green-600">{examState.results.correctCount}</p>
+                <div className="p-4 sm:p-6 bg-green-50 rounded-2xl sm:rounded-3xl">
+                  <p className="text-[10px] text-green-400 uppercase font-bold mb-1">Correct</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">{examState.results.correctCount}</p>
                 </div>
-                <div className="p-6 bg-red-50 rounded-3xl">
-                  <p className="text-xs text-red-400 uppercase font-bold mb-1">Wrong</p>
-                  <p className="text-3xl font-bold text-red-600">{examState.results.wrongCount}</p>
+                <div className="p-4 sm:p-6 bg-red-50 rounded-2xl sm:rounded-3xl">
+                  <p className="text-[10px] text-red-400 uppercase font-bold mb-1">Wrong</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-red-600">{examState.results.wrongCount}</p>
                 </div>
               </div>
 

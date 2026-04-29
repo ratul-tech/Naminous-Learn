@@ -269,27 +269,27 @@ export default function Exam({ profile }: ExamProps) {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-10">
       {/* Official Header */}
-      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 sticky top-4 z-50 backdrop-blur-md bg-white/95">
-        <div className="flex items-center space-x-6">
-          <div className="w-16 h-16 bg-[#7A4900] rounded-2xl flex items-center justify-center text-white shadow-lg">
-            <GraduationCap className="w-8 h-8" />
+      <div className="bg-white p-4 sm:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 sticky top-2 sm:top-4 z-50 backdrop-blur-md bg-white/95">
+        <div className="flex items-center space-x-4 sm:space-x-6 w-full md:w-auto">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#7A4900] rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+            <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#7A4900] font-serif leading-tight">{event?.title}</h1>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-2xl font-bold text-[#7A4900] font-serif leading-tight truncate">{event?.title}</h1>
             <div className="flex items-center space-x-2 mt-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Official Assessment</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] sm:tracking-[0.2em]">Official Assessment</span>
+              <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 animate-pulse" />
             </div>
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="text-right hidden md:block">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Status</p>
-            <p className="text-xs font-bold text-[#7A4900]">Item {currentQuestionIndex + 1} / {questions.length}</p>
+        <div className="flex items-center justify-between md:justify-end w-full md:w-auto space-x-4 pt-2 md:pt-0 border-t md:border-t-0 border-gray-50">
+          <div className="text-left md:text-right">
+            <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Status</p>
+            <p className="text-[10px] sm:text-xs font-bold text-[#7A4900]">Item {currentQuestionIndex + 1} / {questions.length}</p>
           </div>
-          <div className={`flex items-center space-x-3 px-8 py-4 rounded-2xl font-mono font-bold text-2xl shadow-inner ${timeLeft < 300 ? 'bg-red-50 text-red-600 animate-pulse border border-red-100' : 'bg-gray-50 text-[#7A4900] border border-gray-100'}`}>
-            <Clock className="w-6 h-6 text-[#D4AF37]" />
+          <div className={`flex items-center space-x-2 sm:space-x-3 px-4 sm:px-8 py-2 sm:py-4 rounded-xl sm:rounded-2xl font-mono font-bold text-lg sm:text-2xl shadow-inner ${timeLeft < 300 ? 'bg-red-50 text-red-600 animate-pulse border border-red-100' : 'bg-gray-50 text-[#7A4900] border border-gray-100'}`}>
+            <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-[#D4AF37]" />
             <span>{formatTime(timeLeft)}</span>
           </div>
         </div>
@@ -314,40 +314,42 @@ export default function Exam({ profile }: ExamProps) {
           initial={{ opacity: 0, scale: 0.98, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 1.02, y: -10 }}
-          className="bg-white p-10 md:p-16 rounded-[3.5rem] shadow-2xl border border-gray-50 relative overflow-hidden"
+          className="bg-white p-6 sm:p-10 md:p-16 rounded-[2rem] sm:rounded-[3rem] md:rounded-[3.5rem] shadow-2xl border border-gray-50 relative overflow-hidden"
         >
-          <div className="absolute top-10 right-10 opacity-[0.03] select-none pointer-events-none">
-            <Shield className="w-64 h-64" />
+          <div className="absolute top-6 sm:top-10 right-6 sm:right-10 opacity-[0.03] select-none pointer-events-none">
+            <Shield className="w-32 h-32 sm:w-64 sm:h-64" />
           </div>
 
           <div className="relative z-10">
-            <div className="inline-block px-4 py-1 bg-gray-50 text-gray-400 rounded-full text-[10px] font-bold uppercase tracking-widest mb-10 border border-gray-100">
+            <div className="inline-block px-3 sm:px-4 py-1 bg-gray-50 text-gray-400 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-widest mb-6 sm:mb-10 border border-gray-100">
               Exam Item #{currentQuestionIndex + 1}
             </div>
             
-            <div className="text-2xl md:text-3xl font-bold text-[#7A4900] mb-12 font-serif leading-relaxed">
+            <div className="text-lg sm:text-2xl md:text-3xl font-bold text-[#7A4900] mb-8 sm:mb-12 font-serif leading-relaxed">
               <MathRenderer content={currentQuestion?.text || ''} engine={profile?.mathEngine} />
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
               {currentQuestion?.options.map((option, i) => (
                 <button
                   key={i}
                   onClick={() => setAnswers({ ...answers, [currentQuestion.id]: i })}
-                  className={`group w-full p-6 p-y-8 rounded-[2rem] border-2 text-left transition-all flex items-center space-x-6 relative overflow-hidden ${
+                  className={`group w-full p-4 sm:p-6 md:py-8 rounded-xl sm:rounded-[2rem] border-2 text-left transition-all flex items-center space-x-3 sm:space-x-6 relative overflow-hidden ${
                     answers[currentQuestion.id] === i
                       ? 'border-[#7A4900] bg-[#7A4900]/5 shadow-lg shadow-[#7A4900]/5'
                       : 'border-gray-50 hover:border-[#D4AF37] bg-gray-50 hover:bg-white text-[#545454]'
                   }`}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl shrink-0 transition-all ${
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-lg sm:text-xl shrink-0 transition-all ${
                     answers[currentQuestion.id] === i 
                       ? 'bg-[#7A4900] text-white shadow-md shadow-[#7A4900]/30' 
                       : 'bg-white text-gray-400 group-hover:text-[#D4AF37] border border-gray-100'
                   }`}>
                     {String.fromCharCode(65 + i)}
                   </div>
-                  <MathRenderer content={option} className="font-bold text-xl" engine={profile?.mathEngine} />
+                  <div className="min-w-0">
+                    <MathRenderer content={option} className="font-bold text-sm sm:text-xl" engine={profile?.mathEngine} />
+                  </div>
                 </button>
               ))}
             </div>
@@ -366,16 +368,17 @@ export default function Exam({ profile }: ExamProps) {
           <span>Previous Task</span>
         </button>
 
-        <div className="flex items-center space-x-3 px-6 py-2 bg-[#f5f5f0] rounded-full">
-          {questions.map((_, i) => (
+        <div className="flex flex-wrap items-center justify-center gap-2 px-4 py-2 bg-[#f5f5f0] rounded-2xl sm:rounded-full max-w-full">
+          {questions.slice(0, 15).map((_, i) => (
             <div 
               key={i} 
-              className={`w-2 h-2 rounded-full transition-all ${
-                i === currentQuestionIndex ? 'bg-[#7A4900] w-6' : 
+              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${
+                i === currentQuestionIndex ? 'bg-[#7A4900] w-4 sm:w-6' : 
                 answers[questions[i].id] !== undefined ? 'bg-[#D4AF37]' : 'bg-gray-300'
               }`} 
             />
           ))}
+          {questions.length > 15 && <span className="text-[8px] font-bold text-gray-400">+{questions.length - 15} more</span>}
         </div>
 
         {currentQuestionIndex === questions.length - 1 ? (

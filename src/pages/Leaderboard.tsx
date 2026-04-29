@@ -56,19 +56,19 @@ export default function Leaderboard() {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden bg-white p-10 md:p-16 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+      <header className="relative overflow-hidden bg-white p-6 sm:p-10 md:p-16 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
         <div className="relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-block px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border border-amber-100"
+            className="inline-block px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 border border-amber-100"
           >
             Hall of Fame
           </motion.div>
-          <h1 className="text-4xl md:text-6xl font-bold text-[#7A4900] mb-6 font-serif">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#7A4900] mb-4 md:mb-6 font-serif">
             Student Rankings
           </h1>
-          <p className="text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed px-4">
             Celebrating the top minds across our global platform. Excellence is noticed, awarded, and remembered.
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function Leaderboard() {
               <PodiumItem
                 result={top3[1]}
                 rank={2}
-                height="h-56"
+                height="h-40 md:h-56"
                 color="bg-gray-100"
                 medalColor="text-gray-400"
                 delay={0.2}
@@ -145,7 +145,7 @@ export default function Leaderboard() {
               <PodiumItem
                 result={top3[0]}
                 rank={1}
-                height="h-80"
+                height="h-56 md:h-80"
                 color="bg-[#D4AF37]"
                 medalColor="text-[#D4AF37]"
                 delay={0}
@@ -156,7 +156,7 @@ export default function Leaderboard() {
               <PodiumItem
                 result={top3[2]}
                 rank={3}
-                height="h-44"
+                height="h-32 md:h-44"
                 color="bg-orange-100"
                 medalColor="text-orange-400"
                 delay={0.4}
@@ -166,11 +166,11 @@ export default function Leaderboard() {
 
           {/* List View */}
           <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 p-8 bg-[#f5f5f0]/50 font-bold text-[#7A4900] uppercase text-[10px] tracking-[0.2em] border-b">
-              <div className="col-span-1 text-center">Rank</div>
-              <div className="col-span-6 md:col-span-7">Student Profile</div>
-              <div className="col-span-3 md:col-span-2">Points</div>
-              <div className="col-span-2 text-right">Details</div>
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 p-4 sm:p-8 bg-[#f5f5f0]/50 font-bold text-[#7A4900] uppercase text-[8px] sm:text-[10px] tracking-wider sm:tracking-[0.2em] border-b">
+              <div className="col-span-2 sm:col-span-1 text-center">Rank</div>
+              <div className="col-span-6 sm:col-span-7">Student Profile</div>
+              <div className="col-span-4 sm:col-span-2 text-center sm:text-left">Points</div>
+              <div className="hidden sm:block col-span-2 text-right">Details</div>
             </div>
             
             <div className="divide-y divide-gray-50">
@@ -181,29 +181,29 @@ export default function Leaderboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="grid grid-cols-12 gap-4 p-8 items-center hover:bg-gray-50 transition-all group"
+                    className="grid grid-cols-12 gap-2 sm:gap-4 p-4 sm:p-8 items-center hover:bg-gray-50 transition-all group"
                   >
-                    <div className="col-span-1 text-center font-serif text-2xl font-bold text-gray-300 group-hover:text-[#D4AF37] transition-colors">
+                    <div className="col-span-2 sm:col-span-1 text-center font-serif text-xl sm:text-2xl font-bold text-gray-300 group-hover:text-[#D4AF37] transition-colors">
                       {index + 4}
                     </div>
-                    <div className="col-span-6 md:col-span-7 flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-all border border-transparent group-hover:border-amber-100">
-                        <User className="w-6 h-6" />
+                    <div className="col-span-6 sm:col-span-7 flex items-center space-x-2 sm:space-x-4 min-w-0">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-all border border-transparent group-hover:border-amber-100 shrink-0">
+                        <User className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <div>
-                        <h4 className="font-bold text-[#7A4900] group-hover:translate-x-1 transition-transform">{result.displayName}</h4>
-                        <div className="flex items-center space-x-2 text-xs text-gray-400">
-                          <School className="w-3 h-3" />
-                          <span>{result.school}</span>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-[#7A4900] truncate text-sm sm:text-base">{result.displayName}</h4>
+                        <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-xs text-gray-400 truncate">
+                          <School className="w-2.5 h-2.5 shrink-0" />
+                          <span className="truncate">{result.school}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="col-span-3 md:col-span-2">
-                      <div className="text-xl font-bold text-[#7A4900] font-serif">{result.score}%</div>
-                      <p className="text-[10px] uppercase font-bold tracking-widest text-[#D4AF37]">{result.correctCount} Correct</p>
+                    <div className="col-span-4 sm:col-span-2">
+                      <div className="text-base sm:text-xl font-bold text-[#7A4900] font-serif">{result.score}%</div>
+                      <p className="text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-[#D4AF37]">{result.correctCount} Correct</p>
                     </div>
-                    <div className="col-span-2 text-right">
-                      <div className="inline-block px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-400 rounded-full group-hover:bg-[#7A4900]/5 group-hover:text-[#7A4900] transition-colors">
+                    <div className="hidden sm:block col-span-2 text-right">
+                      <div className="inline-block px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-400 rounded-full group-hover:bg-[#7A4900]/5 group-hover:text-[#7A4900] transition-colors whitespace-nowrap">
                         {result.type}
                       </div>
                     </div>
@@ -258,7 +258,7 @@ function PodiumItem({ result, rank, height, color, medalColor, delay }: { result
       
       <motion.div 
         whileHover={{ y: -5 }}
-        className={`${height} w-full rounded-t-[2.5rem] flex flex-col items-center justify-center shadow-2xl relative overflow-hidden ${
+        className={`${height} w-full rounded-t-[1.5rem] sm:rounded-t-[2.5rem] flex flex-col items-center justify-center shadow-2xl relative overflow-hidden ${
           rank === 1 ? 'bg-gradient-to-b from-[#D4AF37] to-[#B8860B]' :
           rank === 2 ? 'bg-gradient-to-b from-gray-200 to-gray-400' :
           'bg-gradient-to-b from-orange-200 to-orange-400'

@@ -139,8 +139,8 @@ export default function Questions({ profile }: QuestionsProps) {
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-grow relative w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -148,14 +148,14 @@ export default function Questions({ profile }: QuestionsProps) {
                 placeholder="Search questions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all text-sm"
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:flex md:flex-nowrap gap-2 w-full md:w-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full lg:w-auto">
               <select
                 value={filterClass}
                 onChange={(e) => setFilterClass(e.target.value)}
-                className="w-full md:w-40 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-gray-100"
+                className="w-full lg:w-40 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-xs sm:text-sm appearance-none cursor-pointer hover:bg-gray-100"
               >
                 <option value="All">All Classes</option>
                 <option value="Class 9">Class 9</option>
@@ -166,7 +166,7 @@ export default function Questions({ profile }: QuestionsProps) {
               <select
                 value={filterSubject}
                 onChange={(e) => setFilterSubject(e.target.value)}
-                className="w-full md:w-48 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-gray-100"
+                className="w-full lg:w-48 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-xs sm:text-sm appearance-none cursor-pointer hover:bg-gray-100"
               >
                 <option value="All">All Subjects</option>
                 {ALL_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -174,7 +174,7 @@ export default function Questions({ profile }: QuestionsProps) {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value as any)}
-                className="w-full md:w-48 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-gray-100"
+                className="w-full lg:w-48 px-4 py-3 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-xs sm:text-sm appearance-none cursor-pointer hover:bg-gray-100"
               >
                 <option value="All">All Categories</option>
                 <option value="Board">Board</option>
@@ -382,33 +382,35 @@ export default function Questions({ profile }: QuestionsProps) {
         </div>
         <div className="divide-y divide-gray-50">
           {filteredQuestions.map((q) => (
-            <div key={q.id} className="p-8 hover:bg-gray-50 transition-colors group">
-              <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                <div className="flex-grow space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-gray-100 rounded-full text-gray-500">{q.category}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-[#D4AF37]/10 rounded-full text-[#7A4900]">{q.board || q.college}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-blue-50 rounded-full text-blue-600">{q.class}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-purple-50 rounded-full text-purple-600">{q.subject}</span>
+            <div key={q.id} className="p-4 sm:p-8 hover:bg-gray-50 transition-colors group">
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4 sm:gap-6">
+                <div className="flex-grow space-y-4 w-full">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-gray-100 rounded-full text-gray-500">{q.category}</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-[#D4AF37]/10 rounded-full text-[#7A4900] truncate max-w-[120px]">{q.board || q.college}</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-blue-50 rounded-full text-blue-600">{q.class}</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-purple-50 rounded-full text-purple-600">{q.subject}</span>
                   </div>
-                  <h3 className="text-lg font-bold text-[#7A4900] leading-relaxed">
+                  <h3 className="text-base sm:text-lg font-bold text-[#7A4900] leading-relaxed">
                     <MathRenderer content={q.text} engine={profile?.mathEngine} />
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-2">
                     {q.options.map((opt, i) => (
-                      <div key={i} className={`flex items-center space-x-3 text-sm ${i === q.correctAnswer ? 'text-green-600 font-bold' : 'text-[#545454]'}`}>
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 shrink-0 ${i === q.correctAnswer ? 'border-green-600 bg-green-50' : 'border-gray-100 bg-white'}`}>
-                          {String.fromCharCode(65 + i)}
+                      <div key={i} className={`flex items-start space-x-3 text-[13px] sm:text-sm ${i === q.correctAnswer ? 'text-green-600 font-bold' : 'text-[#545454]'}`}>
+                        <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center border-2 shrink-0 mt-0.5 ${i === q.correctAnswer ? 'border-green-600 bg-green-50' : 'border-gray-100 bg-white'}`}>
+                          <span className="text-[10px] sm:text-xs">{String.fromCharCode(65 + i)}</span>
                         </div>
-                        <MathRenderer content={opt} engine={profile?.mathEngine} />
+                        <div className="min-w-0">
+                          <MathRenderer content={opt} engine={profile?.mathEngine} />
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="flex md:flex-col items-center space-x-2 md:space-x-0 md:space-y-2 transition-all">
+                <div className="flex flex-row md:flex-col items-center space-x-2 md:space-x-0 md:space-y-2 w-full md:w-auto justify-end md:justify-start pt-2 md:pt-0">
                   <button 
                     onClick={() => handleEdit(q)} 
-                    className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 hover:scale-110 active:scale-95 transition-all shadow-sm border border-blue-100"
+                    className="flex-1 md:flex-none p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all shadow-sm border border-blue-100 flex items-center justify-center sm:block"
                     title="Edit Question"
                   >
                     <Edit className="w-5 h-5" />
@@ -416,7 +418,7 @@ export default function Questions({ profile }: QuestionsProps) {
                   {profile?.role === 'admin' && (
                     <button 
                       onClick={() => handleDeleteQuestion(q.id)} 
-                      className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 hover:scale-110 active:scale-95 transition-all shadow-sm border border-red-100"
+                      className="flex-1 md:flex-none p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all shadow-sm border border-red-100 flex items-center justify-center sm:block"
                       title="Delete Question"
                     >
                       <Trash2 className="w-5 h-5" />

@@ -170,10 +170,10 @@ export default function Admin({ profile }: AdminProps) {
   if (loading) return <div className="text-center py-20">Loading admin panel...</div>;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-3xl font-bold text-[#7A4900]">Admin Control Center</h1>
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border overflow-x-auto max-w-full">
+    <div className="space-y-6 md:space-y-8">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#7A4900] truncate">Admin Control Center</h1>
+        <div className="flex bg-white p-1 rounded-xl shadow-sm border overflow-x-auto max-w-full no-scrollbar w-full lg:w-auto">
           {isFullAdmin && (
             <>
               <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="Students" />
@@ -291,12 +291,12 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 className="text-xl font-bold text-[#7A4900]">User Submissions ({filteredSubmissions.length})</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">User Submissions ({filteredSubmissions.length})</h2>
         <select 
           value={filterEvent} 
           onChange={(e) => setFilterEvent(e.target.value)}
-          className="px-4 py-2 rounded-xl border outline-none font-bold text-[#7A4900] bg-white shadow-sm"
+          className="w-full sm:w-auto px-4 py-2 rounded-xl border outline-none font-bold text-[#7A4900] bg-white shadow-sm text-sm"
         >
           <option value="all">All Events</option>
           {events.map(e => (
@@ -307,45 +307,41 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+          <table className="w-full text-left min-w-[600px] lg:min-w-[800px]">
+            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
               <tr>
-                <th className="px-6 py-4">Student</th>
-                <th className="px-6 py-4">Event</th>
-                <th className="px-6 py-4">Score</th>
-                <th className="px-6 py-4">Time</th>
-                <th className="px-6 py-4">Actions</th>
+                <th className="px-4 sm:px-6 py-4">Student</th>
+                <th className="px-4 sm:px-6 py-4">Event</th>
+                <th className="px-4 sm:px-6 py-4">Score</th>
+                <th className="px-4 sm:px-6 py-4">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y text-xs sm:text-sm">
               {filteredSubmissions.map((s) => {
                 const user = users.find(u => u.uid === s.uid);
                 const event = events.find(e => e.id === s.eventId);
                 return (
                   <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-[#7A4900]">{user?.displayName || 'Unknown Student'}</p>
-                      <p className="text-xs text-[#545454]">{user?.email}</p>
+                    <td className="px-4 sm:px-6 py-4">
+                      <p className="font-bold text-[#7A4900] truncate max-w-[150px]">{user?.displayName || 'Unknown'}</p>
+                      <p className="text-[10px] text-[#545454] truncate max-w-[150px]">{user?.email}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium">{event?.title || 'Unknown Event'}</p>
-                      <p className="text-[10px] text-gray-400">ID: {s.eventId}</p>
+                    <td className="px-4 sm:px-6 py-4">
+                      <p className="font-medium truncate max-w-[150px]">{event?.title || 'Unknown Event'}</p>
+                      <p className="text-[10px] text-gray-400 font-mono">{new Date(s.submittedAt).toLocaleDateString()}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="text-lg font-bold text-[#D4AF37]">{s.score} Points</span>
-                        <span className="text-[10px] text-gray-400">Correct Answers</span>
+                        <span className="font-bold text-[#D4AF37]">{s.score} pts</span>
+                        <span className="text-[9px] text-gray-400">Correct</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[10px] text-gray-400">
-                      {new Date(s.submittedAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
                       <button 
                         onClick={() => setSelectedSubmission(s)}
-                        className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-all"
+                        className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-blue-100 transition-all whitespace-nowrap"
                       >
-                        Review Answers
+                        Review
                       </button>
                     </td>
                   </tr>
@@ -371,76 +367,78 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
               exit={{ opacity: 0, scale: 0.9 }}
               className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
             >
-              <div className="p-8 border-b flex justify-between items-center bg-[#fdfaf5]">
-                <div>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider">Detailed Submission Review</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">ID: {selectedSubmission.id}</span>
+              <div className="p-4 sm:p-8 border-b flex justify-between items-center bg-[#fdfaf5]">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-[8px] sm:text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider">Detailed Submission Review</span>
+                    <span className="hidden sm:inline w-1 h-1 rounded-full bg-gray-300" />
+                    <span className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">ID: {selectedSubmission.id}</span>
                   </div>
-                  <h2 className="text-2xl font-bold text-[#7A4900] font-serif">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#7A4900] font-serif truncate">
                     {users.find(u => u.uid === selectedSubmission.uid)?.displayName}'s Entry
                   </h2>
-                  <p className="text-sm text-[#545454]">{events.find(e => e.id === selectedSubmission.eventId)?.title}</p>
+                  <p className="text-xs sm:text-sm text-[#545454] truncate">{events.find(e => e.id === selectedSubmission.eventId)?.title}</p>
                 </div>
-                <button onClick={() => setSelectedSubmission(null)} className="p-2 hover:bg-white rounded-full shadow-sm">
-                  <X className="w-6 h-6 text-gray-400" />
+                <button onClick={() => setSelectedSubmission(null)} className="p-2 hover:bg-white rounded-full shadow-sm shrink-0 ml-4">
+                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-gray-50/30">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Final Score</p>
-                    <p className="text-3xl font-bold text-[#D4AF37]">{selectedSubmission.score}</p>
-                    <p className="text-xs text-gray-500 mt-1">out of {events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 'N/A'}</p>
+              <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 sm:space-y-8 bg-gray-50/30">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                  <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm">
+                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase mb-1 sm:mb-2">Final Score</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-[#D4AF37]">{selectedSubmission.score}</p>
+                    <p className="text-[10px] text-gray-500 mt-1">out of {events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 'N/A'}</p>
                   </div>
-                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Completion Time</p>
-                    <p className="text-lg font-bold text-[#7A4900]">
+                  <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm">
+                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase mb-1 sm:mb-2">Completion Time</p>
+                    <p className="text-base sm:text-lg font-bold text-[#7A4900]">
                       {new Date(selectedSubmission.submittedAt).toLocaleTimeString()}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{new Date(selectedSubmission.submittedAt).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-gray-500 mt-1">{new Date(selectedSubmission.submittedAt).toLocaleDateString()}</p>
                   </div>
-                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Success Rate</p>
-                    <p className="text-2xl font-bold text-emerald-600">
+                  <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm">
+                    <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase mb-1 sm:mb-2">Success Rate</p>
+                    <p className="text-xl sm:text-2xl font-bold text-emerald-600">
                       {Math.round((selectedSubmission.score / (events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 1)) * 100)}%
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-bold text-[#7A4900] uppercase tracking-widest text-xs mb-4">Question Breakdown</h3>
+                  <h3 className="font-bold text-[#7A4900] uppercase tracking-widest text-[10px] sm:text-xs mb-4">Question Breakdown</h3>
                   {events.find(e => e.id === selectedSubmission.eventId)?.questions?.map((q: Question, idx: number) => {
                     const userAnswer = selectedSubmission.answers[q.id];
                     const isCorrect = userAnswer === q.correctAnswer;
                     
                     return (
-                      <div key={q.id} className={`p-6 rounded-2xl border-2 bg-white transition-all ${isCorrect ? 'border-emerald-50' : 'border-red-50'}`}>
+                      <div key={q.id} className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 bg-white transition-all ${isCorrect ? 'border-emerald-50' : 'border-red-50'}`}>
                         <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center space-x-3">
-                            <span className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-[#7A4900] text-sm">{idx + 1}</span>
-                            <MathRenderer content={q.text} className="font-bold text-[#7A4900] text-lg" engine={mathEngine} />
+                          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                            <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-[#7A4900] text-xs sm:text-sm shrink-0">{idx + 1}</span>
+                            <div className="min-w-0">
+                              <MathRenderer content={q.text} className="font-bold text-[#7A4900] text-sm sm:text-lg" engine={mathEngine} />
+                            </div>
                           </div>
                           {isCorrect ? (
-                            <div className="flex items-center text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                            <div className="flex items-center text-emerald-600 bg-emerald-50 px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase shrink-0 ml-2">
+                              <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
                               Correct
                             </div>
                           ) : (
-                            <div className="flex items-center text-red-600 bg-red-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                              <XCircle className="w-3 h-3 mr-1" />
+                            <div className="flex items-center text-red-600 bg-red-50 px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase shrink-0 ml-2">
+                              <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
                               Incorrect
                             </div>
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-6">
                           {q.options.map((opt, i) => (
                             <div 
                               key={i} 
-                              className={`p-4 rounded-xl border text-sm flex items-center space-x-3 ${
+                              className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border text-xs sm:text-sm flex items-center space-x-3 ${
                                 i === q.correctAnswer 
                                   ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' 
                                   : i === userAnswer 
@@ -448,14 +446,16 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
                                     : 'bg-gray-50 border-gray-200 text-gray-400'
                               }`}
                             >
-                              <span className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                              <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-[8px] sm:text-[10px] font-bold shrink-0 ${
                                 i === q.correctAnswer ? 'bg-emerald-600 text-white' : i === userAnswer ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-500'
                               }`}>
                                 {String.fromCharCode(65 + i)}
                               </span>
-                              <MathRenderer content={opt} engine={mathEngine} />
-                              {i === q.correctAnswer && <span className="ml-auto text-[10px] uppercase font-black">Official Answer</span>}
-                              {i === userAnswer && i !== q.correctAnswer && <span className="ml-auto text-[10px] uppercase font-black">Student Choice</span>}
+                              <div className="min-w-0 flex-1">
+                                <MathRenderer content={opt} engine={mathEngine} />
+                              </div>
+                              {i === q.correctAnswer && <span className="ml-auto text-[8px] sm:text-[10px] uppercase font-black shrink-0">Official</span>}
+                              {i === userAnswer && i !== q.correctAnswer && <span className="ml-auto text-[8px] sm:text-[10px] uppercase font-black shrink-0">Yours</span>}
                             </div>
                           ))}
                         </div>
@@ -486,15 +486,15 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, on
 
 function StatCard({ icon: Icon, label, value, color, description }: { icon: any, label: string, value: number, color: string, description: string }) {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-      <div className={`p-3 rounded-xl ${color}`}>
-        <Icon className="w-6 h-6" />
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+      <div className={`p-2.5 sm:p-3 rounded-xl ${color}`}>
+        <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
       </div>
       <div>
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
+        <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
         <div className="flex items-baseline space-x-2">
-          <h3 className="text-2xl font-bold text-[#7A4900]">{value}</h3>
-          <p className="text-[10px] text-gray-400 font-medium">{description}</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-[#7A4900]">{value}</h3>
+          <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium">{description}</p>
         </div>
       </div>
     </div>
@@ -608,46 +608,49 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
       {pendingAdmins.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center space-x-2 text-[#7A4900]">
-            <AlertCircle className="w-6 h-6 animate-pulse" />
-            <h2 className="text-xl font-bold">Access Requests ({pendingAdmins.length})</h2>
+            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
+            <h2 className="text-lg sm:text-xl font-bold">Access Requests ({pendingAdmins.length})</h2>
           </div>
-          <div className="bg-amber-50 rounded-3xl border-2 border-[#D4AF37] overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-[#D4AF37] text-white uppercase text-xs font-bold">
+          <div className="bg-amber-50 rounded-2xl sm:rounded-3xl border-2 border-[#D4AF37] overflow-hidden shadow-lg">
+            <div className="overflow-x-auto no-scrollbar">
+              <table className="w-full text-left min-w-[500px] sm:min-w-[600px]">
+                <thead className="bg-[#D4AF37] text-white uppercase text-[10px] sm:text-xs font-bold">
                   <tr>
-                    <th className="px-6 py-4">Candidate</th>
-                    <th className="px-6 py-4">Email</th>
-                    <th className="px-6 py-4">Request Date</th>
-                    <th className="px-6 py-4">Actions</th>
+                    <th className="px-4 sm:px-6 py-4">Candidate</th>
+                    <th className="px-4 sm:px-6 py-4">Status</th>
+                    <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#D4AF37]/20">
+                <tbody className="divide-y divide-[#D4AF37]/20 text-xs sm:text-sm">
                   {pendingAdmins.map((a) => (
                     <tr key={a.uid} className="bg-white/50 hover:bg-white transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          <img src={a.photoURL} alt="" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
-                          <span className="font-bold text-[#7A4900]">{a.displayName}</span>
+                          <img src={a.photoURL} alt="" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white shadow-sm shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#7A4900] truncate">{a.displayName}</p>
+                            <p className="text-[10px] text-[#545454] truncate">{a.email}</p>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-[#545454] font-medium">{a.email}</td>
-                      <td className="px-6 py-4 text-xs text-gray-400">{new Date(a.createdAt).toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
+                      <td className="px-4 sm:px-6 py-4">
+                        <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">PENDING</span>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-right">
+                        <div className="flex items-center justify-end space-x-2">
                           <button 
                             onClick={() => onActivate(a.uid)}
-                            className="bg-green-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-green-700 shadow-md transition-all flex items-center space-x-2"
+                            className="bg-green-600 text-white p-2 rounded-xl text-xs font-bold hover:bg-green-700 shadow-md transition-all shrink-0"
+                            title="Approve"
                           >
                             <CheckCircle2 className="w-4 h-4" />
-                            <span>Approve</span>
                           </button>
                           <button 
                             onClick={() => onDelete(a.uid)}
-                            className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-all flex items-center space-x-2"
+                            className="bg-red-50 text-red-600 p-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-all shrink-0"
+                            title="Reject"
                           >
                             <XCircle className="w-4 h-4" />
-                            <span>Reject</span>
                           </button>
                         </div>
                       </td>
@@ -662,82 +665,81 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
 
       {/* Admin List Section */}
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-[#7A4900]">Active Administrators ({activeAdmins.length})</h2>
-          <button onClick={() => setShowAdd(true)} className="bg-[#7A4900] text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:bg-black shadow-lg transition-all transform hover:-translate-y-1">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">Active Administrators ({activeAdmins.length})</h2>
+          <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-[#7A4900] text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:bg-black shadow-lg transition-all transform hover:-translate-y-1">
             <Plus className="w-5 h-5" />
-            <span>Add Admin Directly</span>
+            <span>Add Admin</span>
           </button>
         </div>
 
         {showAdd && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-8 rounded-[2.5rem] shadow-xl border-4 border-[#7A4900]/10">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-xl border-4 border-[#7A4900]/10">
             <form onSubmit={handleCreateAdmin} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Full Name</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium" required />
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Full Name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium text-sm sm:text-base" required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Email Address</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium" required />
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Email Address</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium text-sm sm:text-base" required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Initial Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium" required minLength={6} />
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Initial Password</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" title="Minimum 6 characters" className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-medium text-sm sm:text-base" required minLength={6} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase ml-2">Permission Level</label>
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase ml-2">Permission Level</label>
                   <select 
                     value={adminType} 
                     onChange={(e) => setAdminType(e.target.value as any)}
-                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-bold text-[#7A4900]"
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-50 focus:border-[#7A4900] outline-none transition-all font-bold text-[#7A4900] text-sm sm:text-base"
                   >
                     <option value="full">Full Administrator</option>
                     <option value="question_holder">Question Holder Only</option>
                   </select>
                 </div>
               </div>
-              {error && <p className="text-red-500 text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100">{error}</p>}
-              <div className="flex justify-end space-x-4">
-                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-gray-500 font-bold hover:text-gray-700 transition-colors">Cancel</button>
-                <button type="submit" disabled={loading} className="bg-[#7A4900] text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-amber-900/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
-                  {loading ? 'Creating...' : 'Confirm Account Creation'}
+              {error && <p className="text-red-500 text-xs sm:text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100">{error}</p>}
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-gray-500 font-bold hover:text-gray-700 transition-colors order-2 sm:order-1">Cancel</button>
+                <button type="submit" disabled={loading} className="bg-[#7A4900] text-white px-8 py-4 rounded-xl sm:rounded-2xl font-bold shadow-xl shadow-amber-900/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 order-1 sm:order-2">
+                  {loading ? 'Creating...' : 'Create Account'}
                 </button>
               </div>
             </form>
           </motion.div>
         )}
 
-        <div className="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-gray-100">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[800px]">
-              <thead className="bg-[#fcfcfa] text-[#7A4900] uppercase text-xs font-black tracking-widest border-b">
+        <div className="bg-white rounded-2xl sm:rounded-[2.5rem] shadow-sm overflow-hidden border border-gray-100">
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left min-w-[600px] lg:min-w-[800px]">
+              <thead className="bg-[#fcfcfa] text-[#7A4900] uppercase text-[10px] sm:text-xs font-black tracking-widest border-b">
                 <tr>
-                  <th className="px-8 py-6">Administrator</th>
-                  <th className="px-8 py-6">Privileges</th>
-                  <th className="px-8 py-6">Email</th>
-                  <th className="px-8 py-6">Joined</th>
-                  <th className="px-8 py-6 text-right">Actions</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-6">Administrator</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-6">Privileges</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-6">Email</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 text-xs sm:text-sm">
                 {activeAdmins.map((a) => (
                   <tr key={a.uid} className="hover:bg-[#fcfcfa] transition-colors">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center space-x-4">
-                        <img src={a.photoURL || undefined} alt="" className="w-12 h-12 rounded-2xl border-2 border-gray-50 shadow-sm" referrerPolicy="no-referrer" />
-                        <div>
-                          <p className="font-bold text-[#7A4900]">{a.displayName}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">ID: {a.uid.slice(0, 8)}</p>
+                    <td className="px-4 sm:px-8 py-4 sm:py-6">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
+                        <img src={a.photoURL || undefined} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border-2 border-gray-50 shadow-sm shrink-0" referrerPolicy="no-referrer" />
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#7A4900] truncate">{a.displayName}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter truncate">ID: {a.uid.slice(0, 8)}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-4 sm:px-8 py-4 sm:py-6">
                       <select
                         value={a.adminType}
                         onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
-                        className={`text-[10px] font-black px-4 py-2 rounded-xl uppercase outline-none border transition-all cursor-pointer ${
+                        className={`text-[9px] sm:text-[10px] font-black px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl uppercase outline-none border transition-all cursor-pointer ${
                           a.adminType === 'full' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
                         }`}
                       >
@@ -745,11 +747,10 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
                         <option value="question_holder">Question Holder</option>
                       </select>
                     </td>
-                    <td className="px-8 py-6 text-sm font-medium text-[#545454]">{a.email}</td>
-                    <td className="px-8 py-6 text-xs font-bold text-gray-300">{new Date(a.createdAt).toLocaleDateString()}</td>
-                    <td className="px-8 py-6 text-right">
-                      <button onClick={() => onDelete(a.uid)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group">
-                        <Trash2 className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 font-medium text-[#545454] truncate max-w-[150px]">{a.email}</td>
+                    <td className="px-4 sm:px-8 py-4 sm:py-6 text-right">
+                      <button onClick={() => onDelete(a.uid)} className="p-2 sm:p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group">
+                        <Trash2 className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" />
                       </button>
                     </td>
                   </tr>
@@ -767,11 +768,11 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
   const navigate = useNavigate();
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-[#7A4900]">Question Bank ({questions.length})</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">Question Bank ({questions.length})</h2>
         <button 
           onClick={() => navigate('/questions')} 
-          className="bg-[#D4AF37] text-white px-4 py-2 rounded-lg font-bold flex items-center space-x-2 hover:bg-[#B8860B] transition-all"
+          className="w-full sm:w-auto bg-[#D4AF37] text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-[#B8860B] transition-all"
         >
           <Edit className="w-4 h-4" />
           <span>Full Management</span>
@@ -779,47 +780,47 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left min-w-[500px] sm:min-w-[600px] lg:min-w-[800px]">
+            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
               <tr>
-                <th className="px-6 py-4">Question</th>
-                <th className="px-6 py-4">Metadata</th>
-                <th className="px-6 py-4">Subject</th>
-                <th className="px-6 py-4">Actions</th>
+                <th className="px-4 sm:px-6 py-4">Question</th>
+                <th className="hidden sm:table-cell px-6 py-4">Metadata</th>
+                <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
-              {questions.map((q) => (
+            <tbody className="divide-y text-xs sm:text-sm">
+              {questions.slice(0, 10).map((q) => (
                 <tr key={q.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 w-1/2">
-                    <div className="text-sm font-medium line-clamp-2">
-                       <MathRenderer content={q.text} engine={mathEngine} />
+                  <td className="px-4 sm:px-6 py-4">
+                    <div className="min-w-0 max-w-[200px] sm:max-w-md">
+                      <MathRenderer content={q.text} className="font-medium line-clamp-1 truncate" engine={mathEngine} />
+                      <div className="sm:hidden mt-1 flex flex-wrap gap-1">
+                        <span className="text-[8px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 uppercase">{q.category}</span>
+                        <span className="text-[8px] px-1.5 py-0.5 bg-[#D4AF37]/10 rounded text-[#7A4900] uppercase">{q.subject}</span>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 rounded-full uppercase">{q.category}</span>
-                    <p className="text-xs text-gray-400 mt-1">{q.class}</p>
+                  <td className="hidden sm:table-cell px-6 py-4">
+                    <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 rounded-full uppercase text-gray-500 mr-2">{q.category}</span>
+                    <span className="text-[10px] font-bold px-2 py-1 bg-[#D4AF37]/10 rounded-full uppercase text-[#7A4900]">{q.subject}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs font-bold text-[#D4AF37]">{q.subject}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
+                  <td className="px-4 sm:px-6 py-4 text-right">
+                    <div className="flex items-center justify-end space-x-1 sm:space-x-2">
                       <button 
                         onClick={() => navigate('/questions', { state: { editQuestion: q } })}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                        title="Edit Question"
+                        title="Edit"
                       >
-                        <Edit className="w-5 h-5" />
+                        <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                       {isFullAdmin && (
                         <button 
                           onClick={() => onDelete(q.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          title="Delete Question"
+                          title="Delete"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       )}
                     </div>
@@ -828,12 +829,19 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
               ))}
               {questions.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="text-center py-20 text-gray-400">No questions found in bank.</td>
+                  <td colSpan={3} className="text-center py-20 text-gray-400">No questions found.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+        {questions.length > 10 && (
+          <div className="p-4 border-t text-center">
+            <button onClick={() => navigate('/questions')} className="text-[#D4AF37] font-bold text-xs hover:underline">
+              View All {questions.length} Questions
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -870,50 +878,52 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <h2 className="text-xl font-bold text-[#7A4900]">Student Management ({users.length})</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-[#7A4900]">Student Management ({users.length})</h2>
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden border">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left min-w-[700px] lg:min-w-[800px]">
+            <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
               <tr>
-                <th className="px-6 py-4">Student</th>
-                <th className="px-6 py-4">Class/Group</th>
-                <th className="px-6 py-4">Institution</th>
-                <th className="px-6 py-4">Phone</th>
-                <th className="px-6 py-4">Actions</th>
+                <th className="px-4 sm:px-6 py-4">Student</th>
+                <th className="px-4 sm:px-6 py-4">Class/Group</th>
+                <th className="px-4 sm:px-6 py-4">Institution</th>
+                <th className="px-4 sm:px-6 py-4">Phone</th>
+                <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y text-xs sm:text-sm">
               {users.map((u) => (
                 <tr key={u.uid} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-4 sm:px-6 py-4">
                     <div className="flex items-center space-x-3">
                       {u.photoURL ? (
-                        <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full border border-gray-100" referrerPolicy="no-referrer" />
+                        <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full border border-gray-100 shrink-0" referrerPolicy="no-referrer" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                           <User className="w-4 h-4 text-gray-400" />
                         </div>
                       )}
-                      <div>
-                        <p className="font-bold text-[#7A4900]">{u.displayName}</p>
-                        <p className="text-xs text-[#545454]">{u.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-bold text-[#7A4900] truncate max-w-[120px]">{u.displayName}</p>
+                        <p className="text-[10px] text-[#545454] truncate max-w-[120px]">{u.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-medium">{u.class}</p>
-                    <p className="text-xs text-[#545454]">{u.group}</p>
+                  <td className="px-4 sm:px-6 py-4">
+                    <p className="font-medium whitespace-nowrap">{u.class}</p>
+                    <p className="text-[10px] text-[#545454] truncate max-w-[100px]">{u.group}</p>
                   </td>
-                  <td className="px-6 py-4 text-sm">{u.school}</td>
-                  <td className="px-6 py-4 text-sm">{u.phone || 'N/A'}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex space-x-2">
-                      <button onClick={() => handleEdit(u)} className="p-2 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all">
-                        <Edit className="w-5 h-5" />
+                  <td className="px-4 sm:px-6 py-4">
+                    <p className="truncate max-w-[150px]" title={u.school}>{u.school}</p>
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">{u.phone || 'N/A'}</td>
+                  <td className="px-4 sm:px-6 py-4 text-right">
+                    <div className="flex items-center justify-end space-x-1 sm:space-x-2">
+                      <button onClick={() => handleEdit(u)} className="p-2 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all" title="Edit">
+                        <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
-                      <button onClick={() => onDelete(u.uid)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all">
-                        <Trash2 className="w-5 h-5" />
+                      <button onClick={() => onDelete(u.uid)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all" title="Delete">
+                        <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                     </div>
                   </td>
@@ -1022,25 +1032,26 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
 function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[], onApprove: (id: string) => void, onReject: (id: string) => void }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white rounded-2xl shadow-sm overflow-hidden border">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left min-w-[700px]">
-          <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-xs font-bold">
+      <div className="overflow-x-auto no-scrollbar">
+        <table className="w-full text-left min-w-[600px]">
+          <thead className="bg-[#f5f5f0] text-[#7A4900] uppercase text-[10px] sm:text-xs font-bold">
           <tr>
-            <th className="px-6 py-4">User ID</th>
-            <th className="px-6 py-4">Method</th>
-            <th className="px-6 py-4">Trx ID</th>
-            <th className="px-6 py-4">Status</th>
-            <th className="px-6 py-4">Actions</th>
+            <th className="px-4 sm:px-6 py-4">User</th>
+            <th className="px-4 sm:px-6 py-4">Method</th>
+            <th className="px-4 sm:px-6 py-4">Status</th>
+            <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y text-xs sm:text-sm">
           {payments.map((p) => (
             <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-6 py-4 text-sm font-mono">{p.uid.slice(0, 8)}...</td>
-              <td className="px-6 py-4 font-bold">{p.method}</td>
-              <td className="px-6 py-4 font-mono text-sm">{p.trxId}</td>
-              <td className="px-6 py-4">
-                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+              <td className="px-4 sm:px-6 py-4">
+                <p className="font-mono text-[10px] sm:text-xs text-gray-500">ID: {p.uid.slice(0, 8)}...</p>
+                <p className="font-mono text-[10px] text-gray-400">Trx: {p.trxId}</p>
+              </td>
+              <td className="px-4 sm:px-6 py-4 font-bold text-[#7A4900]">{p.method}</td>
+              <td className="px-4 sm:px-6 py-4">
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
                   p.status === 'approved' ? 'bg-green-100 text-green-600' :
                   p.status === 'rejected' ? 'bg-red-100 text-red-600' :
                   'bg-yellow-100 text-yellow-600'
@@ -1048,16 +1059,21 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
                   {p.status}
                 </span>
               </td>
-              <td className="px-6 py-4">
+              <td className="px-4 sm:px-6 py-4 text-right">
                 {p.status === 'pending' && (
-                  <div className="flex space-x-2">
-                    <button onClick={() => onApprove(p.id)} className="p-1 text-green-600 hover:bg-green-50 rounded"><CheckCircle2 className="w-5 h-5" /></button>
-                    <button onClick={() => onReject(p.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><XCircle className="w-5 h-5" /></button>
+                  <div className="flex items-center justify-end space-x-2">
+                    <button onClick={() => onApprove(p.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg border border-green-100 transition-all" title="Approve"><CheckCircle2 className="w-5 h-5" /></button>
+                    <button onClick={() => onReject(p.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg border border-red-100 transition-all" title="Reject"><XCircle className="w-5 h-5" /></button>
                   </div>
                 )}
               </td>
             </tr>
           ))}
+          {payments.length === 0 && (
+            <tr>
+              <td colSpan={4} className="text-center py-20 text-gray-400">No payment records found.</td>
+            </tr>
+          )}
         </tbody>
       </table>
       </div>

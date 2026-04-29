@@ -135,13 +135,13 @@ export default function Login() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-2xl max-w-lg w-full border border-gray-100"
+        className="bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-2xl max-w-lg w-full border border-gray-100"
       >
-        <div className="text-center mb-10">
-          <div className={`w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center shadow-lg transition-colors ${selectedRole === 'admin' ? 'bg-[#7A4900] text-white' : 'bg-[#D4AF37] text-white'}`}>
-            {selectedRole === 'admin' ? <ShieldCheck className="w-10 h-10" /> : <UserIcon className="w-10 h-10" />}
+        <div className="text-center mb-8 md:mb-10">
+          <div className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center shadow-lg transition-colors ${selectedRole === 'admin' ? 'bg-[#7A4900] text-white' : 'bg-[#D4AF37] text-white'}`}>
+            {selectedRole === 'admin' ? <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10" /> : <UserIcon className="w-8 h-8 sm:w-10 sm:h-10" />}
           </div>
-          <h1 className="text-4xl font-bold text-[#7A4900] font-serif">
+          <h1 className="text-3xl sm:text-4xl font-bold text-[#7A4900] font-serif">
             {selectedRole === 'admin' ? 'Admin Portal' : 'Student Portal'}
           </h1>
           <p className="text-[#545454] mt-3 font-medium opacity-70">

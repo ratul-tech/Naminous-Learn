@@ -53,238 +53,162 @@ export default function Dashboard({ profile }: DashboardProps) {
     fetchStats();
   }, [profile]);
 
-  if (profile?.role === 'admin') {
+  if (!profile) {
     return (
-      <div className="max-w-4xl mx-auto space-y-8">
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border-2 border-[#D4AF37]"
-    >
-      <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 mb-6 text-center sm:text-left">
-        <div className="p-3 bg-[#D4AF37]/20 rounded-2xl">
-          <Shield className="w-8 h-8 text-[#7A4900]" />
-        </div>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#7A4900]">Welcome, {profile.displayName}</h1>
-          <p className="text-[#545454]">
-            Logged in as an <span className="font-bold text-[#D4AF37]">{profile.adminType === 'full' ? 'Administrator' : 'Question Holder'}</span>
-          </p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-10">
-        <Link 
-          to="/questions" 
-          className="p-6 md:p-8 bg-[#D4AF37]/10 rounded-2xl md:rounded-3xl border-2 border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all group"
-        >
-          <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-[#D4AF37] mb-4 group-hover:scale-110 transition-transform" />
-          <h3 className="text-lg md:text-xl font-bold text-[#7A4900] mb-2">Question Bank</h3>
-          <p className="text-sm text-[#545454]">Access the separate question management page to add, search, and edit questions.</p>
-        </Link>
-        <Link 
-          to="/admin" 
-          className="p-6 md:p-8 bg-[#7A4900]/5 rounded-2xl md:rounded-3xl border-2 border-[#7A4900]/10 hover:border-[#7A4900] transition-all group"
-        >
-          <Shield className="w-8 h-8 md:w-10 md:h-10 text-[#7A4900] mb-4 group-hover:scale-110 transition-transform" />
-          <h3 className="text-lg md:text-xl font-bold text-[#7A4900] mb-2">Admin Panel</h3>
-          <p className="text-sm text-[#545454]">
-            Full system control: users, payments, events, and feedback management.
-          </p>
-        </Link>
-      </div>
-    </motion.div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-12 h-12 border-4 border-[#7A4900] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  return (
-    <div className="space-y-10">
-      <header className="relative overflow-hidden bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-gray-100">
-        <div className="relative z-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-block px-4 py-1.5 bg-[#D4AF37]/10 text-[#7A4900] rounded-full text-xs font-bold uppercase tracking-widest mb-6"
-          >
-            Student Dashboard
-          </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#7A4900] mb-4">
-            Welcome back, <span className="text-[#D4AF37]">{profile?.displayName}</span>!
-          </h1>
-          <p className="text-lg text-[#545454] max-w-xl leading-relaxed">
-            Your academic journey is a marathon, not a sprint. Every practice session brings you closer to your goals.
-          </p>
-          <div className="flex flex-wrap gap-4 mt-8">
-            <Link to="/practice" className="bg-[#D4AF37] text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-[#B8860B] shadow-lg shadow-yellow-100 transition-all flex items-center space-x-3 transform hover:-translate-y-1">
-              <BookOpen className="w-5 h-5" />
-              <span>Start Practice Session</span>
-            </Link>
-            <Link to="/events" className="bg-white text-[#7A4900] border-2 border-[#7A4900]/10 hover:border-[#7A4900] px-8 py-3.5 rounded-2xl font-bold transition-all flex items-center space-x-3 transform hover:-translate-y-1">
-              <Calendar className="w-5 h-5" />
-              <span>Browse Events</span>
-            </Link>
+  // --- ADMIN DASHBOARD CONTENT ---
+  if (profile.role === 'admin') {
+    return (
+      <div className="space-y-6 sm:space-y-10">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#7A4900] font-serif">System Snapshot</h1>
+            <p className="text-xs sm:text-sm text-[#545454] font-medium opacity-70">Real-time engagement metrics</p>
           </div>
+          <div className="flex items-center space-x-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-sm border">
+             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
+             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Services Active</span>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <StatCard icon={TrendingUp} label="Platform Average" value={`${stats.avgScore}%`} color="bg-blue-50 text-blue-600" />
+          <StatCard icon={BookOpen} label="Total Evaluations" value={stats.totalExams} color="bg-emerald-50 text-emerald-600" />
+          <StatCard icon={Trophy} label="Elite Mastery" value={`${stats.bestScore}%`} color="bg-amber-50 text-amber-600" />
         </div>
-        
-        {/* Background Decorative Elements */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-64 h-64 bg-[#7A4900]/5 rounded-full blur-2xl" />
-      </header>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        <StatCard 
-          icon={TrendingUp} 
-          label="Total Exams" 
-          value={stats.totalExams} 
-          color="bg-blue-50 text-blue-600" 
-          delay={0.1}
-        />
-        <StatCard 
-          icon={Trophy} 
-          label="Average Score" 
-          value={`${stats.avgScore}%`} 
-          color="bg-amber-50 text-amber-600" 
-          delay={0.2}
-        />
-        <StatCard 
-          icon={Clock} 
-          label="Best Performance" 
-          value={`${stats.bestScore}%`} 
-          color="bg-emerald-50 text-emerald-600" 
-          delay={0.3}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="lg:col-span-3 bg-white rounded-[2.5rem] shadow-sm p-8 border border-gray-100"
-        >
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-[#7A4900] flex items-center space-x-3">
-              <div className="w-1.5 h-6 bg-[#D4AF37] rounded-full" />
-              <span>Recent Activity</span>
-            </h2>
-            <Link to="/leaderboard" className="text-sm font-bold text-[#D4AF37] hover:text-[#7A4900] transition-colors flex items-center space-x-2">
-              <span>Leaderboard</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
+          <div className="bg-white rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center space-y-4 min-h-[250px] sm:min-h-[350px]">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-gray-200" />
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold text-[#7A4900]">Usage Analytics</h3>
+            <p className="text-xs sm:text-sm text-gray-400 max-w-sm px-4">Detailed performance heatmaps and usage graphs will synchronize as system traffic scales.</p>
           </div>
-          
-          <div className="space-y-4">
-            {recentResults.length > 0 ? recentResults.map((result, idx) => (
-              <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + (idx * 0.1) }}
-                key={result.id} 
-                className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all group"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-xl transition-transform group-hover:scale-110 ${result.type === 'Event' ? 'bg-purple-100 text-purple-600' : 'bg-orange-100 text-orange-600'}`}>
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-[#7A4900]">{result.type} Exam</h3>
-                    <p className="text-xs text-[#545454] flex items-center space-x-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{new Date(result.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <span className="text-xl font-bold text-[#7A4900]">{result.score}%</span>
-                    <p className="text-[10px] uppercase font-bold tracking-widest text-[#D4AF37]">{result.correctCount} Correct</p>
-                  </div>
-                  <div className="h-10 w-1 bg-gray-200 rounded-full" />
-                </div>
-              </motion.div>
-            )) : (
-              <div className="text-center py-12 px-6 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
-                <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-[#545454] font-medium">No practice history yet.</p>
-                <Link to="/practice" className="text-[#D4AF37] font-bold text-sm hover:underline mt-2 inline-block">Start your first session →</Link>
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Action Sidebar */}
-        <div className="lg:col-span-2 space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-[#7A4900] text-white rounded-[2.5rem] shadow-xl p-8 relative overflow-hidden group"
-          >
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold mb-4">Mega Mock Test</h2>
-              <p className="text-white/80 text-sm mb-8 leading-relaxed">
-                Join our biggest mock test event yet. Challenge yourself against thousands of students and win Tk 5000+.
-              </p>
-              <Link to="/events" className="inline-flex items-center space-x-3 bg-white text-[#7A4900] px-6 py-3 rounded-xl font-bold hover:bg-[#D4AF37] hover:text-white transition-all transform hover:scale-105">
-                <span>Join Event</span>
-                <ArrowRight className="w-4 h-4" />
+          <div className="bg-white rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-bold text-[#7A4900]">Critical Actions</h3>
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-gray-200" />
+            </div>
+            <div className="space-y-3">
+              <Link to="/admin" className="block p-4 bg-[#7A4900]/5 hover:bg-[#7A4900]/10 rounded-2xl transition-all border border-transparent hover:border-[#7A4900]/20 group">
+                <p className="text-sm font-bold text-[#7A4900] group-hover:translate-x-1 transition-transform">Review Pending Admins</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase">Security Verification Required</p>
+              </Link>
+              <Link to="/questions" className="block p-4 bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10 rounded-2xl transition-all border border-transparent hover:border-[#D4AF37]/20 group">
+                <p className="text-sm font-bold text-[#7A4900] group-hover:translate-x-1 transition-transform">Audit Question Bank</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase">Content Integrity Check</p>
               </Link>
             </div>
-            {/* Background Decorative */}
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors" />
-            <Trophy className="absolute top-4 right-4 w-20 h-20 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-700" />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-white rounded-[2.5rem] shadow-sm p-8 border border-gray-100"
-          >
-            <h3 className="text-lg font-bold text-[#7A4900] mb-4">Quick Links</h3>
-            <div className="space-y-3">
-              {[
-                { name: 'My Profile', path: '/profile', icon: UserIcon },
-                { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
-                { name: 'Feedback', path: '/feedback', icon: MessageSquare },
-              ].map((link) => (
-                <Link 
-                  key={link.path}
-                  to={link.path} 
-                  className="flex items-center space-x-3 p-4 rounded-xl hover:bg-[#f5f5f0] transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#D4AF37]/10 group-hover:text-[#D4AF37] transition-colors">
-                    <link.icon className="w-5 h-5" />
-                  </div>
-                  <span className="font-bold text-[#545454] group-hover:text-[#7A4900] transition-colors">{link.name}</span>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
+          </div>
         </div>
       </div>
+    );
+  }
+
+  // --- STUDENT DASHBOARD CONTENT ---
+  return (
+    <div className="space-y-10">
+      <header className="bg-white p-8 rounded-[2.5rem] shadow-xl border-2 border-[#D4AF37] overflow-hidden relative group">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-[#7A4900] mb-3 font-serif">Academic Progress</h1>
+          <p className="text-[#545454] text-xs leading-relaxed mb-6">Your academy average is <span className="font-bold text-[#D4AF37]">{stats.avgScore}%</span>. Aim for consistent excellence!</p>
+          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+             <div className="h-full bg-[#D4AF37] rounded-full transition-all duration-1000" style={{ width: `${stats.avgScore}%` }} />
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+          <Trophy className="w-32 h-32 rotate-12" />
+        </div>
+      </header>
+
+      <div className="grid grid-cols-2 gap-4 mb-10">
+        <StudentAppShortcut icon={BookOpen} label="Practice" color="bg-amber-100 text-amber-700" path="/practice" />
+        <StudentAppShortcut icon={Calendar} label="Live Exams" color="bg-purple-100 text-purple-700" path="/events" />
+        <StudentAppShortcut icon={Trophy} label="Rankings" color="bg-blue-100 text-blue-700" path="/leaderboard" />
+        <StudentAppShortcut icon={MessageSquare} label="Feedback" color="bg-rose-100 text-rose-700" path="/feedback" />
+      </div>
+
+      <section>
+        <div className="flex items-center justify-between mb-6 px-2">
+          <h3 className="text-lg font-black text-[#7A4900] uppercase tracking-tighter">Recent Performance</h3>
+          <span className="text-[10px] font-black text-[#D4AF37] uppercase">Last 5 Sessions</span>
+        </div>
+        <div className="space-y-4">
+          {recentResults.length > 0 ? recentResults.map((result, index) => (
+            <motion.div
+              key={result.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all active:scale-95"
+            >
+              <div className="flex items-center space-x-4">
+                <div className={`p-3 rounded-2xl ${result.type === 'Event' ? 'bg-purple-50 text-purple-600' : 'bg-gray-50 text-[#7A4900]'}`}>
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#7A4900] text-sm">{result.type} Exam</h4>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">{new Date(result.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-lg font-bold text-[#7A4900]">{result.score}%</p>
+                  <p className="text-[8px] font-black uppercase text-[#D4AF37]">{result.correctCount} Right</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-200 group-hover:text-[#7A4900] transition-colors" />
+              </div>
+            </motion.div>
+          )) : (
+            <div className="bg-white p-10 rounded-[2.5rem] text-center border-2 border-dashed border-gray-100">
+               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                 <BookOpen className="w-8 h-8 text-gray-200" />
+               </div>
+               <p className="text-sm font-bold text-gray-400">Ready to start? Select a module above.</p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
 
-function StatCard({ icon: Icon, label, value, color, delay = 0 }: { icon: any, label: string, value: string | number, color: string, delay?: number }) {
+function StudentAppShortcut({ icon: Icon, label, color, path }: { icon: any, label: string, color: string, path: string }) {
+  return (
+    <Link to={path}>
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col items-center justify-center space-y-3 cursor-pointer text-center h-44 hover:shadow-md transition-all sm:h-48"
+      >
+        <div className={`p-4 rounded-2xl ${color} shadow-sm group-hover:scale-110 transition-transform`}>
+          <Icon className="w-8 h-8" />
+        </div>
+        <span className="text-xs font-black text-[#7A4900] uppercase tracking-tighter">{label}</span>
+      </motion.div>
+    </Link>
+  );
+}
+
+// Re-using common component for Admin
+function StatCard({ icon: Icon, label, value, color }: { icon: any, label: string, value: string | number, color: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
       whileHover={{ y: -5 }}
-      className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center space-x-5 transition-all hover:shadow-md"
+      className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 flex items-center space-x-3 sm:space-x-5"
     >
-      <div className={`p-4 rounded-2xl ${color} shadow-inner`}>
-        <Icon className="w-7 h-7" />
+      <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl ${color} shrink-0`}>
+        <Icon className="w-5 h-5 sm:w-7 sm:h-7" />
       </div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</p>
-        <p className="text-3xl font-bold text-[#7A4900] font-serif">{value}</p>
+      <div className="min-w-0">
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-1 truncate">{label}</p>
+        <p className="text-xl sm:text-3xl font-bold text-[#7A4900] font-serif truncate">{value}</p>
       </div>
     </motion.div>
   );
