@@ -88,6 +88,10 @@ async function startServer() {
 
       console.log(`Starting deletion for user: ${uid}`);
 
+      // Check if user is a student to decrement the global counter
+      const studentDoc = await db.collection('students').doc(uid).get();
+      const isStudent = studentDoc.exists;
+
       // 1. Delete from all user-related Firestore collections
       const collections = ['students', 'admins', 'results', 'payments', 'submissions', 'feedback'];
       const batch = db.batch();
@@ -99,6 +103,13 @@ async function startServer() {
           const snapshot = await db.collection(coll).where('uid', '==', uid).get();
           snapshot.docs.forEach(doc => batch.delete(doc.ref));
         }
+      }
+
+      // Decrement the studentsCount global statistics counter if a student user is deleted
+      if (isStudent) {
+        batch.set(db.collection('global_stats').doc('counters'), {
+          studentsCount: admin.firestore.FieldValue.increment(-1)
+        }, { merge: true });
       }
       
       await batch.commit();
