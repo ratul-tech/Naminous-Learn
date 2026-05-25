@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, getDocFromServer } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -84,13 +84,15 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
     );
   };
 
+  const isPlainAdminDashboard = profile?.role === 'admin' && location.pathname === '/admin' && localStorage.getItem('admin_preview_mode') !== 'true';
+
   return (
     <div className="min-h-screen bg-[#020617] text-slate-300 font-sans flex flex-col transition-colors duration-500">
-      {(!user || location.pathname === '/') && (
+      {!isPlainAdminDashboard && (
         <Navbar user={user} profile={profile} onLogout={onLogout} />
       )}
       
-      <main className={`container mx-auto px-4 flex-grow ${user ? 'py-4' : 'py-8'}`}>
+      <main className="container mx-auto px-4 flex-grow py-4">
         {renderContent()}
       </main>
 
@@ -190,57 +192,168 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
 
   const showNavBack = location.pathname !== '/';
 
-  const navLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Practice', path: '/practice', icon: BookOpen },
-    { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
-    { name: 'Events', path: '/events', icon: Calendar },
-    { name: 'Feedback', path: '/feedback', icon: MessageSquare },
-  ];
+  const getNavLinks = () => {
+    if (!user) {
+      return [
+        { name: 'Home', path: '/', icon: LayoutDashboard },
+        { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+      ];
+    }
+    
+    if (profile?.role === 'admin') {
+      const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
+      if (isPreviewMode) {
+        return [
+          { name: 'Home', path: '/dashboard', icon: LayoutDashboard },
+          { name: 'Exams', path: '/events', icon: Calendar },
+          { name: 'Topic', path: '/practice', icon: BookOpen },
+          { name: 'Library', path: '/resources', icon: FileText },
+          { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+          { name: 'Feedback', path: '/feedback', icon: MessageSquare },
+        ];
+      }
+      return [
+        { name: 'Admin Control', path: '/admin', icon: Shield },
+        { name: 'Question Bank', path: '/questions', icon: BookOpen },
+        { name: 'My Profile', path: '/profile', icon: UserIcon },
+      ];
+    }
+    
+    return [
+      { name: 'Home', path: '/dashboard', icon: LayoutDashboard },
+      { name: 'Exams', path: '/events', icon: Calendar },
+      { name: 'Topic', path: '/practice', icon: BookOpen },
+      { name: 'Library', path: '/resources', icon: FileText },
+      { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+      { name: 'Feedback', path: '/feedback', icon: MessageSquare },
+    ];
+  };
+
+  const navLinks = getNavLinks();
 
   return (
-    <nav className="bg-[#0f172a]/80 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-indigo-500/10">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-20">
-          <div className="flex items-center space-x-4">
+    <nav className="bg-[#0f172a]/90 backdrop-blur-xl sticky top-0 z-50 border-b border-indigo-500/10 shadow-2xl transition-all duration-300">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex justify-between items-center h-16 md:h-20">
+          
+          {/* Brand & Left Section */}
+          <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
             {showNavBack && (
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 mr-2 hover:bg-white/5 rounded-xl transition-all text-[#D4AF37] flex items-center space-x-1 font-bold group"
+                className="p-1.5 sm:p-2 hover:bg-white/5 rounded-xl transition-all text-[#D4AF37] flex items-center space-x-1 font-bold group"
                 aria-label="Go back"
               >
-                <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-                <span className="hidden sm:inline text-[10px] uppercase tracking-wider">Back</span>
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-0.5 transition-transform" />
+                <span className="hidden sm:inline text-[9px] uppercase tracking-wider font-extrabold">Back</span>
               </button>
             )}
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-              <img src={LOGO_URL} alt="Numinous Learn" className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl shadow-md object-cover border border-indigo-500/20" referrerPolicy="no-referrer" />
-              <span className="text-lg sm:text-2xl font-bold text-white truncate">Numinous Learn</span>
+              <img src={LOGO_URL} alt="Numinous Learn" className="h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-xl shadow-xl object-cover border border-indigo-500/20" referrerPolicy="no-referrer" />
+              <div className="flex flex-col">
+                <span className="text-xs sm:text-lg font-black text-white tracking-tight truncate max-w-[120px] sm:max-w-none font-sans">
+                  Numinous Learn
+                </span>
+                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] hidden sm:block">
+                  Academic Portal
+                </span>
+              </div>
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {user && user.emailVerified && (
-              <div className="hidden sm:flex items-center space-x-4 mr-4 pr-4 border-r border-slate-800">
-                <Link to="/profile" className="flex items-center space-x-2 group">
-                  <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37] group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" />
-                  <span className="text-sm font-bold text-slate-300 group-hover:text-white">{profile?.displayName}</span>
+          {/* Tablets & Computers Adaptive Navigation Links */}
+          <div className="hidden md:flex items-center space-x-1 lg:space-x-2 px-2">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  title={link.name}
+                  className={`px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-[13px] font-bold transition-all duration-200 flex items-center space-x-1.5 border group ${
+                    isActive
+                      ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 shadow-md shadow-amber-500/5'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5 border-transparent'
+                  }`}
+                >
+                  <link.icon className="w-4 h-4 text-inherit transition-transform group-hover:scale-110" />
+                  <span className="hidden lg:inline">{link.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right Action / Profile Section */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            
+            {/* Authenticated User state badge */}
+            {user && (
+              <div className="flex items-center space-x-2 md:space-x-3.5 bg-slate-900/60 pl-2 lg:pl-3 pr-2 py-1 lg:py-1.5 rounded-xl md:rounded-2xl border border-slate-800/80">
+                <Link to="/profile" className="flex items-center space-x-2 lg:space-x-2.5 group">
+                  <div className="relative">
+                    <img 
+                      src={profile?.photoURL || `https://ui-avatars.com/api/?name=${profile?.displayName || 'User'}`} 
+                      alt="Profile" 
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ring-2 ring-indigo-500/10 group-hover:scale-105 transition-transform object-cover" 
+                      referrerPolicy="no-referrer" 
+                    />
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full border border-slate-900 ${profile?.role === 'admin' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
+                  </div>
+                  <div className="hidden sm:flex flex-col text-left">
+                    <span className="text-[10px] md:text-xs font-extrabold text-slate-200 group-hover:text-white transition-colors truncate max-w-[60px] md:max-w-[100px]">
+                      {profile?.displayName?.split(' ')[0] || 'User'}
+                    </span>
+                    <span className="text-[8px] md:text-[9px] text-[#D4AF37] font-bold uppercase tracking-wider">
+                      {profile?.role === 'admin' ? 'Curator' : 'Scholar'}
+                    </span>
+                  </div>
+                </Link>
+                
+                <div className="hidden md:block w-px h-6 bg-slate-800" />
+                
+                <button
+                  onClick={onLogout}
+                  className="hidden md:flex p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Desktop Auth login buttons when not authenticated */}
+            {!user && (
+              <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
+                <Link
+                  to="/login"
+                  className="px-3 py-1.5 lg:px-4 lg:py-2 text-xs lg:text-[13px] font-bold text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all border border-transparent"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/login?role=student"
+                  className="px-3 py-1.5 lg:px-4 lg:py-2 text-xs lg:text-[13px] font-extrabold bg-[#D4AF37] hover:bg-[#ffdf64] hover:shadow-amber-500/25 text-slate-950 rounded-xl transition-all shadow-md shadow-amber-500/10"
+                >
+                  Register
                 </Link>
               </div>
             )}
-            
+
+            {/* Mobile Menu Button / Responsive indicator */}
             <button 
               onClick={() => setIsOpen(true)} 
-              className="p-3 rounded-xl text-[#D4AF37] hover:bg-white/5 transition-all flex items-center space-x-2 border border-transparent hover:border-indigo-500/20"
+              className="p-2 sm:p-2.5 rounded-xl text-[#D4AF37] bg-slate-900/40 border border-slate-800 hover:bg-white/5 hover:border-indigo-500/20 lg:hidden transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95"
+              aria-label="Open menu"
             >
-              <Menu className="w-6 h-6" />
-              <span className="font-bold hidden sm:block">Menu</span>
+              <Menu className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+              <span className="font-extrabold text-[10px] sm:text-xs uppercase tracking-wider hidden sm:inline text-slate-300">Space Menu</span>
             </button>
+            
           </div>
         </div>
       </div>
 
-      {/* Sidebar Overlay */}
+      {/* Responsive Drawer Overlay */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -249,117 +362,116 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100]"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xs bg-[#0f172a] z-[70] shadow-2xl flex flex-col border-l border-indigo-500/20"
+              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-xs bg-[#0f172a] z-[110] shadow-2xl flex flex-col border-l border-indigo-500/10"
             >
-              <div className="p-6 flex justify-between items-center border-b border-slate-800">
+              <div className="p-6 flex justify-between items-center border-b border-slate-800 bg-slate-950/20">
                 <div className="flex items-center space-x-3">
-                  <img src={LOGO_URL} alt="Logo" className="h-8 w-8 rounded-lg" referrerPolicy="no-referrer" />
-                  <span className="font-bold text-white">Navigation</span>
+                  <img src={LOGO_URL} alt="Logo" className="h-8 w-8 rounded-xl border border-indigo-500/20 object-cover" referrerPolicy="no-referrer" />
+                  <span className="font-black text-sm uppercase tracking-widest text-[#D4AF37]">Academic Deck</span>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
-                  <X className="w-6 h-6 text-slate-500" />
+                <button onClick={() => setIsOpen(false)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors border border-slate-800">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="flex-grow overflow-y-auto p-6 space-y-2">
                 {user ? (
                   <>
-                    {user.emailVerified && (
-                      <div className="mb-8 p-4 bg-[#020617] rounded-2xl flex items-center space-x-4 border border-slate-800 shadow-inner">
-                        <img src={profile?.photoURL || undefined} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
+                    <Link to="/profile" onClick={() => setIsOpen(false)} className="block mb-6 group">
+                      <div className="p-4 bg-slate-900 rounded-2xl flex items-center space-x-3.5 border border-slate-800 hover:border-[#D4AF37]/35 shadow-inner transition-all">
+                        <img 
+                          src={profile?.photoURL || `https://ui-avatars.com/api/?name=${profile?.displayName || 'User'}`} 
+                          alt="Profile" 
+                          className="h-11 w-11 rounded-xl border border-slate-700 object-cover" 
+                          referrerPolicy="no-referrer" 
+                        />
                         <div className="overflow-hidden">
-                          <p className="font-bold text-white truncate">{profile?.displayName}</p>
-                          <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
+                          <p className="font-bold text-white text-sm truncate group-hover:text-[#D4AF37] transition-colors">{profile?.displayName || 'Numinous Scholar'}</p>
+                          <p className="text-[10px] text-slate-500 truncate lowercase">{profile?.email}</p>
                         </div>
                       </div>
-                    )}
+                    </Link>
                     
-                    {user.emailVerified && navLinks.map((link) => (
-                      <Link
-                        key={link.path}
-                        to={link.path}
-                        onClick={() => setIsOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all ${
-                          location.pathname === link.path 
-                            ? 'bg-[#D4AF37] text-slate-900 shadow-lg shadow-amber-500/20' 
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        <link.icon className="w-5 h-5" />
-                        <span>{link.name}</span>
-                      </Link>
-                    ))}
+                    {navLinks.map((link) => {
+                      const isActive = location.pathname === link.path;
+                      return (
+                        <Link
+                          key={link.path}
+                          to={link.path}
+                          onClick={() => setIsOpen(false)}
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
+                            isActive 
+                              ? 'bg-[#D4AF37] text-slate-950 shadow-lg shadow-amber-500/25' 
+                              : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <link.icon className="w-4.5 h-4.5" />
+                          <span>{link.name}</span>
+                        </Link>
+                      );
+                    })}
 
-                    {user.emailVerified && profile?.role === 'admin' && (
-                      <Link
-                        to="/admin"
-                        onClick={() => setIsOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all mt-4 ${
-                          location.pathname === '/admin' 
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
-                            : 'text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 border border-indigo-500/10'
-                        }`}
-                      >
-                        <Shield className="w-5 h-5" />
-                        <span>Admin Panel</span>
-                      </Link>
+                    {profile?.role === 'admin' && (
+                      <div className="pt-4 mt-4 border-t border-slate-800/80">
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsOpen(false)}
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
+                            location.pathname === '/admin' 
+                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
+                              : 'text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 border border-indigo-500/10'
+                          }`}
+                        >
+                          <Shield className="w-4.5 h-4.5" />
+                          <span>Team Admin Console</span>
+                        </Link>
+                      </div>
                     )}
 
-                    <div className="pt-8 mt-8 border-t border-slate-800 space-y-2">
-                      <Link
-                        to="/profile"
-                        onClick={() => setIsOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all ${
-                          location.pathname === '/profile' 
-                            ? 'bg-slate-800 text-white' 
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        <UserIcon className="w-5 h-5" />
-                        <span>My Profile</span>
-                      </Link>
+                    <div className="pt-6 mt-6 border-t border-slate-800 space-y-1.5">
                       <button 
                         onClick={() => {
                           onLogout();
                           setIsOpen(false);
+                          navigate('/login');
                         }} 
-                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-rose-400 hover:bg-rose-500/10 transition-all"
+                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-black text-rose-400 hover:bg-[#f43f5e]/10 transition-all text-sm text-left"
                       >
-                        <LogOut className="w-5 h-5" />
-                        <span>Logout</span>
+                        <LogOut className="w-4.5 h-4.5" />
+                        <span>Sign Out Portal</span>
                       </button>
                     </div>
                   </>
                 ) : (
                   <div className="space-y-4 pt-4">
-                    <p className="text-sm text-slate-500 text-center mb-6">Join Numinous Learn to start your journey.</p>
+                    <p className="text-xs font-semibold text-slate-500 text-center mb-6 leading-relaxed">Access full mock exams, analytics dashboards, and track scores on Numinous Learn.</p>
                     <Link
                       to="/login"
                       onClick={() => setIsOpen(false)}
-                      className="block w-full text-center bg-[#D4AF37] text-slate-900 py-4 rounded-xl font-bold shadow-lg hover:bg-amber-400 transition-all"
+                      className="block w-full text-center bg-[#D4AF37] text-slate-950 py-3.5 rounded-xl font-bold shadow-lg hover:bg-[#ffdf64] transition-all text-sm"
                     >
-                      Login / Register
+                      Login / Register Account
                     </Link>
                     <Link
-                      to="/admin/login"
+                      to="/login?role=admin"
                       onClick={() => setIsOpen(false)}
-                      className="block w-full text-center bg-slate-800 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-slate-700 transition-all border border-slate-700"
+                      className="block w-full text-center bg-slate-900 text-slate-300 py-3 rounded-xl font-semibold shadow-md hover:bg-slate-850 hover:text-white transition-all text-xs border border-slate-800"
                     >
-                      Admin Portal
+                      Team Curator Login
                     </Link>
                   </div>
                 )}
               </div>
 
-              <div className="p-6 border-t border-slate-800 bg-[#020617]/50">
-                <p className="text-[10px] text-slate-600 text-center uppercase tracking-widest font-bold">
+              <div className="p-6 border-t border-slate-800 bg-slate-950/20">
+                <p className="text-[10px] text-slate-600 text-center uppercase tracking-widest font-black">
                   © {new Date().getFullYear()} Numinous Learn
                 </p>
               </div>
@@ -372,21 +484,58 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
 }
 
 function Landing() {
-  const [stats, setStats] = useState({ studentsCount: 5000, questionsCount: 100000, eventsCount: 200 });
+  const [stats, setStats] = useState({ studentsCount: 15, questionsCount: 45, eventsCount: 3 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1. Subscribe to real-time cached stats
     const unsub = onSnapshot(doc(db, 'global_stats', 'counters'), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
         setStats({
-          studentsCount: data.studentsCount || 5000,
-          questionsCount: data.questionsCount || 100000,
-          eventsCount: data.eventsCount || 200
+          studentsCount: data.studentsCount ?? 15,
+          questionsCount: data.questionsCount ?? 45,
+          eventsCount: data.eventsCount ?? 3
         });
       }
       setLoading(false);
+    }, (error) => {
+      console.warn("Could not load global_stats:", error);
+      setLoading(false);
     });
+
+    // 2. If a user is signed in, sync precise values from actual collections
+    const syncRealCounts = async () => {
+      if (auth.currentUser) {
+        try {
+          const [studentsSnap, questionsSnap, eventsSnap] = await Promise.all([
+            getCountFromServer(collection(db, 'students')),
+            getCountFromServer(collection(db, 'questions')),
+            getCountFromServer(collection(db, 'events'))
+          ]);
+
+          const liveStudents = studentsSnap.data().count;
+          const liveQuestions = questionsSnap.data().count;
+          const liveEvents = eventsSnap.data().count;
+
+          const updated = {
+            studentsCount: liveStudents > 0 ? liveStudents : 15,
+            questionsCount: liveQuestions > 0 ? liveQuestions : 45,
+            eventsCount: liveEvents > 0 ? liveEvents : 3
+          };
+
+          setStats(updated);
+
+          // Update cache doc for non-logged-in visitors (allowed as write: if isSignedIn())
+          await setDoc(doc(db, 'global_stats', 'counters'), updated, { merge: true });
+        } catch (e) {
+          console.warn("Offline or insufficient database scan permission:", e);
+        }
+      }
+    };
+
+    syncRealCounts();
+
     return () => unsub();
   }, []);
 
@@ -447,20 +596,61 @@ function Landing() {
 
       {/* App Stats List */}
       <section className="px-4">
-        <div className="bg-[#0f172a] rounded-3xl p-6 shadow-xl border border-slate-800 grid grid-cols-3 gap-2">
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-[#D4AF37]">{loading ? '...' : formatNumber(stats.studentsCount)}</h3>
-            <p className="text-[9px] font-black uppercase text-slate-500">Users</p>
+        <motion.div 
+          initial={{ y: 15, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          id="landing-stats"
+          className="bg-gradient-to-b from-[#0f172a]/95 to-[#050811]/98 rounded-3xl p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-slate-800/80 grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 relative overflow-hidden group hover:border-[#D4AF37]/30 transition-all duration-500"
+        >
+          {/* Subtle gold-glowing atmospheric overlay */}
+          <div className="absolute -inset-2 bg-gradient-to-tr from-[#D4AF37] to-indigo-500 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity pointer-events-none -z-10 blur-2xl" />
+
+          {/* Students Count Card */}
+          <div className="text-center flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl hover:bg-white/[0.02] transition-colors duration-300">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center mb-2.5 shadow-md shadow-[#D4AF37]/5 transition-transform duration-300 group-hover:scale-105">
+              <UserIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-inherit" />
+            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-100 tracking-tight leading-none mb-1">
+              {loading ? (
+                <span className="inline-block animate-pulse text-slate-750">...</span>
+              ) : (
+                formatNumber(stats.studentsCount)
+              )}
+            </h3>
+            <p className="text-[9px] md:text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Students</p>
           </div>
-          <div className="text-center border-x border-slate-800">
-            <h3 className="text-xl font-bold text-[#D4AF37]">{loading ? '...' : formatNumber(stats.questionsCount)}</h3>
-            <p className="text-[9px] font-black uppercase text-slate-500">Solved</p>
+
+          {/* Questions Count Card */}
+          <div className="text-center flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl hover:bg-white/[0.02] transition-colors duration-300 border-x border-slate-805/80">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-2.5 shadow-md shadow-indigo-500/5 transition-transform duration-300 group-hover:scale-105">
+              <BookOpen className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-inherit" />
+            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-100 tracking-tight leading-none mb-1">
+              {loading ? (
+                <span className="inline-block animate-pulse text-slate-750">...</span>
+              ) : (
+                formatNumber(stats.questionsCount)
+              )}
+            </h3>
+            <p className="text-[9px] md:text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Questions</p>
           </div>
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-[#D4AF37]">{loading ? '...' : formatNumber(stats.eventsCount)}</h3>
-            <p className="text-[9px] font-black uppercase text-slate-500">Events</p>
+
+          {/* Events Count Card */}
+          <div className="text-center flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl hover:bg-white/[0.02] transition-colors duration-300">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-2.5 shadow-md shadow-emerald-500/5 transition-transform duration-300 group-hover:scale-105">
+              <Calendar className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-inherit" />
+            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-100 tracking-tight leading-none mb-1">
+              {loading ? (
+                <span className="inline-block animate-pulse text-slate-750">...</span>
+              ) : (
+                formatNumber(stats.eventsCount)
+              )}
+            </h3>
+            <p className="text-[9px] md:text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Events</p>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Features Cards */}

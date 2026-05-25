@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch, setDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { UserProfile, Gender, Group } from '../types';
-import { User, Phone, School, GraduationCap, Users, Save, CheckCircle2, Trash2, AlertTriangle, X, Settings, LogOut, Lock, ShieldCheck, Mail, Calendar, Info, ArrowLeft } from 'lucide-react';
+import { UserProfile, Gender, Group, MathEngine } from '../types';
+import { 
+  User, Phone, School, GraduationCap, Users, Save, CheckCircle2, 
+  Trash2, AlertTriangle, X, Settings, LogOut, Lock, ShieldCheck, 
+  Mail, Calendar, Trophy, BookOpen, KeyRound, Palette, Sparkles, Check, ArrowLeft
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, updateProfile } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
@@ -14,16 +18,31 @@ interface ProfileProps {
   setProfile: (profile: UserProfile) => void;
 }
 
+const AVATAR_PRESETS = [
+  { name: 'Scholar Felix', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix' },
+  { name: 'Scholar Aneka', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka' },
+  { name: 'Scholar Caleb', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Caleb' },
+  { name: 'Creative Lilou', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Lilou' },
+  { name: 'Science Buster', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Buster' },
+  { name: 'Tech Jack', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Jack' },
+  { name: 'Explorer Sophia', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia' },
+  { name: 'Classic Gizmo', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Gizmo' }
+];
+
+type ProfileTab = 'edit' | 'security' | 'admins';
+
 export default function Profile({ profile, setProfile }: ProfileProps) {
   const navigate = useNavigate();
-  const [view, setView] = useState<'profile' | 'settings'>('profile');
+  const [activeTab, setActiveTab] = useState<ProfileTab>('edit');
   const [formData, setFormData] = useState({
+    displayName: profile?.displayName || '',
     gender: profile?.gender || 'Male' as Gender,
     phone: profile?.phone || '',
     class: profile?.class || 'Class 9',
     school: profile?.school || '',
     group: profile?.group || 'Science' as Group,
     mathEngine: profile?.mathEngine || 'katex',
+    photoURL: profile?.photoURL || ''
   });
   
   const [passwords, setPasswords] = useState({
@@ -40,17 +59,73 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [admins, setAdmins] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalExams: 0,
+    avgScore: 0,
+    bestScore: 0,
+    loading: true
+  });
 
+  // Load state and update when profile changes initially
   useEffect(() => {
-    if (view === 'settings') {
-      const fetchAdmins = async () => {
+    if (profile) {
+      setFormData({
+        displayName: profile.displayName || '',
+        gender: profile.gender || 'Male',
+        phone: profile.phone || '',
+        class: profile.class || 'Class 9',
+        school: profile.school || '',
+        group: profile.group || 'Science',
+        mathEngine: profile.mathEngine || 'katex',
+        photoURL: profile.photoURL || ''
+      });
+    }
+  }, [profile]);
+
+  // Load admins list for view
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
         const q = query(collection(db, 'admins'));
         const snapshot = await getDocs(q);
         setAdmins(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-      };
-      fetchAdmins();
-    }
-  }, [view]);
+      } catch (e) {
+        console.warn('Could not fetch instructors roster:', e);
+      }
+    };
+    fetchAdmins();
+  }, []);
+
+  // Fetch student personalized performance stats
+  useEffect(() => {
+    if (!profile) return;
+    const fetchStats = async () => {
+      try {
+        const resultsRef = collection(db, 'results');
+        const q = query(resultsRef, where('uid', '==', profile.uid));
+        const snapshot = await getDocs(q);
+        const results = snapshot.docs.map(doc => doc.data());
+        
+        if (results.length > 0) {
+          const total = results.length;
+          const sum = results.reduce((acc, curr) => acc + (curr.score || 0), 0);
+          const best = Math.max(...results.map(r => r.score || 0));
+          setStats({
+            totalExams: total,
+            avgScore: Math.round(sum / total),
+            bestScore: best,
+            loading: false
+          });
+        } else {
+          setStats({ totalExams: 0, avgScore: 0, bestScore: 0, loading: false });
+        }
+      } catch (err) {
+        console.warn("Could not load stats for profile card:", err);
+        setStats(prev => ({ ...prev, loading: false }));
+      }
+    };
+    fetchStats();
+  }, [profile]);
 
   useEffect(() => {
     let timer: any;
@@ -70,14 +145,14 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
 
   const calculateCompletion = () => {
     const fields = [
-      profile?.displayName,
+      formData.displayName,
       profile?.email,
       formData.gender,
       formData.phone,
       formData.class,
       formData.school,
       formData.group,
-      profile?.photoURL
+      formData.photoURL
     ];
     const filledFields = fields.filter(f => f && f.toString().trim() !== '').length;
     return Math.round((filledFields / fields.length) * 100);
@@ -97,10 +172,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
   const deleteAuthUser = async (uid: string) => {
     try {
       const idToken = await auth.currentUser?.getIdToken();
-      if (!idToken) {
-        console.warn('Cannot delete: No ID token found');
-        return false;
-      }
+      if (!idToken) return false;
       const response = await fetch('/api/admin/delete-user', {
         method: 'POST',
         headers: {
@@ -109,14 +181,9 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
         },
         body: JSON.stringify({ uid })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.warn('Auth deletion error:', errorData.error);
-      }
-      return true;
+      return response.ok;
     } catch (error) {
-      console.error('Error in deleteAuthUser:', error);
+      console.error('Error deleting account authentication:', error);
       return false;
     }
   };
@@ -127,8 +194,6 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     try {
       const uid = profile.uid;
       const role = profile.role;
-
-      // 1. Delete user-related Firestore data using a atomic client-side transaction/batch
       const batch = writeBatch(db);
       
       const collections = ['results', 'payments', 'submissions', 'feedback'];
@@ -140,30 +205,24 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
             batch.delete(docSnap.ref);
           });
         } catch (e) {
-          console.warn(`Failed to query/batch delete ${collPath}:`, e);
+          console.warn(`Failed to clean up user data in ${collPath}:`, e);
         }
       }
       
-      // Delete core profile record
       if (role === 'admin') {
         batch.delete(doc(db, 'admins', uid));
       } else {
         batch.delete(doc(db, 'students', uid));
-        
-        // Decrement global student statistics counter
         try {
           batch.set(doc(db, 'global_stats', 'counters'), { 
             studentsCount: increment(-1) 
           }, { merge: true });
         } catch (counterErr) {
-          console.warn("Failed to batch decrement student counter:", counterErr);
+          console.warn("Failed to decrement student counter:", counterErr);
         }
       }
       
       await batch.commit();
-      console.log('Successfully completed client-side Firestore cleanup');
-
-      // 2. Call backend function to remove original auth account
       await deleteAuthUser(uid);
       await signOut(auth);
       navigate('/');
@@ -187,7 +246,6 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     setUpdatingPassword(true);
     setError('');
     try {
-      // Re-authenticate user first (security requirement for password change)
       const credential = EmailAuthProvider.credential(profile.email, passwords.oldPassword);
       await reauthenticateWithCredential(auth.currentUser, credential);
       await updatePassword(auth.currentUser, passwords.newPassword);
@@ -207,9 +265,15 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     e.preventDefault();
     if (!profile) return;
 
+    if (!formData.displayName.trim()) {
+      setError('Please provide a default Full Name.');
+      setTimeout(() => setError(''), 4000);
+      return;
+    }
+
     if (!formData.phone.trim() || !formData.school.trim()) {
-      setError('Please fill in all required fields (Phone and Institution).');
-      setTimeout(() => setError(''), 5000);
+      setError('Please fill in your Contact Phone and Institution Name.');
+      setTimeout(() => setError(''), 4000);
       return;
     }
 
@@ -217,10 +281,21 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     setError('');
     try {
       const collectionName = profile.role === 'admin' ? 'admins' : 'students';
+      
+      // Update Firebase Auth original profile if displayName or photoURL changed
+      if (auth.currentUser) {
+        if (formData.displayName !== profile.displayName || formData.photoURL !== profile.photoURL) {
+          await updateProfile(auth.currentUser, {
+            displayName: formData.displayName,
+            photoURL: formData.photoURL
+          });
+        }
+      }
+
       await updateDoc(doc(db, collectionName, profile.uid), formData);
       const updatedProfile = { ...profile, ...formData };
       setProfile(updatedProfile);
-      setMessage('Profile updated successfully!');
+      setMessage('Profile settings saved successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       const collectionName = profile.role === 'admin' ? 'admins' : 'students';
@@ -230,411 +305,595 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     }
   };
 
+  const selectPresetAvatar = (url: string) => {
+    setFormData(prev => ({ ...prev, photoURL: url }));
+  };
+
   const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <div className={`space-y-8 pb-24 pt-6 ${isAdmin && !isPreviewMode ? 'mt-8' : ''}`}>
+    <div className={`space-y-6 pb-24 pt-4 ${isAdmin && !isPreviewMode ? 'mt-6' : ''}`}>
+      
+      {/* Curator Navigation Header */}
       {isAdmin && !isPreviewMode && (
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto">
           <button 
             onClick={() => navigate('/admin')}
-            className="flex items-center space-x-3 text-slate-500 hover:text-[#D4AF37] transition-all mb-4 group"
+            className="flex items-center space-x-3 text-slate-400 hover:text-[#D4AF37] transition-all group"
           >
-            <div className="p-2.5 bg-slate-900 rounded-2xl shadow-xl border border-slate-800 group-hover:border-[#D4AF37]/40 transition-all active:scale-95">
+            <div className="p-2 bg-slate-900 rounded-xl shadow-md border border-slate-800 group-hover:border-[#D4AF37]/40 transition-all">
               <ArrowLeft className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.25em]">Return to Control Center</span>
+            <span className="text-xs font-bold uppercase tracking-[0.15em] font-sans">Return to Control Center</span>
           </button>
         </div>
       )}
 
-      {/* Dynamic Header */}
-      <header className="relative overflow-hidden bg-slate-900 px-8 py-14 rounded-[3rem] shadow-2xl border border-slate-800 text-center group">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-50" />
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-10">
-            <button 
-              onClick={() => {
-                setView('profile');
-                setShowDeleteConfirm(false);
-              }}
-              className={`p-3 rounded-2xl transition-all ${view === 'profile' ? 'bg-transparent text-transparent pointer-events-none opacity-0' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'}`}
-            >
-              <X className="w-7 h-7" />
-            </button>
-            <h1 className="text-3xl font-bold text-white font-serif tracking-tight">
-              {view === 'profile' ? 'Academy ID' : 'System Settings'}
-            </h1>
-            <button 
-              onClick={() => setView(view === 'profile' ? 'settings' : 'profile')}
-              className={`p-3 rounded-2xl transition-all relative ${view === 'settings' ? 'bg-[#D4AF37] text-slate-950 shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'}`}
-            >
-              <Settings className={`w-7 h-7 ${view === 'settings' ? 'animate-spin-slow' : ''}`} />
-              {completion < 100 && view === 'profile' && <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-slate-900 animate-pulse" />}
-            </button>
-          </div>
-
-          <div className="relative inline-block mb-6">
-            <motion.div
-              layoutId="avatar"
-              className="relative p-1 bg-gradient-to-tr from-amber-500 via-[#D4AF37] to-amber-200 rounded-full shadow-2xl"
-            >
-              <div className="bg-slate-900 rounded-full p-1">
-                {profile?.photoURL ? (
-                  <img src={profile.photoURL} alt="Profile" className="w-32 h-32 rounded-full object-cover mx-auto ring-4 ring-slate-900" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="w-32 h-32 rounded-full bg-slate-800 flex items-center justify-center mx-auto ring-4 ring-slate-900">
-                    <User className="w-16 h-16 text-slate-600" />
-                  </div>
-                )}
-              </div>
-              <div className="absolute bottom-2 right-2 bg-emerald-500 w-6 h-6 rounded-full border-4 border-slate-900 shadow-lg animate-pulse" />
-            </motion.div>
-          </div>
-          
-          <h2 className="text-3xl font-bold text-white mb-2 font-serif tracking-tight">{profile?.displayName}</h2>
-          <p className="text-sm font-bold text-slate-500 mb-6 uppercase tracking-widest">{profile?.email}</p>
-          
-          <div className="flex justify-center space-x-3">
-            <span className="px-5 py-2 bg-amber-500/10 text-[#D4AF37] rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-amber-500/20 shadow-lg">
-              {profile?.role}
-            </span>
-            <span className="px-5 py-2 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-emerald-500/20 shadow-lg">
-              Authorized
-            </span>
-          </div>
-        </div>
+      {/* Responsive layout: Grid structure on desktop and tablet, vertical stacking on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto items-start">
         
-        <Users className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 text-white opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-[2000ms]" />
-      </header>
-
-      <AnimatePresence mode="wait">
-        {view === 'profile' ? (
-          <motion.div
-            key="profile-content"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="space-y-8"
-          >
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 gap-4 sm:gap-6">
-              <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-800 text-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative z-10">
-                  <div className="w-14 h-14 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/20 shadow-lg">
-                    <GraduationCap className="w-7 h-7" />
-                  </div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Academic Status</p>
-                  <p className="text-xl font-bold text-white font-serif">{profile?.class}</p>
-                </div>
-              </div>
-              <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-800 text-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative z-10">
-                  <div className="w-14 h-14 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20 shadow-lg">
-                    <Calendar className="w-7 h-7" />
-                  </div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Enrolled Since</p>
-                  <p className="text-xl font-bold text-white font-serif">{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Profile Completion Card */}
-            <div className="bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-slate-800 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
-                <Info className="w-32 h-32 text-white" />
-              </div>
-              <div className="relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-bold text-white font-serif flex items-center space-x-3">
-                    <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                    <span>Integrity Meter</span>
-                  </h3>
-                  <span className={`text-xl font-black ${completion === 100 ? 'text-emerald-400' : 'text-[#D4AF37] font-serif'}`}>{completion}%</span>
-                </div>
-                <div className="h-3 bg-slate-950 rounded-full overflow-hidden mb-6 border border-slate-800 shadow-inner">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${completion}%` }}
-                    className={`h-full relative ${completion === 100 ? 'bg-gradient-to-r from-emerald-600 to-teal-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-gradient-to-r from-amber-600 to-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)]'}`}
-                  >
-                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                  </motion.div>
-                </div>
-                <p className="text-sm text-slate-400 leading-relaxed font-medium">
-                  {completion === 100 
-                    ? "Exceptional! Your academic identity is fully verified and synchronized across the mainframe." 
-                    : "Finalize your institutional details to achieve full verification and unlock priority access tickets."}
-                </p>
-              </div>
-            </div>
-
-            {/* Account Information Card */}
-            <div className="bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-slate-800 space-y-8">
-              <h3 className="text-xl font-bold text-white font-serif border-b border-slate-800 pb-6 flex items-center justify-between">
-                <span>Personal Dossier</span>
-                <Users className="w-6 h-6 text-slate-700" />
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="flex items-start space-x-4 group/item">
-                  <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 group-hover/item:border-amber-500/50 transition-colors"><Users className="w-5 h-5 text-slate-500" /></div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Gender</p>
-                    <p className="text-base font-bold text-white">{profile?.gender || 'Unspecified'}</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4 group/item">
-                  <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 group-hover/item:border-emerald-500/50 transition-colors"><Phone className="w-5 h-5 text-slate-500" /></div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Encrypted Link</p>
-                    <p className="text-base font-bold text-white">{profile?.phone || 'No active link'}</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4 group/item">
-                  <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 group-hover/item:border-blue-500/50 transition-colors"><School className="w-5 h-5 text-slate-500" /></div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Home Institution</p>
-                    <p className="text-base font-bold text-white line-clamp-1">{profile?.school || 'Private Enrolment'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="settings-content"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="space-y-8"
-          >
-            {/* Action Card: Edit Details */}
-            <div className="bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-slate-800">
-              <div className="flex items-center space-x-4 mb-10">
-                <div className="w-12 h-12 bg-amber-500/10 text-[#D4AF37] rounded-2xl flex items-center justify-center border border-amber-500/20 shadow-lg">
-                  <Save className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white font-serif">Credential Update</h3>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Adjust your academic identity</p>
-                </div>
-              </div>
-              <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Academic Tier</label>
-                    <select
-                      value={formData.class}
-                      onChange={(e) => setFormData({ ...formData, class: e.target.value })}
-                      className="w-full px-6 py-5 rounded-[1.5rem] bg-slate-950 border-2 border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm shadow-inner cursor-pointer"
-                    >
-                      <option value="Class 9">Class 9</option>
-                      <option value="Class 10">Class 10</option>
-                      <option value="SSC Candidate">SSC Candidate</option>
-                    </select>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Communication Link</label>
-                    <div className="relative">
-                      <Phone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" />
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full pl-16 pr-6 py-5 rounded-[1.5rem] bg-slate-950 border-2 border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm shadow-inner"
-                        placeholder="Enter primary mobile"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-3 md:col-span-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Institution Name</label>
-                    <div className="relative">
-                      <School className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" />
-                      <input
-                        type="text"
-                        value={formData.school}
-                        onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                        className="w-full pl-16 pr-6 py-5 rounded-[1.5rem] bg-slate-950 border-2 border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm shadow-inner"
-                        placeholder="Verified institution name"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full bg-[#D4AF37] text-slate-950 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] hover:bg-amber-400 transition-all flex items-center justify-center space-x-3 disabled:opacity-50 shadow-[0_10px_20px_rgba(212,175,55,0.2)] active:scale-95 group/btn"
-                >
-                  {saving ? <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" /> : <Save className="w-5 h-5 group-hover/btn:scale-125 transition-transform" />}
-                  <span>{saving ? 'Synchronizing...' : 'Commit Data Changes'}</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Action Card: Security/Password */}
-            <div className="bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-slate-800">
-              <div className="flex items-center space-x-4 mb-10">
-                <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-lg">
-                  <Lock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white font-serif">Security Protocol</h3>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Rotate your authentication keys</p>
-                </div>
-              </div>
-              <form onSubmit={handlePasswordChange} className="space-y-6">
-                <input
-                  type="password"
-                  placeholder="Legacy (Existing) Password"
-                  value={passwords.oldPassword}
-                  onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
-                  className="w-full px-6 py-5 rounded-[1.5rem] bg-slate-950 border-2 border-slate-800 focus:border-emerald-500 text-white outline-none transition-all font-bold text-sm shadow-inner"
-                  required
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <input
-                    type="password"
-                    placeholder="Novel Strategy (New Password)"
-                    value={passwords.newPassword}
-                    onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                    className="w-full px-6 py-5 rounded-[1.5rem] bg-slate-950 border-2 border-slate-800 focus:border-emerald-500 text-white outline-none transition-all font-bold text-sm shadow-inner"
-                    required
-                  />
-                  <input
-                    type="password"
-                    placeholder="Verify New Strategy"
-                    value={passwords.confirmPassword}
-                    onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                    className="w-full px-6 py-5 rounded-[1.5rem] bg-slate-950 border-2 border-slate-800 focus:border-emerald-500 text-white outline-none transition-all font-bold text-sm shadow-inner"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={updatingPassword}
-                  className="w-full bg-slate-950 border-2 border-emerald-500/50 text-emerald-400 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center space-x-3 disabled:opacity-50 active:scale-95 group/btn"
-                >
-                  {updatingPassword ? <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> : <ShieldCheck className="w-5 h-5 group-hover/btn:scale-125 transition-transform" />}
-                  <span>{updatingPassword ? 'Authenticating...' : 'Re-secure Identity'}</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Admin Information Area */}
-            {isAdmin && (
-              <div className="bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-slate-800">
-                <h3 className="text-xl font-bold text-white font-serif mb-8 flex items-center space-x-4">
-                  <div className="p-2 bg-purple-500/10 rounded-lg"><ShieldCheck className="w-6 h-6 text-purple-400" /></div>
-                  <span>Mainframe Curators</span>
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {admins.length > 0 ? admins.map((admin) => (
-                    <div key={admin.id} className="flex items-center space-x-4 p-4 bg-slate-950 rounded-2xl border border-slate-800 group hover:border-purple-500/30 transition-all">
+        {/* Left Side: Summary Profile Card, Completion Meter & Switch Actions */}
+        <div className="md:col-span-1 space-y-6">
+          
+          {/* Main Visual Profile Card */}
+          <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 text-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#D4AF37]/5 to-[#4f46e5]/5 opacity-60 pointer-events-none" />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              {/* Profile Avatar Frame with High Contrast Accents */}
+              <div className="relative mb-5 group/avatar">
+                <div className="p-1.5 bg-gradient-to-tr from-amber-500 via-[#D4AF37] to-indigo-500 rounded-full shadow-2xl transition-transform duration-500 group-hover:rotate-6">
+                  <div className="bg-slate-950 rounded-full p-1">
+                    {formData.photoURL ? (
                       <img 
-                        src={admin.photoURL || `https://ui-avatars.com/api/?name=${admin.displayName}`} 
-                        className="w-12 h-12 rounded-xl object-cover ring-2 ring-slate-800 group-hover:ring-purple-500/50 transition-all" 
-                        alt="" 
-                        referrerPolicy="no-referrer"
+                        src={formData.photoURL} 
+                        alt="Profile" 
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-2 ring-slate-900" 
+                        referrerPolicy="no-referrer" 
                       />
-                      <div>
-                        <p className="text-sm font-bold text-white line-clamp-1">{admin.displayName}</p>
-                        <div className="flex items-center space-x-1">
-                          <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                          <p className="text-[9px] font-black text-purple-500 uppercase tracking-tighter">{admin.adminType || 'Super'} Curator</p>
-                        </div>
+                    ) : (
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-800 flex items-center justify-center ring-2 ring-slate-900">
+                        <User className="w-12 h-12 text-slate-600" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Enabled Status Pulse Indicator */}
+                <span className="absolute bottom-1 right-2 bg-emerald-500 w-5 h-5 rounded-full border-4 border-slate-950 shadow-md animate-pulse" />
+              </div>
+
+              {/* Identity Details */}
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">{profile?.displayName}</h2>
+              <p className="text-xs font-bold text-slate-400 mt-1 truncate max-w-full tracking-wide">{profile?.email}</p>
+              
+              {/* Student/Curator Badges */}
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4">
+                <span className="px-3.5 py-1 bg-amber-500/10 text-[#D4AF37] rounded-full text-[9px] font-extrabold uppercase tracking-widest border border-amber-500/20">
+                  {profile?.role === 'admin' ? 'Instructor' : 'Student'}
+                </span>
+                <span className="px-3.5 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[9px] font-extrabold uppercase tracking-widest border border-indigo-500/20">
+                  Verified
+                </span>
+              </div>
+            </div>
+            
+            {/* Minimal Background Icon */}
+            <Users className="absolute -bottom-10 -right-10 w-40 h-40 text-white opacity-[0.015] pointer-events-none" />
+          </div>
+
+          {/* Profile Strength / Completion Meter */}
+          <div className="bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-800">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                <span>Profile Strength</span>
+              </h3>
+              <span className={`text-sm font-black ${completion === 100 ? 'text-emerald-400' : 'text-[#D4AF37]'}`}>{completion}%</span>
+            </div>
+            <div className="h-2 bg-slate-950 rounded-full overflow-hidden mb-3 border border-slate-850 shadow-inner">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${completion}%` }}
+                className={`h-full relative ${completion === 100 ? 'bg-gradient-to-r from-emerald-600 to-teal-500' : 'bg-gradient-to-r from-amber-600 to-[#D4AF37]'}`}
+              >
+                <div className="absolute inset-0 bg-white/10 animate-pulse" />
+              </motion.div>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+              {completion === 100 
+                ? "Your academic profile is 100% complete. Good job!" 
+                : "Fill out your profile fields to complete your academy record."}
+            </p>
+          </div>
+
+          {/* Tab Selection List - Desktop Sidebar Menu style */}
+          <div className="hidden md:flex flex-col bg-slate-900 rounded-2xl p-2.5 border border-slate-800 space-y-1">
+            <button
+              onClick={() => setActiveTab('edit')}
+              className={`px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-left flex items-center space-x-3 ${
+                activeTab === 'edit'
+                  ? 'bg-amber-500/10 text-[#D4AF37] border-l-2 border-[#D4AF37]'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Settings className="w-4.5 h-4.5 text-inherit" />
+              <span>Edit Details</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-left flex items-center space-x-3 ${
+                activeTab === 'security'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-l-2 border-emerald-500'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Lock className="w-4.5 h-4.5 text-inherit" />
+              <span>Password & Security</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('admins')}
+              className={`px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-left flex items-center space-x-3 ${
+                activeTab === 'admins'
+                  ? 'bg-purple-500/10 text-purple-400 border-l-2 border-purple-500'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Users className="w-4.5 h-4.5 text-inherit" />
+              <span>System Admins</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Right Side: Active Form or Details Block */}
+        <div className="md:col-span-2 space-y-6">
+          
+          {/* Tabs header for Mobile / Tablets */}
+          <div className="flex md:hidden bg-slate-900 border border-slate-800 rounded-2xl p-1 overflow-x-auto no-scrollbar space-x-1">
+            <button
+              onClick={() => setActiveTab('edit')}
+              className={`flex-1 min-w-[100px] px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider text-center transition-all ${
+                activeTab === 'edit'
+                  ? 'bg-[#D4AF37] text-slate-950 shadow-md font-extrabold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Edit Info
+            </button>
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`flex-1 min-w-[100px] px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider text-center transition-all ${
+                activeTab === 'security'
+                  ? 'bg-[#D4AF37] text-slate-950 shadow-md font-extrabold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Security
+            </button>
+            <button
+              onClick={() => setActiveTab('admins')}
+              className={`flex-1 min-w-[100px] px-3 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider text-center transition-all ${
+                activeTab === 'admins'
+                  ? 'bg-[#D4AF37] text-slate-950 shadow-md font-extrabold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Admins
+            </button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            
+            {/* Tab 1: Edit Details (Including Avatar and Personal info) */}
+            {activeTab === 'edit' && (
+              <motion.div
+                key="edit-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-8"
+              >
+                <div className="flex items-center space-x-3.5 border-b border-slate-800/80 pb-5">
+                  <div className="p-2.5 bg-amber-500/10 text-[#D4AF37] rounded-xl border border-amber-500/20">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-100">Profile Settings</h3>
+                    <p className="text-[10px] text-slate-505 uppercase font-bold tracking-wider">Keep your personal details up to date</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  
+                  {/* Part A: Customizable Student Avatars */}
+                  <div className="space-y-3.5">
+                    <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-350 flex items-center space-x-2">
+                      <Palette className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span>Choose Avatar Companion</span>
+                    </label>
+                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                      {AVATAR_PRESETS.map((preset) => {
+                        const isSelected = formData.photoURL === preset.url;
+                        return (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => selectPresetAvatar(preset.url)}
+                            title={preset.name}
+                            className={`relative rounded-xl overflow-hidden p-1 bg-slate-900 border-2 transition-all hover:scale-105 hover:border-amber-500/40 active:scale-95 ${
+                              isSelected ? 'border-[#D4AF37] ring-2 ring-amber-500/20 shadow-md shadow-amber-500/10' : 'border-slate-800/50'
+                            }`}
+                          >
+                            <img src={preset.url} alt={preset.name} className="w-full h-auto object-contain rounded-lg" referrerPolicy="no-referrer" />
+                            {isSelected && (
+                              <div className="absolute top-0 right-0 bg-[#D4AF37] text-slate-950 rounded-bl-lg p-0.5 shadow-sm">
+                                <Check className="w-2.5 h-2.5 font-bold" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Custom URL Field */}
+                    <div className="space-y-1.5 mt-2">
+                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Or enter any custom Image URL:</p>
+                      <input 
+                        type="url"
+                        value={formData.photoURL}
+                        onChange={(e) => setFormData({ ...formData, photoURL: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-xs text-slate-300 outline-none transition-all placeholder:text-slate-600"
+                        placeholder="https://example.com/avatar.png"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Part B: Personal Info Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                    
+                    {/* Full Name */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Full Name</label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-500" />
+                        <input
+                          type="text"
+                          value={formData.displayName}
+                          onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                          className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm shadow-inner"
+                          placeholder="Your real name"
+                          required
+                        />
                       </div>
                     </div>
-                  )) : (
-                    <p className="text-sm text-slate-500 italic py-4">No other curators identified.</p>
+
+                    {/* Contact Phone */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Phone Number</label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-500" />
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm shadow-inner"
+                          placeholder="Contact phone number"
+                        />
+                      </div>
+                    </div>
+
+                    {/* School / College */}
+                    <div className="space-y-2 sm:col-span-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">School / College / Institution</label>
+                      <div className="relative">
+                        <School className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-500" />
+                        <input
+                          type="text"
+                          value={formData.school}
+                          onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                          className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm shadow-inner"
+                          placeholder="Your educational institution"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Class Selection */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Class / Grade</label>
+                      <div className="relative">
+                        <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-500" />
+                        <select
+                          value={formData.class}
+                          onChange={(e) => setFormData({ ...formData, class: e.target.value })}
+                          className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm cursor-pointer"
+                        >
+                          <option value="Class 9">Class 9</option>
+                          <option value="Class 10">Class 10</option>
+                          <option value="SSC Candidate">SSC Candidate</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Academic Group Selection */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Academic Group</label>
+                      <div className="relative">
+                        <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-500" />
+                        <select
+                          value={formData.group}
+                          onChange={(e) => setFormData({ ...formData, group: e.target.value as Group })}
+                          className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm cursor-pointer"
+                        >
+                          <option value="Science">Science Group</option>
+                          <option value="Commerce">Commerce Group</option>
+                          <option value="Arts">General Arts Group</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Gender Selection */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Gender</label>
+                      <select
+                        value={formData.gender}
+                        onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })}
+                        className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm cursor-pointer"
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {/* Math Expression Engine Render Choice */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Math Rendering Preference</label>
+                      <select
+                        value={formData.mathEngine}
+                        onChange={(e) => setFormData({ ...formData, mathEngine: e.target.value as MathEngine })}
+                        className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm cursor-pointer"
+                      >
+                        <option value="katex">KaTeX (Ultra Fast & Smooth)</option>
+                        <option value="mathjax">MathJax (Strict & Comprehensive)</option>
+                      </select>
+                    </div>
+
+                  </div>
+
+                  {/* Submission element */}
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="w-full bg-[#D4AF37] text-slate-950 py-4 sm:py-4.5 rounded-xl font-extrabold text-xs uppercase tracking-widest hover:bg-amber-400 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-95 shadow-md shadow-amber-500/10"
+                    >
+                      {saving ? (
+                        <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      <span>{saving ? 'Saving changes...' : 'Save Profile Details'}</span>
+                    </button>
+                  </div>
+
+                </form>
+              </motion.div>
+            )}
+
+            {/* Tab 2: Security & Password Update */}
+            {activeTab === 'security' && (
+              <motion.div
+                key="security-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-8"
+              >
+                <div className="flex items-center space-x-3.5 border-b border-slate-800/80 pb-5">
+                  <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-100">Changing Password</h3>
+                    <p className="text-[10px] text-slate-505 uppercase font-bold tracking-wider">Configure your login passwords securely</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handlePasswordChange} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Current Password</label>
+                    <input
+                      type="password"
+                      placeholder="Enter current password"
+                      value={passwords.oldPassword}
+                      onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
+                      className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white outline-none transition-all font-bold text-sm shadow-inner"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">New Password</label>
+                      <input
+                        type="password"
+                        placeholder="Choose new password"
+                        value={passwords.newPassword}
+                        onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                        className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white outline-none transition-all font-bold text-sm shadow-inner"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Confirm New Password</label>
+                      <input
+                        type="password"
+                        placeholder="Re-type new password"
+                        value={passwords.confirmPassword}
+                        onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                        className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white outline-none transition-all font-bold text-sm shadow-inner"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={updatingPassword}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-95 shadow-md shadow-emerald-600/10"
+                    >
+                      {updatingPassword ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <ShieldCheck className="w-4 h-4" />
+                      )}
+                      <span>{updatingPassword ? 'Authenticating...' : 'Update Password'}</span>
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+            {/* Tab 3: Administrators Team */}
+            {activeTab === 'admins' && (
+              <motion.div
+                key="admins-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-6"
+              >
+                <div className="flex items-center space-x-3.5 border-b border-slate-800/80 pb-5">
+                  <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-100">Portal Administrators</h3>
+                    <p className="text-[10px] text-slate-505 uppercase font-bold tracking-wider">Academy program authors & instructors</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {admins.length > 0 ? (
+                    admins.map((admin) => (
+                      <div key={admin.id} className="flex items-center space-x-4 p-4 bg-slate-950 rounded-2xl border border-slate-800 hover:border-purple-500/20 transition-all group">
+                        <img 
+                          src={admin.photoURL || `https://ui-avatars.com/api/?name=${admin.displayName}`} 
+                          className="w-11 h-11 rounded-xl object-cover ring-2 ring-slate-800 group-hover:ring-purple-500/35 transition-all" 
+                          alt="" 
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-black text-slate-100 truncate">{admin.displayName || 'Administrator'}</p>
+                          <div className="flex items-center space-x-1.5 mt-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                              {admin.adminType || 'Super'} Curator
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="sm:col-span-2 text-center py-8">
+                      <p className="text-slate-500 italic text-sm">No administrators identified yet.</p>
+                    </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
-            <div className="space-y-4 pt-6">
+
+          </AnimatePresence>
+
+          {/* Action Row: Logout Session and unregister buttons */}
+          <div className="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl space-y-4">
+            <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Account Operations</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button 
                 onClick={handleLogout}
-                className="w-full bg-slate-800 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-slate-700 transition-all flex items-center justify-center space-x-4 border border-slate-700 shadow-xl active:scale-[0.98]"
+                className="w-full bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center space-x-2 border border-slate-850 active:scale-[0.98]"
               >
-                <LogOut className="w-6 h-6 mb-0.5" />
-                <span>Deactivate Session</span>
+                <LogOut className="w-4.5 h-4.5" />
+                <span>Logout Session</span>
               </button>
               <button 
                 onClick={() => {
                   setShowDeleteConfirm(true);
                   setDeleteTimer(5);
                 }}
-                className="w-full text-rose-500 font-bold py-4 hover:text-rose-400 transition-all text-[10px] uppercase tracking-[0.3em] font-black opacity-60 hover:opacity-100"
+                className="w-full bg-rose-500/5 hover:bg-rose-500/15 text-rose-500 hover:text-rose-450 py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center space-x-2 border border-rose-500/10 active:scale-[0.98]"
               >
-                Purge Academic History (Unregister)
+                <Trash2 className="w-4.5 h-4.5" />
+                <span>Delete Account</span>
               </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
 
-      {/* Persistence Messages */}
-      <div className="fixed bottom-32 left-0 right-0 pointer-events-none px-6 z-[60]">
+        </div>
+
+      </div>
+
+      {/* Floating Status Notification Alerts */}
+      <div className="fixed bottom-24 left-0 right-0 pointer-events-none px-6 z-[60]">
         <AnimatePresence>
           {message && (
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="bg-emerald-600 text-white p-5 rounded-[1.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex items-center space-x-4 max-w-md mx-auto border border-emerald-500/30">
-              <div className="p-2 bg-white/20 rounded-lg"><CheckCircle2 className="w-6 h-6" /></div>
-              <span className="font-bold text-sm uppercase tracking-wide">{message}</span>
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="bg-emerald-600 text-white p-4.5 rounded-xl shadow-xl flex items-center space-x-3.5 max-w-md mx-auto border border-emerald-500/20 pointer-events-auto">
+              <div className="p-2 bg-white/20 rounded-lg"><CheckCircle2 className="w-5 h-5" /></div>
+              <span className="font-bold text-xs uppercase tracking-wide">{message}</span>
             </motion.div>
           )}
           {error && (
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="bg-rose-600 text-white p-5 rounded-[1.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex items-center space-x-4 max-w-md mx-auto border border-rose-500/30">
-              <div className="p-2 bg-white/20 rounded-lg"><AlertTriangle className="w-6 h-6" /></div>
-              <span className="font-bold text-sm uppercase tracking-wide">{error}</span>
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="bg-rose-600 text-white p-4.5 rounded-xl shadow-xl flex items-center space-x-3.5 max-w-md mx-auto border border-rose-500/20 pointer-events-auto">
+              <div className="p-2 bg-white/20 rounded-lg"><AlertTriangle className="w-5 h-5" /></div>
+              <span className="font-bold text-xs uppercase tracking-wide">{error}</span>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Modern High-Contrast Deletion Modal */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/95 backdrop-blur-xl">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 100 }}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 100 }}
-              className="bg-slate-900 rounded-[3.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] max-w-lg w-full p-12 text-center relative border border-slate-800"
+              exit={{ opacity: 0, scale: 0.9, y: 50 }}
+              className="bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center relative border border-slate-800"
             >
-              <div className="w-24 h-24 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-10 border border-rose-500/20 shadow-2xl rotate-45 transform">
-                <Trash2 className="w-12 h-12 -rotate-45" />
+              <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-lg">
+                <Trash2 className="w-7 h-7" />
               </div>
-              <h2 className="text-4xl font-bold text-white mb-6 font-serif">Terminal Protocol</h2>
-              <p className="text-slate-400 text-base leading-relaxed mb-12 font-medium">
-                You are about to initiate total data erasure. This includes all <span className="text-white font-bold">exam history</span>, <span className="text-white font-bold">unlocked credentials</span>, and <span className="text-white font-bold">identity badges</span>. This action is definitive and non-reversible.
+              <h2 className="text-2xl font-black text-white mb-3">Delete Your Account</h2>
+              <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-8">
+                This will dissolve your entire academy dashboard history. Your <span className="text-white font-bold">completed exams</span>, <span className="text-white font-bold">scoreboards</span>, and settings cannot be recovered.
               </p>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deleting || deleteTimer > 0}
-                  className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center space-x-4 shadow-2xl ${
+                  className={`w-full py-4 rounded-xl font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
                     deleteTimer > 0 
-                    ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700' 
-                    : 'bg-rose-600 text-white hover:bg-rose-500 active:scale-95 shadow-red-900/40'
+                    ? 'bg-slate-805 text-slate-500 cursor-not-allowed border border-slate-800' 
+                    : 'bg-rose-600 hover:bg-rose-500 text-white active:scale-95 shadow-lg shadow-rose-900/10'
                   }`}
                 >
                   {deleting ? (
-                    <div className="w-7 h-7 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Trash2 className="w-7 h-7" />
-                      <span>{deleteTimer > 0 ? `Authorizing (${deleteTimer}s)` : 'Confirm Erasure'}</span>
+                      <Trash2 className="w-4 h-4" />
+                      <span>{deleteTimer > 0 ? `Please Wait (${deleteTimer}s)` : 'Confirm Delete'}</span>
                     </>
                   )}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="w-full py-4 text-slate-500 font-bold hover:text-white transition-all text-sm uppercase tracking-widest"
+                  className="w-full py-2.5 text-slate-500 hover:text-white transition-all text-xs uppercase tracking-widest font-bold"
                 >
-                  Terminate Protocol (Cancel)
+                  Cancel & Return
                 </button>
               </div>
             </motion.div>
@@ -642,6 +901,5 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
         )}
       </AnimatePresence>
     </div>
-
   );
 }

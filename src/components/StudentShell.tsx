@@ -32,7 +32,7 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
   menuItems.push({ icon: UserIcon, path: '/profile', label: 'Profile' });
 
   return (
-    <div className="max-w-2xl mx-auto pb-32 lg:pb-12 pt-4 relative">
+    <div className="max-w-5xl mx-auto pb-32 md:pb-12 pt-4 relative w-full px-4 sm:px-6">
       {isPreviewMode && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow-2xl border-b border-indigo-500/20 backdrop-blur-md bg-slate-900/90">
           <div className="flex items-center space-x-3">
@@ -54,8 +54,8 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
         </div>
       )}
 
-      {/* Integrated App Header */}
-      <div className="flex items-center justify-between mb-8 px-4">
+      {/* Integrated App Header (Only visible on mobile as desktop has top navbar) */}
+      <div className="md:hidden flex items-center justify-between mb-8 px-4">
         <div className="flex items-center space-x-2">
           <Link to="/feedback" className="p-3 bg-slate-900 rounded-2xl shadow-lg border border-slate-800 text-[#D4AF37] hover:bg-slate-800 transition-all relative">
             <MessageSquare className="w-5 h-5" />
@@ -90,8 +90,8 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
         {children}
       </main>
 
-      {/* Bottom Floating Navigation (Premium Mobile App Style) */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 pointer-events-none z-50">
+      {/* Bottom Floating Navigation (Premium Mobile App Style - hidden on desktop/computers) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 sm:p-6 pointer-events-none z-50">
         <nav className="max-w-md mx-auto bg-slate-900/90 backdrop-blur-xl rounded-[2.5rem] p-1.5 flex items-center justify-around shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-slate-800 pointer-events-auto">
           {menuItems.map(item => {
             const isActive = location.pathname === item.path;
