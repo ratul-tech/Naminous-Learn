@@ -315,7 +315,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
   return (
     <div className={`space-y-6 pb-24 pt-4 ${isAdmin && !isPreviewMode ? 'mt-6' : ''}`}>
       
-      {/* Curator Navigation Header */}
+      {/* Navigation Header */}
       {isAdmin && !isPreviewMode && (
         <div className="max-w-5xl mx-auto">
           <button 
@@ -325,7 +325,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
             <div className="p-2 bg-slate-900 rounded-xl shadow-md border border-slate-800 group-hover:border-[#D4AF37]/40 transition-all">
               <ArrowLeft className="w-5 h-5" />
             </div>
-            <span className="text-xs font-bold uppercase tracking-[0.15em] font-sans">Return to Control Center</span>
+            <span className="text-xs font-bold uppercase tracking-[0.15em] font-sans">Return to Admin Dashboard</span>
           </button>
         </div>
       )}
@@ -440,7 +440,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
               }`}
             >
               <Users className="w-4.5 h-4.5 text-inherit" />
-              <span>System Admins</span>
+              <span>Assigned Instructors</span>
             </button>
           </div>
 
@@ -479,7 +479,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Admins
+              Instructors
             </button>
           </div>
 
@@ -508,9 +508,9 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                   
                   {/* Part A: Customizable Student Avatars */}
                   <div className="space-y-3.5">
-                    <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-350 flex items-center space-x-2">
+                    <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400 flex items-center space-x-2">
                       <Palette className="w-3.5 h-3.5 text-[#D4AF37]" />
-                      <span>Choose Avatar Companion</span>
+                      <span>Choose Your Avatar</span>
                     </label>
                     <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
                       {AVATAR_PRESETS.map((preset) => {
@@ -694,8 +694,8 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                     <Lock className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-100">Changing Password</h3>
-                    <p className="text-[10px] text-slate-505 uppercase font-bold tracking-wider">Configure your login passwords securely</p>
+                    <h3 className="text-lg font-bold text-slate-100">Security Settings</h3>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Configure your login passwords securely</p>
                   </div>
                 </div>
 
@@ -769,8 +769,8 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-100">Portal Administrators</h3>
-                    <p className="text-[10px] text-slate-505 uppercase font-bold tracking-wider">Academy program authors & instructors</p>
+                    <h3 className="text-lg font-bold text-slate-100">Assigned Instructors</h3>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Academy program authors & course instructors</p>
                   </div>
                 </div>
 
@@ -785,11 +785,11 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-black text-slate-100 truncate">{admin.displayName || 'Administrator'}</p>
+                          <p className="text-xs sm:text-sm font-bold text-slate-100 truncate">{admin.displayName || 'Administrator'}</p>
                           <div className="flex items-center space-x-1.5 mt-0.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                              {admin.adminType || 'Super'} Curator
+                              {admin.adminType || 'Lead'} Instructor
                             </span>
                           </div>
                         </div>
@@ -874,9 +874,9 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deleting || deleteTimer > 0}
-                  className={`w-full py-4 rounded-xl font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
+                  className={`w-full py-3.5 sm:py-4 rounded-xl font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
                     deleteTimer > 0 
-                    ? 'bg-slate-805 text-slate-500 cursor-not-allowed border border-slate-800' 
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-800' 
                     : 'bg-rose-600 hover:bg-rose-500 text-white active:scale-95 shadow-lg shadow-rose-900/10'
                   }`}
                 >

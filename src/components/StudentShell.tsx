@@ -34,22 +34,22 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
   return (
     <div className="max-w-5xl mx-auto pb-32 md:pb-12 pt-4 relative w-full px-4 sm:px-6">
       {isPreviewMode && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow-2xl border-b border-indigo-500/20 backdrop-blur-md bg-slate-900/90">
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow-2xl border-b border-slate-800 backdrop-blur-md bg-slate-900/90">
           <div className="flex items-center space-x-3">
-            <div className="bg-indigo-600 p-1.5 rounded-lg">
-              <Shield className="w-4 h-4 text-white" />
+            <div className="bg-amber-500 p-1.5 rounded-lg text-slate-950">
+              <Shield className="w-4 h-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white">Simulation Active</span>
-              <span className="text-[8px] font-medium text-slate-400 uppercase tracking-[0.2em]">Viewing as Scholar</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">Admin Preview Mode</span>
+              <span className="text-[8px] font-medium text-slate-400 uppercase tracking-[0.2em]">Viewing student dashboard simulation</span>
             </div>
           </div>
           <button 
             onClick={exitPreview}
-            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+            className="flex items-center space-x-2 bg-[#D4AF37] hover:bg-amber-400 text-slate-950 px-5 py-2 rounded-xl font-extrabold text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-amber-500/10 active:scale-95"
           >
             <ArrowLeft className="w-3 h-3" />
-            <span>Terminal Access</span>
+            <span>Return to Admin Panel</span>
           </button>
         </div>
       )}
