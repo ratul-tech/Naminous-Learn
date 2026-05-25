@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where, increment } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where, increment, writeBatch, getDocs } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
@@ -189,9 +189,41 @@ export default function Admin({ profile }: AdminProps) {
     setConfirmModal({
       show: true,
       title: 'Delete Student',
-      message: 'Are you sure you want to delete this student record? Their exam history will remain but they will lose access.',
+      message: 'Are you sure you want to delete this student record? This action will permanently remove all associated user and exam data.',
       onConfirm: async () => {
         try {
+          // 1. Delete student-related data in Firestore on client side
+          const batch = writeBatch(db);
+          
+          const collections = ['results', 'payments', 'submissions', 'feedback'];
+          for (const collPath of collections) {
+            try {
+              const q = query(collection(db, collPath), where('uid', '==', uid));
+              const snapshot = await getDocs(q);
+              snapshot.docs.forEach((docSnap) => {
+                batch.delete(docSnap.ref);
+              });
+            } catch (e) {
+              console.warn(`Admin failed to add deletions for ${collPath} to batch:`, e);
+            }
+          }
+          
+          // Delete core profile record
+          batch.delete(doc(db, 'students', uid));
+          
+          // Decrement global student statistics counter
+          try {
+            batch.set(doc(db, 'global_stats', 'counters'), { 
+              studentsCount: increment(-1) 
+            }, { merge: true });
+          } catch (counterErr) {
+            console.warn("Admin failed to batch decrement student counter:", counterErr);
+          }
+          
+          await batch.commit();
+          console.log('Admin successfully completed client-side Firestore student cleanup');
+
+          // 2. Call backend to delete auth user
           await deleteAuthUser(uid);
           setConfirmModal(null);
         } catch (error) {
@@ -217,9 +249,32 @@ export default function Admin({ profile }: AdminProps) {
     setConfirmModal({
       show: true,
       title: 'Delete Admin',
-      message: 'Are you sure you want to remove this administrator? They will lose all administrative privileges.',
+      message: 'Are you sure you want to remove this administrator? They will be permanently removed from the system and lose all access.',
       onConfirm: async () => {
         try {
+          // 1. Delete admin-related data in Firestore on client side
+          const batch = writeBatch(db);
+          
+          const collections = ['feedback'];
+          for (const collPath of collections) {
+            try {
+              const q = query(collection(db, collPath), where('uid', '==', uid));
+              const snapshot = await getDocs(q);
+              snapshot.docs.forEach((docSnap) => {
+                batch.delete(docSnap.ref);
+              });
+            } catch (e) {
+              console.warn(`Admin failed to add deletions for ${collPath} to batch:`, e);
+            }
+          }
+          
+          // Delete admin document
+          batch.delete(doc(db, 'admins', uid));
+          
+          await batch.commit();
+          console.log('Admin successfully completed client-side admin cleanup');
+
+          // 2. Call backend to delete auth user
           await deleteAuthUser(uid);
           setConfirmModal(null);
         } catch (error) {

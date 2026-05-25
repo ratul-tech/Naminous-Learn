@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch, setDoc, increment } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserProfile, Gender, Group } from '../types';
 import { User, Phone, School, GraduationCap, Users, Save, CheckCircle2, Trash2, AlertTriangle, X, Settings, LogOut, Lock, ShieldCheck, Mail, Calendar, Info, ArrowLeft } from 'lucide-react';
@@ -126,7 +126,44 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     setDeleting(true);
     try {
       const uid = profile.uid;
-      // Backend handles everything now
+      const role = profile.role;
+
+      // 1. Delete user-related Firestore data using a atomic client-side transaction/batch
+      const batch = writeBatch(db);
+      
+      const collections = ['results', 'payments', 'submissions', 'feedback'];
+      for (const collPath of collections) {
+        try {
+          const q = query(collection(db, collPath), where('uid', '==', uid));
+          const snapshot = await getDocs(q);
+          snapshot.docs.forEach((docSnap) => {
+            batch.delete(docSnap.ref);
+          });
+        } catch (e) {
+          console.warn(`Failed to query/batch delete ${collPath}:`, e);
+        }
+      }
+      
+      // Delete core profile record
+      if (role === 'admin') {
+        batch.delete(doc(db, 'admins', uid));
+      } else {
+        batch.delete(doc(db, 'students', uid));
+        
+        // Decrement global student statistics counter
+        try {
+          batch.set(doc(db, 'global_stats', 'counters'), { 
+            studentsCount: increment(-1) 
+          }, { merge: true });
+        } catch (counterErr) {
+          console.warn("Failed to batch decrement student counter:", counterErr);
+        }
+      }
+      
+      await batch.commit();
+      console.log('Successfully completed client-side Firestore cleanup');
+
+      // 2. Call backend function to remove original auth account
       await deleteAuthUser(uid);
       await signOut(auth);
       navigate('/');
