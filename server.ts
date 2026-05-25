@@ -15,18 +15,36 @@ async function startServer() {
 
   // Initialize Firebase Admin
   try {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
-    });
-  } catch (e) {
     const configPath = path.join(process.cwd(), "firebase-applet-config.json");
     if (fs.existsSync(configPath)) {
       const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
       admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
         projectId: firebaseConfig.projectId,
       });
+      console.log(`Firebase Admin initialized with applicationDefault and projectId: ${firebaseConfig.projectId}`);
     } else {
-      admin.initializeApp();
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+      });
+      console.log("Firebase Admin initialized with applicationDefault (no config file)");
+    }
+  } catch (e) {
+    console.warn("Firebase Admin applicationDefault initialization failed, running fallback setup:", e);
+    try {
+      const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+      if (fs.existsSync(configPath)) {
+        const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+        admin.initializeApp({
+          projectId: firebaseConfig.projectId,
+        });
+        console.log(`Firebase Admin fallback initialized with config projectId: ${firebaseConfig.projectId}`);
+      } else {
+        admin.initializeApp();
+        console.log("Firebase Admin fallback initialized with default arguments");
+      }
+    } catch (fallbackErr) {
+      console.error("Firebase Admin absolute fallback initialization failed:", fallbackErr);
     }
   }
 
@@ -46,6 +64,10 @@ async function startServer() {
     }
 
     const idToken = authHeader.split('Bearer ')[1];
+
+    if (!idToken || idToken === 'undefined' || idToken === 'null') {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing token string" });
+    }
 
     try {
       const configPath = path.join(process.cwd(), "firebase-applet-config.json");

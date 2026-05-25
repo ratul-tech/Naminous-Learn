@@ -119,6 +119,10 @@ export default function Admin({ profile }: AdminProps) {
   const deleteAuthUser = async (uid: string) => {
     try {
       const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        console.warn('Cannot delete: No ID token found');
+        return false;
+      }
       const response = await fetch('/api/admin/delete-user', {
         method: 'POST',
         headers: {
