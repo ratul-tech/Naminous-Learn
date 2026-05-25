@@ -56,25 +56,25 @@ export default function Leaderboard() {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden bg-white p-6 sm:p-10 md:p-16 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+      <header className="relative overflow-hidden bg-slate-900 p-6 sm:p-10 md:p-16 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-slate-800 text-center">
         <div className="relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-block px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 border border-amber-100"
+            className="inline-block px-4 py-1.5 bg-amber-500/10 text-amber-500 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 border border-amber-500/20"
           >
             Hall of Fame
           </motion.div>
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#7A4900] mb-4 md:mb-6 font-serif">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-4 md:mb-6 font-serif">
             Student Rankings
           </h1>
-          <p className="text-base md:text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed px-4">
+          <p className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed px-4">
             Celebrating the top minds across our global platform. Excellence is noticed, awarded, and remembered.
           </p>
         </div>
         
         {/* Background Decorative */}
-        <Trophy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 text-gray-50 opacity-20 pointer-events-none" />
+        <Trophy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 text-white opacity-5 pointer-events-none" />
       </header>
 
       {/* Filters Overlay */}
@@ -82,9 +82,9 @@ export default function Leaderboard() {
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="bg-white/80 backdrop-blur-md p-2 rounded-2xl shadow-xl border border-white flex flex-wrap gap-2 items-center"
+          className="bg-slate-900/80 backdrop-blur-md p-2 rounded-2xl shadow-xl border border-slate-800 flex flex-wrap gap-2 items-center"
         >
-          <div className="px-3 py-2 flex items-center space-x-2 text-[#7A4900] font-bold text-xs uppercase tracking-wider">
+          <div className="px-3 py-2 flex items-center space-x-2 text-[#D4AF37] font-bold text-xs uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5" />
             <span>Filter By:</span>
           </div>
@@ -99,11 +99,11 @@ export default function Leaderboard() {
                 <select 
                   value={(filters as any)[f.id]}
                   onChange={(e) => setFilters({ ...filters, [f.id]: e.target.value })}
-                  className="appearance-none bg-gray-50 hover:bg-gray-100 border-none rounded-xl px-4 py-2 pr-10 text-xs font-bold text-[#7A4900] transition-colors outline-none cursor-pointer"
+                  className="appearance-none bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl px-4 py-2 pr-10 text-xs font-bold text-slate-300 transition-colors outline-none cursor-pointer"
                 >
                   {f.options.map(o => <option key={o} value={o}>{o === 'All' ? f.label : o}</option>)}
                 </select>
-                <ChevronDown className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <ChevronDown className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
               </div>
             ))}
           </div>
@@ -111,19 +111,19 @@ export default function Leaderboard() {
       </div>
 
       {loading ? (
-        <div className="text-center py-32 flex flex-col items-center space-y-6 bg-white rounded-[3rem] border border-gray-100">
+        <div className="text-center py-32 flex flex-col items-center space-y-6 bg-slate-900 rounded-[3rem] border border-slate-800">
           <motion.div 
             animate={{ rotate: 360 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
             className="w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full"
           />
-          <p className="text-xl font-bold text-[#7A4900] font-serif">Calculating rankings...</p>
+          <p className="text-xl font-bold text-white font-serif">Calculating rankings...</p>
         </div>
       ) : topResults.length === 0 ? (
-        <div className="text-center py-32 bg-white rounded-[3rem] shadow-sm border-2 border-dashed border-gray-100">
-           <Trophy className="w-20 h-20 text-gray-100 mx-auto mb-6" />
-           <h3 className="text-2xl font-bold text-[#7A4900] font-serif mb-2">No Rankings Data</h3>
-           <p className="text-[#545454]">Try adjusting your filters or participate in an exam to appear here!</p>
+        <div className="text-center py-32 bg-slate-900 rounded-[3rem] shadow-sm border-2 border-dashed border-slate-800">
+           <Trophy className="w-20 h-20 text-slate-800 mx-auto mb-6" />
+           <h3 className="text-2xl font-bold text-white font-serif mb-2">No Rankings Data</h3>
+           <p className="text-slate-400">Try adjusting your filters or participate in an exam to appear here!</p>
         </div>
       ) : (
         <div className="space-y-16">
@@ -135,8 +135,8 @@ export default function Leaderboard() {
                 result={top3[1]}
                 rank={2}
                 height="h-40 md:h-56"
-                color="bg-gray-100"
-                medalColor="text-gray-400"
+                color="bg-slate-800"
+                medalColor="text-slate-400"
                 delay={0.2}
               />
             )}
@@ -157,7 +157,7 @@ export default function Leaderboard() {
                 result={top3[2]}
                 rank={3}
                 height="h-32 md:h-44"
-                color="bg-orange-100"
+                color="bg-orange-900/40"
                 medalColor="text-orange-400"
                 delay={0.4}
               />
@@ -165,15 +165,15 @@ export default function Leaderboard() {
           </div>
 
           {/* List View */}
-          <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 overflow-hidden">
-            <div className="grid grid-cols-12 gap-2 sm:gap-4 p-4 sm:p-8 bg-[#f5f5f0]/50 font-bold text-[#7A4900] uppercase text-[8px] sm:text-[10px] tracking-wider sm:tracking-[0.2em] border-b">
+          <div className="bg-slate-900 rounded-[3rem] shadow-xl border border-slate-800 overflow-hidden">
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 p-4 sm:p-8 bg-slate-950 font-bold text-[#D4AF37] uppercase text-[8px] sm:text-[10px] tracking-wider sm:tracking-[0.2em] border-b border-slate-800">
               <div className="col-span-2 sm:col-span-1 text-center">Rank</div>
               <div className="col-span-6 sm:col-span-7">Student Profile</div>
               <div className="col-span-4 sm:col-span-2 text-center sm:text-left">Points</div>
               <div className="hidden sm:block col-span-2 text-right">Details</div>
             </div>
             
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-slate-800">
               <AnimatePresence>
                 {others.map((result, index) => (
                   <motion.div
@@ -181,29 +181,29 @@ export default function Leaderboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="grid grid-cols-12 gap-2 sm:gap-4 p-4 sm:p-8 items-center hover:bg-gray-50 transition-all group"
+                    className="grid grid-cols-12 gap-2 sm:gap-4 p-4 sm:p-8 items-center hover:bg-slate-800/50 transition-all group"
                   >
-                    <div className="col-span-2 sm:col-span-1 text-center font-serif text-xl sm:text-2xl font-bold text-gray-300 group-hover:text-[#D4AF37] transition-colors">
+                    <div className="col-span-2 sm:col-span-1 text-center font-serif text-xl sm:text-2xl font-bold text-slate-700 group-hover:text-[#D4AF37] transition-colors">
                       {index + 4}
                     </div>
                     <div className="col-span-6 sm:col-span-7 flex items-center space-x-2 sm:space-x-4 min-w-0">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-all border border-transparent group-hover:border-amber-100 shrink-0">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-800 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-500 group-hover:bg-amber-500/10 group-hover:text-amber-500 transition-all border border-transparent group-hover:border-amber-500/20 shrink-0">
                         <User className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-[#7A4900] truncate text-sm sm:text-base">{result.displayName}</h4>
-                        <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-xs text-gray-400 truncate">
+                        <h4 className="font-bold text-white truncate text-sm sm:text-base">{result.displayName}</h4>
+                        <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-xs text-slate-500 truncate">
                           <School className="w-2.5 h-2.5 shrink-0" />
                           <span className="truncate">{result.school}</span>
                         </div>
                       </div>
                     </div>
                     <div className="col-span-4 sm:col-span-2">
-                      <div className="text-base sm:text-xl font-bold text-[#7A4900] font-serif">{result.score}%</div>
+                      <div className="text-base sm:text-xl font-bold text-white font-serif">{result.score}%</div>
                       <p className="text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-[#D4AF37]">{result.correctCount} Correct</p>
                     </div>
                     <div className="hidden sm:block col-span-2 text-right">
-                      <div className="inline-block px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-400 rounded-full group-hover:bg-[#7A4900]/5 group-hover:text-[#7A4900] transition-colors whitespace-nowrap">
+                      <div className="inline-block px-3 py-1 bg-slate-800 text-[10px] font-bold text-slate-500 rounded-full group-hover:bg-[#D4AF37]/10 group-hover:text-[#D4AF37] transition-colors whitespace-nowrap">
                         {result.type}
                       </div>
                     </div>
@@ -242,17 +242,17 @@ function PodiumItem({ result, rank, height, color, medalColor, delay }: { result
         <div className="relative inline-block">
           <motion.div 
             whileHover={{ scale: 1.1 }}
-            className={`w-20 h-20 md:w-24 md:h-24 rounded-full bg-white shadow-2xl flex items-center justify-center border-4 ${isFirst ? 'border-[#D4AF37]' : 'border-white'} overflow-hidden`}
+            className={`w-20 h-20 md:w-24 md:h-24 rounded-full bg-slate-800 shadow-2xl flex items-center justify-center border-4 ${isFirst ? 'border-[#D4AF37]' : 'border-slate-800'} overflow-hidden shadow-inner`}
           >
-             <User className="w-10 h-10 text-gray-300" />
+             <User className="w-10 h-10 text-slate-600" />
           </motion.div>
-          <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center ${medalColor} border-2 border-white`}>
+          <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-slate-900 shadow-xl flex items-center justify-center ${medalColor} border-2 border-slate-800`}>
             <Medal className="w-6 h-6" />
           </div>
         </div>
         <div className="mt-4">
-          <h3 className="font-bold text-[#7A4900] truncate w-40 mx-auto text-lg">{result.displayName}</h3>
-          <p className="text-xs text-[#545454] font-medium truncate w-40 mx-auto opacity-70">{result.school}</p>
+          <h3 className="font-bold text-white truncate w-40 mx-auto text-lg">{result.displayName}</h3>
+          <p className="text-xs text-slate-500 font-medium truncate w-40 mx-auto opacity-70">{result.school}</p>
         </div>
       </div>
       
@@ -260,13 +260,13 @@ function PodiumItem({ result, rank, height, color, medalColor, delay }: { result
         whileHover={{ y: -5 }}
         className={`${height} w-full rounded-t-[1.5rem] sm:rounded-t-[2.5rem] flex flex-col items-center justify-center shadow-2xl relative overflow-hidden ${
           rank === 1 ? 'bg-gradient-to-b from-[#D4AF37] to-[#B8860B]' :
-          rank === 2 ? 'bg-gradient-to-b from-gray-200 to-gray-400' :
-          'bg-gradient-to-b from-orange-200 to-orange-400'
+          rank === 2 ? 'bg-gradient-to-b from-slate-600 to-slate-800' :
+          'bg-gradient-to-b from-orange-800 to-orange-950'
         }`}
       >
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
-        <span className={`text-6xl font-black mb-2 ${isFirst ? 'text-white/30' : 'text-black/10'}`}>{rank}</span>
-        <div className={`px-4 py-1 rounded-full text-sm font-bold shadow-sm ${isFirst ? 'bg-white text-[#7A4900]' : 'bg-black/10 text-white'}`}>
+        <span className={`text-6xl font-black mb-2 ${isFirst ? 'text-slate-950/20' : 'text-black/20'}`}>{rank}</span>
+        <div className={`px-4 py-1 rounded-full text-sm font-bold shadow-sm ${isFirst ? 'bg-slate-950 text-[#D4AF37]' : 'bg-black/20 text-white'}`}>
           {result.score}%
         </div>
       </motion.div>

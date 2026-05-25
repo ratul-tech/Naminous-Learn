@@ -7,7 +7,7 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle, PlusCircle, Filter, Trophy, Clock, AlertTriangle, ExternalLink, ShieldPlus } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle, PlusCircle, Filter, Trophy, Clock, AlertTriangle, ExternalLink, ShieldPlus, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType, Resource } from '../types';
@@ -116,6 +116,30 @@ export default function Admin({ profile }: AdminProps) {
     }
   };
 
+  const deleteAuthUser = async (uid: string) => {
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ uid })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Auth deletion error:', errorData.error);
+        // We continue even if auth deletion fails (might be already deleted)
+      }
+      return true;
+    } catch (error) {
+      console.error('Error in deleteAuthUser:', error);
+      return false;
+    }
+  };
+
   const handleDeleteEvent = async (id: string) => {
     setCountdown(5);
     setConfirmModal({
@@ -158,7 +182,7 @@ export default function Admin({ profile }: AdminProps) {
       message: 'Are you sure you want to delete this student record? Their exam history will remain but they will lose access.',
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'students', uid));
+          await deleteAuthUser(uid);
           setConfirmModal(null);
         } catch (error) {
           handleFirestoreError(error, OperationType.DELETE, `students/${uid}`);
@@ -186,7 +210,7 @@ export default function Admin({ profile }: AdminProps) {
       message: 'Are you sure you want to remove this administrator? They will lose all administrative privileges.',
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'admins', uid));
+          await deleteAuthUser(uid);
           setConfirmModal(null);
         } catch (error) {
           handleFirestoreError(error, OperationType.DELETE, `admins/${uid}`);
@@ -229,8 +253,8 @@ export default function Admin({ profile }: AdminProps) {
 
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-    { id: 'users', label: 'Students', icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10', fullAdminOnly: true },
-    { id: 'admins', label: 'Team', icon: Shield, color: 'text-purple-500', bg: 'bg-purple-500/10', fullAdminOnly: true },
+    { id: 'users', label: 'Students', icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { id: 'admins', label: 'Team', icon: Shield, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { id: 'questions', label: 'Question Bank', icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { id: 'payments', label: 'Billing', icon: CreditCard, color: 'text-amber-500', bg: 'bg-amber-500/10', fullAdminOnly: true },
     { id: 'events', label: 'Exams', icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-500/10' },
@@ -241,7 +265,7 @@ export default function Admin({ profile }: AdminProps) {
   ];
 
   return (
-    <div className="min-h-screen -mx-4 -mt-8 bg-[#0f172a] text-slate-200">
+    <div className="min-h-screen bg-[#0f172a] text-slate-200 -mx-4 -mt-8">
       {activeTab === 'menu' ? (
         <div className="p-4 sm:p-8 lg:p-12 max-w-7xl mx-auto">
           <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -293,7 +317,13 @@ export default function Admin({ profile }: AdminProps) {
           <div className="mt-12 p-6 bg-slate-900/50 rounded-3xl border border-slate-800 flex flex-wrap items-center justify-between gap-6">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <img src={profile?.photoURL} alt="" className="w-12 h-12 rounded-2xl border-2 border-slate-800 shadow-sm" referrerPolicy="no-referrer" />
+                {profile?.photoURL ? (
+                  <img src={profile.photoURL} alt="" className="w-12 h-12 rounded-2xl border-2 border-slate-800 shadow-sm" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-slate-700">
+                    <User className="w-6 h-6 text-slate-500" />
+                  </div>
+                )}
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full" />
               </div>
               <div>
@@ -302,7 +332,7 @@ export default function Admin({ profile }: AdminProps) {
                   <p className="text-xs text-slate-500 lowercase">{profile?.email}</p>
                   <span className="w-1 h-1 rounded-full bg-slate-700" />
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${isFullAdmin ? 'text-indigo-400' : 'text-amber-400'}`}>
-                    {isFullAdmin ? 'Super Admin' : 'Question Holder'}
+                    {isFullAdmin ? 'Super' : 'Staff'}
                   </span>
                 </div>
               </div>
@@ -351,9 +381,16 @@ export default function Admin({ profile }: AdminProps) {
                 </button>
               )}
               <div className="h-6 w-px bg-slate-800 mx-2" />
-              <img src={profile?.photoURL} alt="" className="w-8 h-8 rounded-lg border border-slate-800" referrerPolicy="no-referrer" />
+              {profile?.photoURL ? (
+                <img src={profile.photoURL} alt="" className="w-8 h-8 rounded-lg border border-slate-800" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700">
+                  <User className="w-4 h-4 text-slate-500" />
+                </div>
+              )}
             </div>
           </header>
+
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 scroll-smooth bg-slate-950">
             <AnimatePresence mode="wait">
@@ -506,19 +543,38 @@ export default function Admin({ profile }: AdminProps) {
 function SubmissionManager({ submissions, events, users, mathEngine }: { submissions: any[], events: ExamEvent[], users: UserProfile[], mathEngine?: MathEngine }) {
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
   const [filterEvent, setFilterEvent] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredSubmissions = filterEvent === 'all' 
-    ? submissions 
-    : submissions.filter(s => s.eventId === filterEvent);
+  const filteredSubmissions = submissions.filter(s => {
+    const user = users.find(u => u.uid === s.uid);
+    const matchesEvent = filterEvent === 'all' || s.eventId === filterEvent;
+    const matchesSearch = !searchTerm || 
+      user?.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.phone?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesEvent && matchesSearch;
+  });
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-6">
         <div>
           <h2 className="text-xl font-bold text-white tracking-tight">Intelligence Yield</h2>
           <p className="text-xs text-slate-500 font-medium">Verify incoming datasets and student throughput</p>
         </div>
-        <div className="flex items-center space-x-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Search className="w-4 h-4" />
+            </div>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name, email, or phone..."
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+            />
+          </div>
           <div className="relative w-full sm:w-64 group">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
               <Filter className="w-4 h-4" />
@@ -748,20 +804,57 @@ function ModernStatCard({ label, value, icon: Icon, trend, highlight }: { label:
 }
 
 function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
+
+  const filteredFeedback = feedback.filter(f => {
+    const matchesSearch = !searchTerm || 
+      f.displayName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      f.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.message.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'all' || f.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
         <div>
           <h2 className="text-xl font-bold text-white tracking-tight">Signal Analysis</h2>
           <p className="text-xs text-slate-500 font-medium">Intercepted user feedback and system issue reports</p>
         </div>
-        <div className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-          <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Receiver: Active</span>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Search className="w-4 h-4" />
+            </div>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search Feedback..."
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+            />
+          </div>
+          <div className="relative w-full sm:w-48 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Filter className="w-4 h-4" />
+            </div>
+            <select 
+              value={filterType} 
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs uppercase tracking-widest text-slate-300 appearance-none shadow-inner"
+            >
+              <option value="all">All Signals</option>
+              <option value="Feedback">Feedback</option>
+              <option value="Issue">Issues</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {feedback.map((f) => (
+        {filteredFeedback.map((f) => (
           <div key={f.id} className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 hover:border-indigo-500/30 transition-all group relative overflow-hidden shadow-xl">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
               {f.type === 'Issue' ? <AlertTriangle className="w-32 h-32 text-rose-500" /> : <MessageSquare className="w-32 h-32 text-indigo-400" />}
@@ -818,9 +911,15 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
   const [adminType, setAdminType] = useState<'full' | 'question_holder'>('question_holder');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const pendingAdmins = admins.filter(a => a.status === 'pending');
-  const activeAdmins = admins.filter(a => a.status !== 'pending');
+  const filteredAdmins = admins.filter(a => 
+    a.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    a.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const pendingAdmins = filteredAdmins.filter(a => a.status === 'pending');
+  const activeAdmins = filteredAdmins.filter(a => a.status !== 'pending');
 
   const handleUpdateRole = async (uid: string, newType: 'full' | 'question_holder') => {
     try {
@@ -920,15 +1019,29 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
       )}
 
       <div className="space-y-6">
-        <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
-          <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+          <div className="flex-1">
             <h2 className="text-xl font-bold text-white tracking-tight">Administrative Team</h2>
             <p className="text-xs text-slate-500 font-medium">Manage permissions and team structural integrity</p>
           </div>
-          <button onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center space-x-2 shadow-lg shadow-indigo-500/20 transition-all">
-            <Plus className="w-4 h-4" />
-            <span>Provision User</span>
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64 group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                <Search className="w-4 h-4" />
+              </div>
+              <input 
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search Admin..."
+                className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+              />
+            </div>
+            <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg shadow-indigo-500/20 transition-all">
+              <Plus className="w-4 h-4" />
+              <span>Provision User</span>
+            </button>
+          </div>
         </div>
 
         {showAdd && (
@@ -1029,20 +1142,49 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
 
 function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { questions: Question[], onDelete: (id: string) => void, isFullAdmin: boolean, mathEngine?: MathEngine }) {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredQuestions = questions.filter(q => 
+    q.text.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    q.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    q.subject?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+        <div className="flex-1">
           <h2 className="text-xl font-bold text-white tracking-tight">Question Archive</h2>
           <p className="text-xs text-slate-500 font-medium">Central data repository for all exam materials</p>
         </div>
-        <button 
-          onClick={() => navigate('/questions')} 
-          className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center space-x-2 transition-all shadow-lg"
-        >
-          <Edit className="w-4 h-4" />
-          <span>Launch Management</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Search className="w-4 h-4" />
+            </div>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search Question Content..."
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+            />
+          </div>
+          <button 
+            onClick={() => navigate('/questions', { state: { openAdd: true } })} 
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95 shadow-emerald-500/20"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Provision Question</span>
+          </button>
+          <button 
+            onClick={() => navigate('/questions')} 
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg"
+          >
+            <Edit className="w-4 h-4" />
+            <span>Launch Management</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-800">
@@ -1056,7 +1198,7 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-sm">
-              {questions.slice(0, 10).map((q) => (
+              {filteredQuestions.slice(0, 10).map((q) => (
                 <tr key={q.id} className="hover:bg-slate-800/20 transition-colors group">
                   <td className="px-8 py-5">
                     <div className="min-w-0 max-w-[200px] sm:max-w-md">
@@ -1119,6 +1261,13 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
   const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredUsers = users.filter(u => 
+    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleEdit = (user: UserProfile) => {
     setEditingUser(user);
@@ -1146,13 +1295,27 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+        <div className="flex-1">
           <h2 className="text-xl font-bold text-white tracking-tight">Student Management</h2>
           <p className="text-xs text-slate-500 font-medium">Configure pupil profiles and access levels</p>
         </div>
-        <div className="px-4 py-2 bg-slate-950 rounded-xl border border-slate-800">
-          <span className="text-xs font-bold text-indigo-400">{users.length} Active Records</span>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Search className="w-4 h-4" />
+            </div>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name, email, or phone..."
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+            />
+          </div>
+          <div className="px-4 py-3 bg-slate-950 rounded-xl border border-slate-800 shrink-0">
+            <span className="text-xs font-bold text-indigo-400">{filteredUsers.length} Match{filteredUsers.length !== 1 ? 'es' : ''}</span>
+          </div>
         </div>
       </div>
 
@@ -1169,7 +1332,7 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50 text-sm">
-              {users.map((u) => (
+              {filteredUsers.map((u) => (
                 <tr key={u.uid} className="hover:bg-slate-800/30 transition-colors group">
                   <td className="px-8 py-5">
                     <div className="flex items-center space-x-4">
@@ -1336,17 +1499,37 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
 }
 
 function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[], onApprove: (id: string) => void, onReject: (id: string) => void }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredPayments = payments.filter(p => 
+    p.trxId?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    p.uid?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.method?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+        <div className="flex-1">
           <h2 className="text-xl font-bold text-white tracking-tight">Financial Operations</h2>
           <p className="text-xs text-slate-500 font-medium">Verify transaction integrity and revenue flow</p>
         </div>
-        <div className="flex items-center space-x-3">
-           <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-             <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">System Clear</span>
-           </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Search className="w-4 h-4" />
+            </div>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search TRX ID or UID..."
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+            />
+          </div>
+          <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">System Clear</span>
+          </div>
         </div>
       </div>
 
@@ -1362,7 +1545,7 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40 text-sm">
-              {payments.map((p) => (
+              {filteredPayments.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-800/20 transition-colors group">
                   <td className="px-8 py-6">
                     <div className="flex items-center space-x-3">
@@ -1427,6 +1610,7 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
 function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: ExamEvent[], onDelete: (id: string) => void, isFullAdmin: boolean, mathEngine?: MathEngine }) {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ExamEvent | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [eventData, setEventData] = useState<Partial<ExamEvent>>({
     title: '',
     description: '',
@@ -1439,6 +1623,12 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
     questions: [],
     class: 'Class 9',
   });
+
+  const filteredEvents = events.filter(e => 
+    e.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    e.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.class?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
 
@@ -1587,17 +1777,46 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+        <div className="flex-1">
           <h2 className="text-xl font-bold text-white tracking-tight">Timeline Management</h2>
           <p className="text-xs text-slate-500 font-medium">Coordinate upcoming milestones and exam protocols</p>
         </div>
-        {isFullAdmin && (
-          <button onClick={() => setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center space-x-2 transition-all shadow-lg active:scale-95">
-            <Plus className="w-4 h-4" />
-            <span>Provision Event</span>
-          </button>
-        )}
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+              <div className="relative w-full sm:w-48 group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                  <Filter className="w-4 h-4" />
+                </div>
+                <select 
+                  value={eventData.class} 
+                  onChange={(e) => setEventData({ ...eventData, class: e.target.value })}
+                  className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs uppercase tracking-widest text-slate-300 appearance-none shadow-inner"
+                >
+                  <option value="Class 9">Class 9</option>
+                  <option value="Class 10">Class 10</option>
+                  <option value="SSC Candidate">SSC Candidate</option>
+                  <option value="College Admission">College Admission</option>
+                </select>
+              </div>
+              <div className="relative w-full sm:w-64 group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                  <Search className="w-4 h-4" />
+                </div>
+                <input 
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search Event..."
+                  className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+                />
+              </div>
+              {isFullAdmin && (
+                <button onClick={() => setShowForm(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95 whitespace-nowrap">
+                  <Plus className="w-4 h-4" />
+                  <span>Provision Event</span>
+                </button>
+              )}
+            </div>
       </div>
 
       <AnimatePresence>
@@ -1805,7 +2024,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
       </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {events.map((e) => (
+        {filteredEvents.map((e) => (
           <div key={e.id} className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 hover:border-indigo-500/30 transition-all group relative overflow-hidden shadow-xl">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
                 <Trophy className="w-32 h-32" />
@@ -1878,6 +2097,12 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({ title: '', url: '', category: 'Physics', size: '' });
   const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredResources = resources.filter(r => 
+    r.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    r.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1898,15 +2123,29 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg gap-6">
         <div className="space-y-1">
           <h2 className="text-xl font-bold text-white tracking-tight">Active Asset Registry</h2>
-          <p className="text-xs text-slate-500 font-medium font-mono uppercase tracking-[0.1em]">Total PDF Nodes: {resources.length}</p>
+          <p className="text-xs text-slate-500 font-medium font-mono uppercase tracking-[0.1em]">Total PDF Nodes: {filteredResources.length}</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95">
-          <Plus className="w-4 h-4" />
-          <span>Ingest New Asset</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+              <Search className="w-4 h-4" />
+            </div>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search Library..."
+              className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
+            />
+          </div>
+          <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95">
+            <Plus className="w-4 h-4" />
+            <span>Ingest New Asset</span>
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -1964,7 +2203,7 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
       </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {resources.map(r => (
+        {filteredResources.map(r => (
           <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-[2rem] p-8 hover:border-indigo-500/30 transition-all group overflow-hidden relative shadow-xl">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
               <FileText className="w-32 h-32" />
@@ -1976,7 +2215,7 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
               </div>
               <button 
                 onClick={() => onDelete(r.id)} 
-                className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20 opacity-0 group-hover:opacity-100"
+                className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-slate-800 hover:border-rose-500/20 shadow-sm"
                 title="Decommission Asset"
               >
                 <Trash2 className="w-4 h-4" />

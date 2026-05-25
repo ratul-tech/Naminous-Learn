@@ -58,6 +58,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
         <Routes>
           <Route path="/admin" element={<Admin profile={profile} />} />
           <Route path="/profile" element={<Profile profile={profile} setProfile={setProfile} />} />
+          <Route path="/questions" element={<Questions profile={profile} />} />
           <Route path="*" element={<Navigate to="/admin" />} />
         </Routes>
       );
@@ -84,7 +85,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] text-[#545454] font-sans flex flex-col">
+    <div className="min-h-screen bg-[#020617] text-slate-300 font-sans flex flex-col transition-colors duration-500">
       {(!user || location.pathname === '/') && (
         <Navbar user={user} profile={profile} onLogout={onLogout} />
       )}
@@ -138,7 +139,19 @@ export default function App() {
           const data = userDoc.data() as UserProfile;
           setProfile(data);
         } else {
-          setProfile(null);
+          // Special case for bootstrap admin
+          if (firebaseUser.email === 'shahriarislam275@gmail.com' && firebaseUser.emailVerified) {
+            setProfile({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName || 'Initial Admin',
+              role: 'admin',
+              status: 'active',
+              createdAt: new Date().toISOString(),
+            } as UserProfile);
+          } else {
+            setProfile(null);
+          }
         }
       } else {
         setProfile(null);
@@ -153,11 +166,11 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f0]">
+      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-[#7A4900] border-t-transparent rounded-full"
+          className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full"
         />
       </div>
     );
@@ -186,39 +199,39 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
   ];
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className="bg-[#0f172a]/80 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-indigo-500/10">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-4">
             {showNavBack && (
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 mr-2 hover:bg-[#D4AF37]/10 rounded-xl transition-all text-[#7A4900] flex items-center space-x-1 font-bold group"
+                className="p-2 mr-2 hover:bg-white/5 rounded-xl transition-all text-[#D4AF37] flex items-center space-x-1 font-bold group"
                 aria-label="Go back"
               >
                 <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-                <span className="hidden sm:inline text-xs uppercase tracking-wider">Back</span>
+                <span className="hidden sm:inline text-[10px] uppercase tracking-wider">Back</span>
               </button>
             )}
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-              <img src={LOGO_URL} alt="Numinous Learn" className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl shadow-md object-cover" referrerPolicy="no-referrer" />
-              <span className="text-lg sm:text-2xl font-bold text-[#7A4900] truncate">Numinous Learn</span>
+              <img src={LOGO_URL} alt="Numinous Learn" className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl shadow-md object-cover border border-indigo-500/20" referrerPolicy="no-referrer" />
+              <span className="text-lg sm:text-2xl font-bold text-white truncate">Numinous Learn</span>
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
             {user && user.emailVerified && (
-              <div className="hidden sm:flex items-center space-x-4 mr-4 pr-4 border-r border-gray-100">
-                <Link to="/profile" className="flex items-center space-x-2">
-                  <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
-                  <span className="text-sm font-bold text-[#7A4900]">{profile?.displayName}</span>
+              <div className="hidden sm:flex items-center space-x-4 mr-4 pr-4 border-r border-slate-800">
+                <Link to="/profile" className="flex items-center space-x-2 group">
+                  <img src={profile?.photoURL || undefined} alt="Profile" className="w-10 h-10 rounded-full border-2 border-[#D4AF37] group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" />
+                  <span className="text-sm font-bold text-slate-300 group-hover:text-white">{profile?.displayName}</span>
                 </Link>
               </div>
             )}
             
             <button 
               onClick={() => setIsOpen(true)} 
-              className="p-3 rounded-xl text-[#7A4900] hover:bg-[#D4AF37]/10 transition-all flex items-center space-x-2 border-2 border-transparent hover:border-[#D4AF37]/30"
+              className="p-3 rounded-xl text-[#D4AF37] hover:bg-white/5 transition-all flex items-center space-x-2 border border-transparent hover:border-indigo-500/20"
             >
               <Menu className="w-6 h-6" />
               <span className="font-bold hidden sm:block">Menu</span>
@@ -236,22 +249,22 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xs bg-white z-[70] shadow-2xl flex flex-col"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-xs bg-[#0f172a] z-[70] shadow-2xl flex flex-col border-l border-indigo-500/20"
             >
-              <div className="p-6 flex justify-between items-center border-b">
+              <div className="p-6 flex justify-between items-center border-b border-slate-800">
                 <div className="flex items-center space-x-3">
                   <img src={LOGO_URL} alt="Logo" className="h-8 w-8 rounded-lg" referrerPolicy="no-referrer" />
-                  <span className="font-bold text-[#7A4900]">Navigation</span>
+                  <span className="font-bold text-white">Navigation</span>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <X className="w-6 h-6 text-gray-400" />
+                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+                  <X className="w-6 h-6 text-slate-500" />
                 </button>
               </div>
 
@@ -259,11 +272,11 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                 {user ? (
                   <>
                     {user.emailVerified && (
-                      <div className="mb-8 p-4 bg-[#f5f5f0] rounded-2xl flex items-center space-x-4">
+                      <div className="mb-8 p-4 bg-[#020617] rounded-2xl flex items-center space-x-4 border border-slate-800 shadow-inner">
                         <img src={profile?.photoURL || undefined} alt="Profile" className="h-12 w-12 rounded-full border-2 border-[#D4AF37]" referrerPolicy="no-referrer" />
                         <div className="overflow-hidden">
-                          <p className="font-bold text-[#7A4900] truncate">{profile?.displayName}</p>
-                          <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
+                          <p className="font-bold text-white truncate">{profile?.displayName}</p>
+                          <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
                         </div>
                       </div>
                     )}
@@ -275,8 +288,8 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all ${
                           location.pathname === link.path 
-                            ? 'bg-[#D4AF37] text-white shadow-md' 
-                            : 'text-[#545454] hover:bg-gray-50'
+                            ? 'bg-[#D4AF37] text-slate-900 shadow-lg shadow-amber-500/20' 
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
                         }`}
                       >
                         <link.icon className="w-5 h-5" />
@@ -290,8 +303,8 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all mt-4 ${
                           location.pathname === '/admin' 
-                            ? 'bg-[#7A4900] text-white shadow-md' 
-                            : 'text-[#7A4900] bg-[#7A4900]/5 hover:bg-[#7A4900]/10'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
+                            : 'text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 border border-indigo-500/10'
                         }`}
                       >
                         <Shield className="w-5 h-5" />
@@ -299,29 +312,14 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       </Link>
                     )}
 
-                    {user.emailVerified && profile?.role === 'admin' && (
-                      <Link
-                        to="/questions"
-                        onClick={() => setIsOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all mt-2 ${
-                          location.pathname === '/questions' 
-                            ? 'bg-[#D4AF37] text-white shadow-md' 
-                            : 'text-[#7A4900] bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10'
-                        }`}
-                      >
-                        <BookOpen className="w-5 h-5" />
-                        <span>Question Bank</span>
-                      </Link>
-                    )}
-
-                    <div className="pt-8 mt-8 border-t space-y-2">
+                    <div className="pt-8 mt-8 border-t border-slate-800 space-y-2">
                       <Link
                         to="/profile"
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all ${
                           location.pathname === '/profile' 
-                            ? 'bg-[#D4AF37] text-white' 
-                            : 'text-[#545454] hover:bg-gray-50'
+                            ? 'bg-slate-800 text-white' 
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
                         }`}
                       >
                         <UserIcon className="w-5 h-5" />
@@ -332,7 +330,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                           onLogout();
                           setIsOpen(false);
                         }} 
-                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all"
+                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-rose-400 hover:bg-rose-500/10 transition-all"
                       >
                         <LogOut className="w-5 h-5" />
                         <span>Logout</span>
@@ -341,18 +339,18 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                   </>
                 ) : (
                   <div className="space-y-4 pt-4">
-                    <p className="text-sm text-gray-400 text-center mb-6">Join Numinous Learn to start your journey.</p>
+                    <p className="text-sm text-slate-500 text-center mb-6">Join Numinous Learn to start your journey.</p>
                     <Link
                       to="/login"
                       onClick={() => setIsOpen(false)}
-                      className="block w-full text-center bg-[#D4AF37] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-[#B8860B] transition-all"
+                      className="block w-full text-center bg-[#D4AF37] text-slate-900 py-4 rounded-xl font-bold shadow-lg hover:bg-amber-400 transition-all"
                     >
                       Login / Register
                     </Link>
                     <Link
                       to="/admin/login"
                       onClick={() => setIsOpen(false)}
-                      className="block w-full text-center bg-[#7A4900] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-black transition-all"
+                      className="block w-full text-center bg-slate-800 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-slate-700 transition-all border border-slate-700"
                     >
                       Admin Portal
                     </Link>
@@ -360,8 +358,8 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                 )}
               </div>
 
-              <div className="p-6 border-t bg-gray-50">
-                <p className="text-[10px] text-gray-400 text-center uppercase tracking-widest font-bold">
+              <div className="p-6 border-t border-slate-800 bg-[#020617]/50">
+                <p className="text-[10px] text-slate-600 text-center uppercase tracking-widest font-bold">
                   © {new Date().getFullYear()} Numinous Learn
                 </p>
               </div>
@@ -410,9 +408,10 @@ function Landing() {
           <img
             src={LOGO_URL}
             alt="Numinous Learn"
-            className="w-32 h-32 rounded-3xl shadow-2xl relative border-4 border-white object-cover"
+            className="w-32 h-32 rounded-3xl shadow-2xl relative border-4 border-[#0f172a] object-cover"
             referrerPolicy="no-referrer"
           />
+          <div className="absolute -inset-1 bg-gradient-to-tr from-[#D4AF37] to-amber-200 rounded-3xl -z-10 blur-md opacity-20" />
         </motion.div>
 
         <motion.div
@@ -420,24 +419,24 @@ function Landing() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <h1 className="text-4xl font-bold text-[#7A4900] mb-4 leading-tight font-serif">
+          <h1 className="text-4xl font-bold text-white mb-4 leading-tight font-serif">
             Numinous Learn
           </h1>
-          <p className="text-base text-[#545454] max-w-sm mb-8 font-medium opacity-80 leading-relaxed">
+          <p className="text-base text-slate-400 max-w-sm mb-8 font-medium leading-relaxed">
             Your premium sanctuary for academic excellence and high-stakes evaluation.
           </p>
           
           <div className="flex flex-col gap-3 w-full max-w-[280px] mx-auto">
             <Link
               to="/login?role=student"
-              className="w-full bg-[#D4AF37] text-white py-4 rounded-2xl font-bold text-lg hover:bg-[#B8860B] shadow-xl shadow-amber-200 transition-all active:scale-95 flex items-center justify-center space-x-2"
+              className="w-full bg-[#D4AF37] text-slate-900 py-4 rounded-2xl font-bold text-lg hover:bg-amber-400 shadow-xl shadow-amber-500/10 transition-all active:scale-95 flex items-center justify-center space-x-2"
             >
               <LogIn className="w-5 h-5" />
               <span>Get Started</span>
             </Link>
             <Link
               to="/admin/login"
-              className="w-full bg-white text-[#7A4900] border-2 border-[#7A4900]/10 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all flex items-center justify-center space-x-2"
+              className="w-full bg-slate-800 text-white border border-slate-700 py-4 rounded-2xl font-bold text-lg hover:bg-slate-700 transition-all flex items-center justify-center space-x-2"
             >
               <Shield className="w-5 h-5" />
               <span>Admin Login</span>
@@ -448,18 +447,18 @@ function Landing() {
 
       {/* App Stats List */}
       <section className="px-4">
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 grid grid-cols-3 gap-2">
+        <div className="bg-[#0f172a] rounded-3xl p-6 shadow-xl border border-slate-800 grid grid-cols-3 gap-2">
           <div className="text-center">
             <h3 className="text-xl font-bold text-[#D4AF37]">{loading ? '...' : formatNumber(stats.studentsCount)}</h3>
-            <p className="text-[9px] font-black uppercase text-gray-400">Users</p>
+            <p className="text-[9px] font-black uppercase text-slate-500">Users</p>
           </div>
-          <div className="text-center border-x">
+          <div className="text-center border-x border-slate-800">
             <h3 className="text-xl font-bold text-[#D4AF37]">{loading ? '...' : formatNumber(stats.questionsCount)}</h3>
-            <p className="text-[9px] font-black uppercase text-gray-400">Solved</p>
+            <p className="text-[9px] font-black uppercase text-slate-500">Solved</p>
           </div>
           <div className="text-center">
             <h3 className="text-xl font-bold text-[#D4AF37]">{loading ? '...' : formatNumber(stats.eventsCount)}</h3>
-            <p className="text-[9px] font-black uppercase text-gray-400">Events</p>
+            <p className="text-[9px] font-black uppercase text-slate-500">Events</p>
           </div>
         </div>
       </section>
@@ -468,15 +467,15 @@ function Landing() {
       <section className="px-4 pb-12">
         <div className="space-y-4">
           {[
-            { title: "Smart Practice", icon: BookOpen, color: "text-blue-600 bg-blue-50" },
-            { title: "Live Competition", icon: Calendar, color: "text-purple-600 bg-purple-50" },
-            { title: "Global Ranks", icon: Trophy, color: "text-amber-600 bg-amber-50" }
+            { title: "Smart Practice", icon: BookOpen, color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
+            { title: "Live Competition", icon: Calendar, color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
+            { title: "Global Ranks", icon: Trophy, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" }
           ].map((item, i) => (
-            <div key={i} className="flex items-center space-x-4 bg-white p-4 rounded-2xl border border-gray-50 shadow-sm">
-              <div className={`p-3 rounded-xl ${item.color}`}>
+            <div key={i} className={`flex items-center space-x-4 bg-slate-900 p-4 rounded-2xl border ${item.color.split(' ')[2]} shadow-lg`}>
+              <div className={`p-3 rounded-xl ${item.color.split(' ').slice(0, 2).join(' ')}`}>
                 <item.icon className="w-5 h-5" />
               </div>
-              <span className="font-bold text-[#7A4900]">{item.title}</span>
+              <span className="font-bold text-slate-200">{item.title}</span>
             </div>
           ))}
         </div>
@@ -487,16 +486,16 @@ function Landing() {
 
 function Footer({ user }: { user: User | null }) {
   return (
-    <footer className="bg-white border-t mt-auto">
+    <footer className="bg-[#0f172a] border-t border-slate-800 mt-auto">
       <div className="container mx-auto px-4 py-12">
         {(!user || !user.emailVerified) && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-6">
-                <img src={LOGO_URL} alt="Numinous Learn" className="h-10 w-10 rounded-lg" referrerPolicy="no-referrer" />
-                <span className="text-xl font-bold text-[#7A4900]">Numinous Learn</span>
+                <img src={LOGO_URL} alt="Numinous Learn" className="h-10 w-10 rounded-lg border border-indigo-500/20" referrerPolicy="no-referrer" />
+                <span className="text-xl font-bold text-white">Numinous Learn</span>
               </div>
-              <p className="text-[#545454] leading-relaxed max-w-sm">
+              <p className="text-slate-400 leading-relaxed max-w-sm">
                 Empowering students to achieve excellence through structured practice and real-time evaluation. Join thousands of students on their journey to success.
               </p>
               <div className="flex items-center space-x-4 mt-6">
@@ -504,7 +503,7 @@ function Footer({ user }: { user: User | null }) {
                   href="https://www.youtube.com/@NuminousLearn" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                  className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-lg border border-red-500/20"
                 >
                   <Youtube className="w-5 h-5" />
                 </a>
@@ -512,27 +511,27 @@ function Footer({ user }: { user: User | null }) {
                   href="https://www.facebook.com/share/18hQRvHAc5/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                  className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all shadow-lg border border-blue-500/20"
                 >
                   <Facebook className="w-5 h-5" />
                 </a>
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#7A4900] mb-6">Quick Links</h3>
+              <h3 className="text-lg font-bold text-white mb-6">Quick Links</h3>
               <ul className="space-y-4">
-                <li><Link to="/practice" className="hover:text-[#D4AF37] transition-all">Practice Modules</Link></li>
-                <li><Link to="/leaderboard" className="hover:text-[#D4AF37] transition-all">Leaderboard</Link></li>
-                <li><Link to="/events" className="hover:text-[#D4AF37] transition-all">Upcoming Events</Link></li>
-                <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Submit Feedback</Link></li>
+                <li><Link to="/practice" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Practice Modules</span></Link></li>
+                <li><Link to="/leaderboard" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Leaderboard</span></Link></li>
+                <li><Link to="/events" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Upcoming Events</span></Link></li>
+                <li><Link to="/feedback" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Submit Feedback</span></Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#7A4900] mb-6">Support</h3>
+              <h3 className="text-lg font-bold text-white mb-6">Support</h3>
               <ul className="space-y-4">
-                <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Report an Issue</Link></li>
-                <li><Link to="/feedback" className="hover:text-[#D4AF37] transition-all">Suggestions</Link></li>
-                <li className="text-sm text-gray-400">© {new Date().getFullYear()} Numinous Learn. All rights reserved.</li>
+                <li><Link to="/feedback" className="text-slate-400 hover:text-[#D4AF37] transition-all">Report an Issue</Link></li>
+                <li><Link to="/feedback" className="text-slate-400 hover:text-[#D4AF37] transition-all">Suggestions</Link></li>
+                <li className="text-sm text-slate-500 pt-4 border-t border-slate-800/50">© {new Date().getFullYear()} Numinous Learn. All rights reserved.</li>
               </ul>
             </div>
           </div>

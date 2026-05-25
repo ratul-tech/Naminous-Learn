@@ -16,13 +16,18 @@ service cloud.firestore {
     function existing() { return resource.data; }
     
     // Auth checks - Pillar 4 (Tiered Identity)
+    function isBootstrapAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email == 'shahriarislam275@gmail.com' && 
+             request.auth.token.email_verified == true;
+    }
+
     function isAdmin() { 
-      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); 
+      return isBootstrapAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))); 
     }
     
     function isActiveAdmin() {
-      // Identity role is only valid if user is member of admin registry.
-      return isAdmin() && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active';
+      return isBootstrapAdmin() || (isAdmin() && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active');
     }
 
     // ===============================================================
@@ -32,64 +37,57 @@ service cloud.firestore {
     function isValidStudent(data) {
       return data.keys().hasAll(['uid', 'email', 'role']) &&
              data.uid == request.auth.uid &&
-             data.email is string &&
              data.role == 'student' &&
-             data.keys().size() <= 15;
+             data.keys().size() <= 30;
+    }
+
+    function isValidAdmin(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'status']) &&
+             // No isOwner check here because admins are often created/updated by other admins
+             data.role == 'admin' &&
+             data.status in ['pending', 'active'] &&
+             data.keys().size() <= 30;
     }
 
     function isValidQuestion(data) {
       return data.keys().hasAll(['text', 'options', 'correctAnswer', 'category']) &&
-             data.text is string && data.text.size() <= 5000 &&
-             data.options is list && data.options.size() >= 2 &&
-             data.options.size() <= 6 &&
-             data.correctAnswer is int &&
-             data.category is string &&
-             data.keys().size() <= 15;
+             data.text is string &&
+             data.options is list &&
+             data.keys().size() <= 30;
     }
 
     function isValidEvent(data) {
       return data.keys().hasAll(['title', 'entryFee', 'startTime', 'duration']) &&
-             data.title is string && data.title.size() <= 200 &&
-             data.entryFee is number &&
-             data.duration is int &&
-             data.keys().size() <= 20;
+             data.keys().size() <= 30;
     }
 
     function isValidPayment(data) {
       return data.keys().hasAll(['uid', 'eventId', 'trxId', 'status']) &&
              data.uid == request.auth.uid &&
-             data.eventId is string &&
-             data.trxId is string && data.trxId.size() <= 100 &&
-             data.status in ['pending', 'approved', 'rejected'] &&
-             data.keys().size() <= 10;
+             data.keys().size() <= 20;
     }
 
     function isValidResult(data) {
-      return data.keys().hasAll(['uid', 'score', 'type', 'createdAt']) &&
+      return data.keys().hasAll(['uid', 'score', 'type']) &&
              data.uid == request.auth.uid &&
-             data.score is number &&
-             data.type in ['Practice', 'Event'] &&
-             data.keys().size() <= 15;
+             data.keys().size() <= 30;
     }
 
     function isValidFeedback(data) {
       return data.keys().hasAll(['uid', 'type', 'message']) &&
              data.uid == request.auth.uid &&
-             data.message is string && data.message.size() <= 2000 &&
-             data.keys().size() <= 10;
+             data.keys().size() <= 20;
     }
 
     function isValidResource(data) {
       return data.keys().hasAll(['title', 'url', 'category']) &&
-             data.title is string && data.url is string &&
-             data.keys().size() <= 10;
+             data.keys().size() <= 20;
     }
 
     function isValidSubmission(data) {
-      return data.keys().hasAll(['uid', 'eventId', 'completed']) &&
+      return data.keys().hasAll(['uid', 'eventId']) &&
              data.uid == request.auth.uid &&
-             data.eventId is string &&
-             data.keys().size() <= 10;
+             data.keys().size() <= 20;
     }
 
     // ===============================================================
@@ -99,6 +97,7 @@ service cloud.firestore {
     // Global Statistics
     match /global_stats/{statId} {
       allow read: if true;
+      // Allow any signed in user to increment counters (e.g. total users)
       allow write: if isSignedIn() && isValidId(statId);
     }
 
@@ -106,17 +105,15 @@ service cloud.firestore {
     match /students/{uid} {
       allow read: if isSignedIn();
       allow create: if isOwner(uid) && isValidStudent(incoming());
-      allow update: if (isActiveAdmin() || (isOwner(uid) && incoming().role == existing().role)) 
-                    && isValidStudent(incoming());
+      allow update: if (isActiveAdmin() || isOwner(uid)) && isValidStudent(incoming());
       allow delete: if isActiveAdmin() || isOwner(uid);
     }
 
     // Admin Registry
     match /admins/{uid} {
-      // App.tsx read check for self doc
-      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      // Only active admins can create/update other admins
-      allow create: if (isActiveAdmin() || (!exists(/databases/$(database)/documents/admins/initial_provisioned))); 
+      allow read: if isSignedIn(); // Allow all signed in users to check admin status
+      // Bootstrap admin can create their own record, or active admins can create/manage others
+      allow create: if (isBootstrapAdmin() && isOwner(uid)) || isActiveAdmin();
       allow update: if isActiveAdmin();
       allow delete: if isActiveAdmin() && !isOwner(uid);
     }
@@ -124,17 +121,14 @@ service cloud.firestore {
     // Question bank
     match /questions/{questionId} {
       allow read: if isSignedIn();
-      allow create: if isActiveAdmin() && isValidQuestion(incoming());
-      allow update: if isActiveAdmin() && isValidQuestion(incoming()) && 
-                    incoming().diff(existing()).affectedKeys().hasOnly(['text', 'options', 'correctAnswer', 'category', 'subCategory', 'board', 'college', 'class', 'subject']);
+      allow create, update: if isActiveAdmin() && isValidQuestion(incoming());
       allow delete: if isActiveAdmin();
     }
 
     // Exam Events
     match /events/{eventId} {
       allow read: if isSignedIn();
-      allow create: if isActiveAdmin() && isValidEvent(incoming());
-      allow update: if isActiveAdmin() && isValidEvent(incoming());
+      allow create, update: if isActiveAdmin() && isValidEvent(incoming());
       allow delete: if isActiveAdmin();
     }
 
@@ -142,16 +136,12 @@ service cloud.firestore {
     match /payments/{paymentId} {
       allow read: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn() && isValidPayment(incoming());
-      // Transition pattern for approved status
-      allow update: if isActiveAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow update: if isActiveAdmin();
       allow delete: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
 
     // Exam Results
     match /results/{resultId} {
-      // Invariant: Rules must enforce list isolation (Pillar 8)
-      allow list: if resource.data.uid == request.auth.uid || isAdmin() || true; // results are public for leaderboard
-      allow get: if true;
       allow read: if true;
       allow create: if isSignedIn() && isValidResult(incoming());
       allow update: if isActiveAdmin();
@@ -168,8 +158,7 @@ service cloud.firestore {
     // Academic Resources
     match /resources/{resourceId} {
       allow read: if isSignedIn();
-      allow create: if isActiveAdmin() && isValidResource(incoming());
-      allow update: if isActiveAdmin() && isValidResource(incoming());
+      allow create, update: if isActiveAdmin() && isValidResource(incoming());
       allow delete: if isActiveAdmin();
     }
 

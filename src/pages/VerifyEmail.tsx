@@ -106,23 +106,23 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center"
+        className="bg-slate-900 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-slate-800"
       >
-        <div className="w-20 h-20 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 bg-amber-500/10 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-500/20">
           {verified ? (
-            <CheckCircle2 className="w-10 h-10 text-green-500" />
+            <CheckCircle2 className="w-10 h-10 text-emerald-400" />
           ) : (
             <Mail className="w-10 h-10" />
           )}
         </div>
 
-        <h1 className="text-3xl font-bold text-[#7A4900] mb-4">
+        <h1 className="text-3xl font-bold text-white mb-4">
           {verified ? 'Email Verified!' : 'Verify Your Email'}
         </h1>
         
-        <div className="space-y-4 text-[#545454] mb-8">
+        <div className="space-y-4 text-slate-400 mb-8">
           {verified ? (
-            <p className="text-lg font-medium text-green-600">
+            <p className="text-lg font-medium text-emerald-400">
               Great! Your account is now fully activated.
             </p>
           ) : (
@@ -130,9 +130,9 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
               <p>
                 We've sent a verification link to:
                 <br />
-                <span className="font-bold text-[#7A4900]">{auth.currentUser?.email}</span>
+                <span className="font-bold text-[#D4AF37]">{auth.currentUser?.email}</span>
               </p>
-              <p className="text-sm bg-blue-50 p-4 rounded-2xl border border-blue-100">
+              <p className="text-sm bg-slate-950 p-4 rounded-2xl border border-slate-800 text-slate-500">
                 Please check your <strong>Inbox</strong> or <strong>Spam</strong> folder. Click the link in that email to verify your account.
               </p>
             </>
@@ -140,13 +140,13 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
         </div>
 
         {message && (
-          <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-2xl border border-green-100 text-sm font-medium">
+          <div className="mb-6 p-4 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 text-sm font-medium">
             {message}
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm font-medium flex items-center justify-center space-x-2">
+          <div className="mb-6 p-4 bg-rose-500/10 text-rose-500 rounded-2xl border border-rose-500/20 text-sm font-medium flex items-center justify-center space-x-2">
             <AlertCircle className="w-4 h-4" />
             <span>{error}</span>
           </div>
@@ -156,7 +156,7 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
           <button
             onClick={handleCheckVerification}
             disabled={checking || verified}
-            className="w-full bg-[#D4AF37] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#B8860B] shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+            className="w-full bg-[#D4AF37] text-slate-950 py-4 rounded-xl font-bold text-lg hover:bg-[#B8860B] shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
           >
             {checking ? (
               <RefreshCw className="w-5 h-5 animate-spin" />
@@ -171,9 +171,9 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
               <button
                 onClick={handleResend}
                 disabled={loading || cooldown > 0}
-                className="w-full bg-white text-[#7A4900] border-2 border-[#7A4900] py-3 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                className="w-full bg-slate-950 text-white border-2 border-slate-800 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4 text-[#D4AF37]" />
                 <span>
                   {loading ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend Verification Link'}
                 </span>
@@ -181,7 +181,7 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
 
               <button
                 onClick={handleLogout}
-                className="w-full text-gray-400 font-bold hover:text-red-500 transition-all flex items-center justify-center space-x-2 pt-4"
+                className="w-full text-slate-500 font-bold hover:text-rose-500 transition-all flex items-center justify-center space-x-2 pt-4"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout and try another email</span>
@@ -191,5 +191,6 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
         </div>
       </motion.div>
     </div>
+
   );
 }

@@ -7,7 +7,7 @@ import { UserRole, UserProfile } from '../types';
 import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
-import { handleFirestoreError } from '../lib/error-handler';
+import { handleFirestoreError, getAuthErrorMessage } from '../lib/error-handler';
 import { OperationType } from '../types';
 
 export default function Login() {
@@ -81,7 +81,7 @@ export default function Login() {
         };
         
         await setDoc(doc(db, 'admins', user.uid), adminRequest);
-        setMessage("Request sent! An administrator will review your account soon. You cannot log in until approved.");
+        setMessage("আবেদন পাঠানো হয়েছে! একজন অ্যাডমিনিস্ট্রেটর শীঘ্রই আপনার অ্যাকাউন্টটি পর্যালোচনা করবেন। অনুমোদনের আগে আপনি লগইন করতে পারবেন না।");
         await signOut(auth);
         setAuthMode('login');
       } else {
@@ -93,7 +93,7 @@ export default function Login() {
         let userDoc = await getDoc(doc(db, collectionName, user.uid));
 
         if (!userDoc.exists()) {
-          setError(`Account not found in ${selectedRole} records.`);
+          setError(`${selectedRole === 'admin' ? 'অ্যাডমিন' : 'শিক্ষার্থী'} রেকর্ডে কোনো অ্যাকাউন্ট পাওয়া যায়নি।`);
           await signOut(auth);
           setLoading(false);
           return;
@@ -102,7 +102,7 @@ export default function Login() {
         const profileData = userDoc.data() as UserProfile;
 
         if (profileData.role === 'admin' && profileData.status === 'pending') {
-          setError("Your administrator account is pending activation. Please wait for a master administrator to approve your request.");
+          setError("আপনার অ্যাডমিনিস্ট্রেটর অ্যাকাউন্টটি অনুমোদনের অপেক্ষায় রয়েছে। দয়া করে অপেক্ষা করুন।");
           await signOut(auth);
           setLoading(false);
           return;
@@ -118,13 +118,7 @@ export default function Login() {
       }
     } catch (err: any) {
       console.error("Auth error:", err);
-      if (err.code === 'auth/email-already-in-use') {
-        setError("This email is already registered. Please login instead.");
-      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError("Invalid email or password.");
-      } else {
-        setError(err.message || "Authentication failed.");
-      }
+      setError(getAuthErrorMessage(err.code));
     } finally {
       setLoading(false);
     }
@@ -135,16 +129,16 @@ export default function Login() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-2xl max-w-lg w-full border border-gray-100"
+        className="bg-slate-900 p-6 sm:p-10 rounded-[2.5rem] shadow-2xl max-w-lg w-full border border-slate-800"
       >
         <div className="text-center mb-8 md:mb-10">
-          <div className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center shadow-lg transition-colors ${selectedRole === 'admin' ? 'bg-[#7A4900] text-white' : 'bg-[#D4AF37] text-white'}`}>
+          <div className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center shadow-lg transition-colors ${selectedRole === 'admin' ? 'bg-[#7A4900] text-white' : 'bg-[#D4AF37] text-slate-950'}`}>
             {selectedRole === 'admin' ? <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10" /> : <UserIcon className="w-8 h-8 sm:w-10 sm:h-10" />}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#7A4900] font-serif">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white font-serif">
             {selectedRole === 'admin' ? 'Admin Portal' : 'Student Portal'}
           </h1>
-          <p className="text-[#545454] mt-3 font-medium opacity-70">
+          <p className="text-slate-400 mt-3 font-medium opacity-70">
             {authMode === 'login' ? 'Access your dashboard' : 
              authMode === 'register' ? 'Join our learning community' : 
              'Request administrative privileges'}
@@ -152,16 +146,16 @@ export default function Login() {
         </div>
 
         {!hasPreselectedRole && (
-          <div className="flex bg-[#f5f5f0] p-1 rounded-2xl mb-8">
+          <div className="flex bg-slate-950 p-1 rounded-2xl mb-8 border border-slate-800">
             <button
               onClick={() => { setSelectedRole('student'); setAuthMode('login'); setError(''); setMessage(''); }}
-              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'student' ? 'bg-white text-[#D4AF37] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'student' ? 'bg-slate-800 text-[#D4AF37] shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
             >
               Student Account
             </button>
             <button
               onClick={() => { setSelectedRole('admin'); setAuthMode('login'); setError(''); setMessage(''); }}
-              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'admin' ? 'bg-white text-[#7A4900] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${selectedRole === 'admin' ? 'bg-slate-800 text-[#D4AF37] shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
             >
               Admin Account
             </button>
@@ -171,15 +165,15 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {(authMode !== 'login') && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-              <label className="block text-sm font-bold text-[#7A4900] mb-2 px-1">Full Name</label>
+              <label className="block text-sm font-bold text-slate-400 mb-2 px-1">Full Name</label>
               <div className="relative">
-                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="John Doe"
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-100 focus:border-[#D4AF37] outline-none transition-all font-medium"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-800 bg-slate-950 focus:border-[#D4AF37] text-white outline-none transition-all font-medium placeholder-slate-700"
                   required
                 />
               </div>
@@ -187,44 +181,44 @@ export default function Login() {
           )}
 
           <div>
-            <label className="block text-sm font-bold text-[#7A4900] mb-2 px-1">Email Address</label>
+            <label className="block text-sm font-bold text-slate-400 mb-2 px-1">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-100 focus:border-[#D4AF37] outline-none transition-all font-medium"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-800 bg-slate-950 focus:border-[#D4AF37] text-white outline-none transition-all font-medium placeholder-slate-700"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#7A4900] mb-2 px-1">Password</label>
+            <label className="block text-sm font-bold text-slate-400 mb-2 px-1">Password</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-100 focus:border-[#D4AF37] outline-none transition-all font-medium"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-800 bg-slate-950 focus:border-[#D4AF37] text-white outline-none transition-all font-medium placeholder-slate-700"
                 required
               />
             </div>
           </div>
 
           {error && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center space-x-2 text-red-500 bg-red-50 p-4 rounded-2xl border border-red-100 text-sm font-bold">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center space-x-2 text-rose-500 bg-rose-500/10 p-4 rounded-2xl border border-rose-500/20 text-sm font-bold">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </motion.div>
           )}
 
           {message && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-green-600 bg-green-50 p-4 rounded-2xl border border-green-100 text-sm font-bold text-center">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-emerald-400 bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-sm font-bold text-center">
               {message}
             </motion.div>
           )}
@@ -232,7 +226,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-5 rounded-2xl font-bold text-lg shadow-xl transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-3 disabled:opacity-50 text-white ${selectedRole === 'admin' ? 'bg-[#7A4900] hover:bg-black shadow-amber-900/20' : 'bg-[#D4AF37] hover:bg-[#B8860B] shadow-amber-200'}`}
+            className={`w-full py-5 rounded-2xl font-bold text-lg shadow-xl transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-3 disabled:opacity-50 text-white ${selectedRole === 'admin' ? 'bg-[#7A4900] hover:bg-black shadow-amber-900/20' : 'bg-[#D4AF37] text-slate-950 hover:bg-[#B8860B] shadow-amber-200'}`}
           >
             {loading ? (
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -257,17 +251,18 @@ export default function Login() {
             <div className="flex flex-col space-y-3">
               <button
                 onClick={() => { setAuthMode(authMode === 'login' ? 'request' : 'login'); setError(''); setMessage(''); }}
-                className="text-[#7A4900] font-bold hover:underline py-2"
+                className="text-[#D4AF37] font-bold hover:underline py-2"
               >
                 {authMode === 'login' ? "Apply for Admin Access" : "Back to Admin Login"}
               </button>
               {authMode === 'login' && (
-                <p className="text-xs text-gray-400 font-medium italic">Admin accounts must be approved by the system owner.</p>
+                <p className="text-xs text-slate-500 font-medium italic">Admin accounts must be approved by the system owner.</p>
               )}
             </div>
           )}
         </div>
       </motion.div>
     </div>
+
   );
 }

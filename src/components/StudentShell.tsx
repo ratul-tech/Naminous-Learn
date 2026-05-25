@@ -57,29 +57,29 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
       {/* Integrated App Header */}
       <div className="flex items-center justify-between mb-8 px-4">
         <div className="flex items-center space-x-2">
-          <Link to="/feedback" className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100 text-[#7A4900] hover:bg-gray-50 transition-all relative">
+          <Link to="/feedback" className="p-3 bg-slate-900 rounded-2xl shadow-lg border border-slate-800 text-[#D4AF37] hover:bg-slate-800 transition-all relative">
             <MessageSquare className="w-5 h-5" />
-            <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
+            <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-slate-900 shadow-sm" />
           </Link>
         </div>
         <div className="flex items-center space-x-4 text-right">
           <div>
             <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.2em]">{profile.role === 'admin' ? 'Curator' : 'Scholar'}</p>
-            <h2 className="text-xl font-bold text-[#7A4900] truncate max-w-[200px]">{profile.displayName.split(' ')[0]}</h2>
+            <h2 className="text-xl font-bold text-white truncate max-w-[200px]">{profile.displayName.split(' ')[0]}</h2>
           </div>
           <Link to="/dashboard" className="relative group">
             <img 
               src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.displayName}`} 
               alt="" 
-              className="w-12 h-12 rounded-2xl border-2 border-white shadow-md object-cover transition-transform group-hover:scale-105"
+              className="w-12 h-12 rounded-2xl border-2 border-slate-800 shadow-xl object-cover transition-transform group-hover:scale-105"
               referrerPolicy="no-referrer"
             />
             {profile.role === 'admin' ? (
-              <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-purple-600 border-2 border-white rounded-full flex items-center justify-center shadow-sm">
-                <Shield className="w-2.5 h-2.5 text-white" />
+              <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-indigo-600 border-2 border-slate-900 rounded-full flex items-center justify-center shadow-lg">
+                < Shield className="w-2.5 h-2.5 text-white" />
               </div>
             ) : (
-              <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" />
+              <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full shadow-lg" />
             )}
           </Link>
         </div>
@@ -92,7 +92,7 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
 
       {/* Bottom Floating Navigation (Premium Mobile App Style) */}
       <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 pointer-events-none z-50">
-        <nav className="max-w-md mx-auto bg-[#7A4900]/95 backdrop-blur-xl rounded-[2.5rem] p-1.5 flex items-center justify-around shadow-[0_20px_50px_rgba(122,73,0,0.3)] border border-white/20 pointer-events-auto">
+        <nav className="max-w-md mx-auto bg-slate-900/90 backdrop-blur-xl rounded-[2.5rem] p-1.5 flex items-center justify-around shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-slate-800 pointer-events-auto">
           {menuItems.map(item => {
             const isActive = location.pathname === item.path;
             return (
@@ -100,7 +100,7 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
                 key={item.label}
                 to={item.path}
                 className={`p-3 sm:p-4 rounded-[2rem] transition-all flex flex-col items-center flex-1 relative group ${
-                  isActive ? 'bg-white text-[#7A4900] shadow-xl translate-y-[-4px]' : 'text-white/60 hover:text-white'
+                  isActive ? 'bg-[#D4AF37] text-slate-900 shadow-2xl translate-y-[-4px]' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
                 <item.icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ${isActive ? 'scale-110 mb-0.5' : 'scale-100'}`} />
@@ -111,7 +111,7 @@ export default function StudentShell({ children, profile }: StudentShellProps) {
                 {isActive && (
                   <motion.div 
                     layoutId="active-indicator"
-                    className="absolute -bottom-1 w-6 h-1 bg-[#D4AF37] rounded-full"
+                    className="absolute -bottom-1 w-6 h-1 bg-slate-900/30 rounded-full"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}

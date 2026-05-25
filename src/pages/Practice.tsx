@@ -164,15 +164,15 @@ export default function Practice({ profile }: PracticeProps) {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (loading) return <div className="text-center py-20">Loading practice modules...</div>;
+  if (loading) return <div className="text-center py-20 text-slate-500 font-bold tracking-widest animate-pulse uppercase">Loading practice modules...</div>;
 
   if (!profile?.class) {
     return (
       <div className="max-w-md mx-auto py-20 text-center space-y-6">
-        <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto" />
-        <h2 className="text-2xl font-bold text-[#7A4900]">Profile Incomplete</h2>
-        <p className="text-[#545454]">Please complete your profile and select your Class to access practice exams.</p>
-        <button onClick={() => window.location.href = '/profile'} className="bg-[#D4AF37] text-white px-8 py-3 rounded-xl font-bold">
+        <AlertCircle className="w-16 h-16 text-amber-500 mx-auto" />
+        <h2 className="text-2xl font-bold text-white">Profile Incomplete</h2>
+        <p className="text-slate-400">Please complete your profile and select your Class to access practice exams.</p>
+        <button onClick={() => window.location.href = '/profile'} className="bg-[#D4AF37] text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/10">
           Go to Profile
         </button>
       </div>
@@ -181,24 +181,24 @@ export default function Practice({ profile }: PracticeProps) {
 
   return (
     <div className="space-y-12">
-      <header className="relative overflow-hidden bg-white p-6 sm:p-10 md:p-16 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+      <header className="relative overflow-hidden bg-slate-900 p-6 sm:p-10 md:p-16 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-slate-800 text-center">
         <div className="relative z-10">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-block px-4 py-1.5 bg-[#7A4900]/5 text-[#7A4900] rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"
+            className="inline-block px-4 py-1.5 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"
           >
             Elite Training Station
           </motion.div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#7A4900] mb-4 md:mb-6 font-serif leading-tight px-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6 font-serif leading-tight px-4">
             Practice Modules
           </h1>
-          <p className="text-base md:text-lg text-[#545454] max-w-2xl mx-auto leading-relaxed px-4">
+          <p className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed px-4">
             Sharpen your intellect with specialized modules tailored for excellence.
           </p>
         </div>
         
-        <BookOpen className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 text-gray-50 opacity-20 pointer-events-none" />
+        <BookOpen className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 text-slate-800 opacity-[0.03] pointer-events-none" />
       </header>
 
       <AnimatePresence mode="wait">
@@ -208,11 +208,11 @@ export default function Practice({ profile }: PracticeProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-gray-100 space-y-12"
+            className="bg-slate-900 p-8 md:p-12 rounded-[3rem] shadow-2xl border border-slate-800 space-y-12"
           >
             {/* Academic Level Selection */}
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Select Academic Level</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-6">Select Academic Level</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {['Class 9', 'Class 10', 'SSC Candidate', 'College Admission'].map(c => (
                   <button
@@ -220,8 +220,8 @@ export default function Practice({ profile }: PracticeProps) {
                     onClick={() => setConfig({ ...config, class: c })}
                     className={`px-6 py-4 rounded-2xl border-2 transition-all font-bold text-sm text-center ${
                       config.class === c 
-                        ? 'border-[#7A4900] bg-[#7A4900]/5 text-[#7A4900] shadow-md' 
-                        : 'border-gray-50 text-gray-400 hover:border-gray-100'
+                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] shadow-lg shadow-amber-500/10' 
+                        : 'border-slate-800 text-slate-500 bg-slate-950 hover:border-slate-700'
                     }`}
                   >
                     {c}
@@ -232,7 +232,7 @@ export default function Practice({ profile }: PracticeProps) {
 
             {/* Subject Selection */}
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6">Select Knowledge Area</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-6">Select Knowledge Area</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {subjects.map(s => (
                   <button
@@ -240,8 +240,8 @@ export default function Practice({ profile }: PracticeProps) {
                     onClick={() => setConfig({ ...config, subject: s })}
                     className={`px-6 py-4 rounded-2xl border-2 transition-all font-bold text-sm text-center ${
                       config.subject === s 
-                        ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#7A4900] shadow-md shadow-amber-50' 
-                        : 'border-gray-50 text-gray-400 hover:border-gray-100'
+                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] shadow-lg shadow-amber-500/10' 
+                        : 'border-slate-800 text-slate-500 bg-slate-950 hover:border-slate-700'
                     }`}
                   >
                     {s}
@@ -256,22 +256,22 @@ export default function Practice({ profile }: PracticeProps) {
                 onClick={() => setConfig({ ...config, mode: 'Complete Board' })}
                 className={`group cursor-pointer p-8 rounded-[2.5rem] border-2 transition-all relative overflow-hidden ${
                   config.mode === 'Complete Board' 
-                    ? 'border-[#D4AF37] bg-[#D4AF37]/5' 
-                    : 'border-gray-50 hover:bg-gray-50'
+                    ? 'border-[#D4AF37] bg-[#D4AF37]/10 shadow-lg' 
+                    : 'border-slate-800 bg-slate-950 hover:bg-slate-900'
                 }`}
               >
                 <div className="relative z-10">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-colors ${
-                    config.mode === 'Complete Board' ? 'bg-[#D4AF37] text-white' : 'bg-gray-100 text-gray-400'
+                    config.mode === 'Complete Board' ? 'bg-[#D4AF37] text-slate-900' : 'bg-slate-800 text-slate-500'
                   }`}>
                     <List className="w-7 h-7" />
                   </div>
                   <h3 className={`text-xl font-bold font-serif mb-2 transition-colors ${
-                    config.mode === 'Complete Board' ? 'text-[#7A4900]' : 'text-gray-400'
+                    config.mode === 'Complete Board' ? 'text-white' : 'text-slate-500'
                   }`}>
                     Comprehensive Pool
                   </h3>
-                  <p className="text-xs text-[#545454] leading-relaxed opacity-70">
+                  <p className="text-xs text-slate-400 leading-relaxed opacity-70">
                     A balanced mix of random questions from the entire board database.
                   </p>
                 </div>
@@ -286,22 +286,22 @@ export default function Practice({ profile }: PracticeProps) {
                 onClick={() => setConfig({ ...config, mode: 'Selected Board' })}
                 className={`group cursor-pointer p-8 rounded-[2.5rem] border-2 transition-all relative overflow-hidden ${
                   config.mode === 'Selected Board' 
-                    ? 'border-[#D4AF37] bg-[#D4AF37]/5' 
-                    : 'border-gray-50 hover:bg-gray-50'
+                    ? 'border-[#D4AF37] bg-[#D4AF37]/10 shadow-lg' 
+                    : 'border-slate-800 bg-slate-950 hover:bg-slate-900'
                 }`}
               >
                 <div className="relative z-10">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm transition-colors ${
-                    config.mode === 'Selected Board' ? 'bg-[#D4AF37] text-white' : 'bg-gray-100 text-gray-400'
+                    config.mode === 'Selected Board' ? 'bg-[#D4AF37] text-slate-900' : 'bg-slate-800 text-slate-500'
                   }`}>
                     <CheckCircle2 className="w-7 h-7" />
                   </div>
                   <h3 className={`text-xl font-bold font-serif mb-2 transition-colors ${
-                    config.mode === 'Selected Board' ? 'text-[#7A4900]' : 'text-gray-400'
+                    config.mode === 'Selected Board' ? 'text-white' : 'text-slate-500'
                   }`}>
                     Master Selection
                   </h3>
-                  <p className="text-xs text-[#545454] leading-relaxed opacity-70">
+                  <p className="text-xs text-slate-400 leading-relaxed opacity-70">
                     Hand-pick specific questions to target your weak points and refine mastery.
                   </p>
                 </div>
@@ -316,7 +316,7 @@ export default function Practice({ profile }: PracticeProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {/* Time Selection */}
               <div className="space-y-4">
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Duration (Minutes)</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Duration (Minutes)</label>
                 <div className="flex flex-wrap gap-2">
                   {times.map(t => (
                     <button
@@ -324,8 +324,8 @@ export default function Practice({ profile }: PracticeProps) {
                       onClick={() => setConfig({ ...config, time: t })}
                       className={`px-4 py-2 rounded-xl border-2 transition-all font-bold text-xs ${
                         config.time === t 
-                          ? 'border-[#7A4900] bg-[#7A4900] text-white' 
-                          : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                          ? 'border-[#D4AF37] bg-[#D4AF37] text-slate-900' 
+                          : 'border-slate-800 text-slate-500 bg-slate-950 hover:border-slate-700'
                       }`}
                     >
                       {t}m
@@ -337,7 +337,7 @@ export default function Practice({ profile }: PracticeProps) {
               {/* Question Count */}
               {config.mode === 'Complete Board' && (
                 <div className="space-y-4">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Quantity</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Quantity</label>
                   <div className="flex flex-wrap gap-2">
                     {[10, 20, 30, 50].map(c => (
                       <button
@@ -345,8 +345,8 @@ export default function Practice({ profile }: PracticeProps) {
                         onClick={() => setConfig({ ...config, count: c })}
                         className={`px-6 py-2 rounded-xl border-2 transition-all font-bold text-xs ${
                           config.count === c 
-                            ? 'border-[#7A4900] bg-[#7A4900] text-white' 
-                            : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                            ? 'border-[#D4AF37] bg-[#D4AF37] text-slate-900' 
+                            : 'border-slate-800 text-slate-500 bg-slate-950 hover:border-slate-700'
                         }`}
                       >
                         {c}
@@ -357,11 +357,11 @@ export default function Practice({ profile }: PracticeProps) {
               )}
             </div>
 
-            <div className="pt-8 border-t border-gray-50 flex justify-center">
+            <div className="pt-8 border-t border-slate-800 flex justify-center">
               {config.mode === 'Selected Board' ? (
                 <button
                   onClick={() => setStep('selection')}
-                  className="w-full md:w-auto min-w-[300px] bg-[#7A4900] text-white py-5 px-10 rounded-2xl font-bold text-lg hover:bg-black shadow-xl transition-all flex items-center justify-center space-x-3 group"
+                  className="w-full md:w-auto min-w-[300px] bg-slate-800 text-white py-5 px-10 rounded-2xl font-bold text-lg hover:bg-slate-700 shadow-xl transition-all flex items-center justify-center space-x-3 group border border-slate-700"
                 >
                   <span>Customize Question Selection</span>
                   <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -369,7 +369,7 @@ export default function Practice({ profile }: PracticeProps) {
               ) : (
                 <button
                   onClick={handleStartExam}
-                  className="w-full md:w-auto min-w-[300px] bg-[#D4AF37] text-white py-5 px-10 rounded-2xl font-bold text-lg hover:bg-[#B8860B] shadow-2xl shadow-amber-100 transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-4"
+                  className="w-full md:w-auto min-w-[300px] bg-[#D4AF37] text-slate-900 py-5 px-10 rounded-2xl font-bold text-lg hover:bg-amber-400 shadow-2xl shadow-amber-500/20 transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-4"
                 >
                   <Play className="w-6 h-6" />
                   <span>Begin Training Session</span>
@@ -389,14 +389,14 @@ export default function Practice({ profile }: PracticeProps) {
           >
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold text-[#7A4900]">Select Questions</h2>
-                <p className="text-[#545454]">{filteredQuestions.length} questions available for {config.subject}</p>
+                <h2 className="text-2xl font-bold text-white font-serif">Select Questions</h2>
+                <p className="text-slate-400">{filteredQuestions.length} questions available for {config.subject}</p>
               </div>
-              <button onClick={() => setStep('config')} className="text-[#D4AF37] font-bold">Back</button>
+              <button onClick={() => setStep('config')} className="text-[#D4AF37] font-bold hover:text-amber-400 transition-colors">Back</button>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-              <div className="max-h-[60vh] overflow-y-auto divide-y">
+            <div className="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+              <div className="max-h-[60vh] overflow-y-auto divide-y divide-slate-800 custom-scrollbar">
                 {filteredQuestions.map(q => (
                   <div 
                     key={q.id} 
@@ -405,28 +405,28 @@ export default function Practice({ profile }: PracticeProps) {
                         prev.includes(q.id) ? prev.filter(id => id !== q.id) : [...prev, q.id]
                       );
                     }}
-                    className={`p-6 cursor-pointer transition-all flex items-start space-x-4 ${selectedQuestionIds.includes(q.id) ? 'bg-[#D4AF37]/5' : 'hover:bg-gray-50'}`}
+                    className={`p-6 cursor-pointer transition-all flex items-start space-x-4 ${selectedQuestionIds.includes(q.id) ? 'bg-[#D4AF37]/10' : 'hover:bg-slate-800/50'}`}
                   >
-                    <div className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${selectedQuestionIds.includes(q.id) ? 'bg-[#D4AF37] border-[#D4AF37]' : 'border-gray-200'}`}>
-                      {selectedQuestionIds.includes(q.id) && <CheckCircle2 className="w-4 h-4 text-white" />}
+                    <div className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${selectedQuestionIds.includes(q.id) ? 'bg-[#D4AF37] border-[#D4AF37]' : 'border-slate-700'}`}>
+                      {selectedQuestionIds.includes(q.id) && <CheckCircle2 className="w-4 h-4 text-slate-900" />}
                     </div>
                     <div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{q.board}</span>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">{q.board}</span>
                       </div>
-                      <div className="font-bold text-[#7A4900]">
+                      <div className="font-bold text-slate-200">
                         <MathRenderer content={q.text} engine={profile?.mathEngine} />
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="p-6 bg-gray-50 flex justify-between items-center">
-                <span className="font-bold text-[#7A4900]">{selectedQuestionIds.length} questions selected</span>
+              <div className="p-6 bg-slate-950 flex justify-between items-center border-t border-slate-800">
+                <span className="font-bold text-[#D4AF37] uppercase tracking-widest text-[10px] bg-[#D4AF37]/10 px-4 py-2 rounded-full border border-[#D4AF37]/20">{selectedQuestionIds.length} Selected</span>
                 <button
                   onClick={handleStartExam}
                   disabled={selectedQuestionIds.length === 0}
-                  className="bg-[#D4AF37] text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50"
+                  className="bg-[#D4AF37] text-slate-900 px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/10"
                 >
                   Start Exam
                 </button>
@@ -442,19 +442,19 @@ export default function Practice({ profile }: PracticeProps) {
             animate={{ opacity: 1 }}
             className="space-y-8"
           >
-            <div className="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center sticky top-4 z-10">
+            <div className="bg-slate-900 p-6 rounded-2xl shadow-xl border border-slate-800 flex justify-between items-center sticky top-4 z-10 backdrop-blur-md bg-slate-900/90">
               <div>
-                <h2 className="text-xl font-bold text-[#7A4900]">{config.subject} Practice</h2>
-                <p className="text-xs text-gray-400 font-bold">Question {examState.currentQuestionIndex + 1} of {filteredQuestions.length}</p>
+                <h2 className="text-xl font-bold text-white font-serif">{config.subject} Practice</h2>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Question {examState.currentQuestionIndex + 1} of {filteredQuestions.length}</p>
               </div>
-              <div className={`flex items-center space-x-3 px-6 py-3 rounded-xl font-mono font-bold text-xl ${examState.timeLeft < 60 ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-gray-50 text-[#7A4900]'}`}>
+              <div className={`flex items-center space-x-3 px-6 py-3 rounded-xl font-mono font-bold text-xl ${examState.timeLeft < 60 ? 'bg-rose-500/10 text-rose-400 animate-pulse border border-rose-500/20 shadow-lg' : 'bg-slate-950 text-[#D4AF37] border border-slate-800'}`}>
                 <Clock className="w-6 h-6" />
                 <span>{formatTime(examState.timeLeft)}</span>
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100">
-              <div className="text-2xl font-bold text-[#7A4900] mb-8 leading-relaxed">
+            <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-slate-800">
+              <div className="text-2xl font-bold text-white mb-8 leading-relaxed font-serif">
                 <MathRenderer content={filteredQuestions[examState.currentQuestionIndex]?.text || ''} engine={profile?.mathEngine} />
               </div>
 
@@ -465,12 +465,12 @@ export default function Practice({ profile }: PracticeProps) {
                     onClick={() => setExamState({ ...examState, answers: { ...examState.answers, [filteredQuestions[examState.currentQuestionIndex].id]: i } })}
                     className={`w-full p-5 rounded-2xl border-2 text-left transition-all flex items-center space-x-4 ${
                       examState.answers[filteredQuestions[examState.currentQuestionIndex].id] === i
-                        ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#7A4900]'
-                        : 'border-gray-50 hover:border-gray-200 text-[#545454]'
+                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]'
+                        : 'border-slate-800 bg-slate-950 hover:bg-slate-800 text-slate-400'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
-                      examState.answers[filteredQuestions[examState.currentQuestionIndex].id] === i ? 'bg-[#D4AF37] text-white' : 'bg-gray-100 text-gray-400'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${
+                      examState.answers[filteredQuestions[examState.currentQuestionIndex].id] === i ? 'bg-[#D4AF37] text-slate-900' : 'bg-slate-800 text-slate-500'
                     }`}>
                       {String.fromCharCode(65 + i)}
                     </div>
@@ -484,7 +484,7 @@ export default function Practice({ profile }: PracticeProps) {
               <button
                 onClick={() => setExamState({ ...examState, currentQuestionIndex: Math.max(0, examState.currentQuestionIndex - 1) })}
                 disabled={examState.currentQuestionIndex === 0}
-                className="flex items-center space-x-2 px-6 py-3 rounded-xl font-bold text-[#7A4900] disabled:opacity-30"
+                className="flex items-center space-x-2 px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white disabled:opacity-30 transition-colors bg-slate-900 border border-slate-800 shadow-lg"
               >
                 <ChevronLeft className="w-5 h-5" />
                 <span>Previous</span>
@@ -494,7 +494,7 @@ export default function Practice({ profile }: PracticeProps) {
                 <button
                   onClick={handleSubmit}
                   disabled={examState.submitting}
-                  className="bg-green-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 transition-all flex items-center space-x-2 disabled:opacity-50"
+                  className="bg-emerald-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-500 transition-all flex items-center space-x-2 disabled:opacity-50"
                 >
                   <Send className="w-5 h-5" />
                   <span>{examState.submitting ? 'Submitting...' : 'Finish Exam'}</span>
@@ -502,7 +502,7 @@ export default function Practice({ profile }: PracticeProps) {
               ) : (
                 <button
                   onClick={() => setExamState({ ...examState, currentQuestionIndex: Math.min(filteredQuestions.length - 1, examState.currentQuestionIndex + 1) })}
-                  className="bg-[#7A4900] text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-black transition-all flex items-center space-x-2"
+                  className="bg-[#D4AF37] text-slate-900 px-10 py-3 rounded-xl font-bold shadow-xl shadow-amber-500/10 hover:bg-amber-400 transition-all flex items-center space-x-2"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-5 h-5" />
@@ -519,25 +519,25 @@ export default function Practice({ profile }: PracticeProps) {
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-8"
           >
-            <div className="bg-white p-12 rounded-[3rem] shadow-xl text-center border border-gray-100">
-              <div className="w-24 h-24 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="bg-slate-900 p-12 rounded-[3rem] shadow-2xl text-center border border-slate-800">
+              <div className="w-24 h-24 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 shadow-lg">
                 <CheckCircle2 className="w-12 h-12" />
               </div>
-              <h1 className="text-4xl font-bold text-[#7A4900] mb-2">Exam Completed!</h1>
-              <p className="text-[#545454] mb-12">Here is how you performed in {config.subject}</p>
+              <h1 className="text-4xl font-bold text-white mb-2 font-serif">Exam Completed!</h1>
+              <p className="text-slate-400 mb-12">Here is how you performed in {config.subject}</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 md:mb-12">
-                <div className="p-4 sm:p-6 bg-gray-50 rounded-2xl sm:rounded-3xl">
-                  <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Score</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-[#7A4900]">{examState.results.score}%</p>
+                <div className="p-4 sm:p-6 bg-slate-950 rounded-2xl sm:rounded-3xl border border-slate-800 shadow-inner">
+                  <p className="text-[10px] text-slate-600 uppercase font-bold mb-2 tracking-widest">Score</p>
+                  <p className="text-2xl sm:text-4xl font-bold text-white">{examState.results.score}%</p>
                 </div>
-                <div className="p-4 sm:p-6 bg-green-50 rounded-2xl sm:rounded-3xl">
-                  <p className="text-[10px] text-green-400 uppercase font-bold mb-1">Correct</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-green-600">{examState.results.correctCount}</p>
+                <div className="p-4 sm:p-6 bg-emerald-500/5 rounded-2xl sm:rounded-3xl border border-emerald-500/10 shadow-inner">
+                  <p className="text-[10px] text-emerald-500/50 uppercase font-bold mb-2 tracking-widest">Correct</p>
+                  <p className="text-2xl sm:text-4xl font-bold text-emerald-400">{examState.results.correctCount}</p>
                 </div>
-                <div className="p-4 sm:p-6 bg-red-50 rounded-2xl sm:rounded-3xl">
-                  <p className="text-[10px] text-red-400 uppercase font-bold mb-1">Wrong</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-red-600">{examState.results.wrongCount}</p>
+                <div className="p-4 sm:p-6 bg-rose-500/5 rounded-2xl sm:rounded-3xl border border-rose-500/10 shadow-inner">
+                  <p className="text-[10px] text-rose-500/50 uppercase font-bold mb-2 tracking-widest">Wrong</p>
+                  <p className="text-2xl sm:text-4xl font-bold text-rose-400">{examState.results.wrongCount}</p>
                 </div>
               </div>
 
@@ -547,14 +547,14 @@ export default function Practice({ profile }: PracticeProps) {
                     setStep('config');
                     setSelectedQuestionIds([]);
                   }}
-                  className="bg-[#D4AF37] text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-[#B8860B] transition-all flex items-center justify-center space-x-2"
+                  className="bg-[#D4AF37] text-slate-900 px-10 py-4 rounded-2xl font-bold text-lg hover:bg-amber-400 transition-all flex items-center justify-center space-x-2 shadow-xl shadow-amber-500/10"
                 >
                   <RotateCcw className="w-5 h-5" />
                   <span>Try Another</span>
                 </button>
                 <button
                   onClick={() => setStep('review')}
-                  className="bg-[#7A4900] text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-black transition-all flex items-center justify-center space-x-2"
+                  className="bg-slate-800 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-slate-700 transition-all flex items-center justify-center space-x-2 border border-slate-700 shadow-xl"
                 >
                   <Eye className="w-5 h-5" />
                   <span>Review Answers</span>
@@ -573,35 +573,35 @@ export default function Practice({ profile }: PracticeProps) {
             className="space-y-6"
           >
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-[#7A4900]">Question Review</h2>
-              <button onClick={() => setStep('results')} className="text-[#D4AF37] font-bold">Back to Results</button>
+              <h2 className="text-2xl font-bold text-white font-serif">Question Review</h2>
+              <button onClick={() => setStep('results')} className="text-[#D4AF37] font-bold hover:text-amber-400 transition-colors">Back to Results</button>
             </div>
             
             {filteredQuestions.map((q, idx) => (
-              <div key={q.id} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                <div className="flex items-center space-x-3 mb-4">
-                  <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-500">{idx + 1}</span>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${examState.answers[q.id] === q.correctAnswer ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+              <div key={q.id} className="bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-800">
+                <div className="flex items-center space-x-3 mb-6">
+                  <span className="w-8 h-8 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-xs text-slate-500 shadow-inner">{idx + 1}</span>
+                  <span className={`text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest border ${examState.answers[q.id] === q.correctAnswer ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
                     {examState.answers[q.id] === q.correctAnswer ? 'Correct' : 'Incorrect'}
                   </span>
                 </div>
-                <div className="text-lg font-bold text-[#7A4900] mb-6">
+                <div className="text-lg font-bold text-white mb-8 font-serif leading-relaxed">
                   <MathRenderer content={q.text} engine={profile?.mathEngine} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {q.options.map((opt, i) => (
                     <div
                       key={i}
-                      className={`p-4 rounded-xl border-2 flex items-center space-x-3 ${
+                      className={`p-4 rounded-xl border-2 flex items-center space-x-3 transition-colors ${
                         i === q.correctAnswer 
-                          ? 'border-green-500 bg-green-50 text-green-700' 
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-100' 
                           : i === examState.answers[q.id]
-                            ? 'border-red-500 bg-red-50 text-red-700'
-                            : 'border-gray-50 text-gray-400'
+                            ? 'border-rose-500 bg-rose-500/10 text-rose-100'
+                            : 'border-slate-800 bg-slate-950 text-slate-500'
                       }`}
                     >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                        i === q.correctAnswer ? 'bg-green-500 text-white' : i === examState.answers[q.id] ? 'bg-red-500 text-white' : 'bg-gray-100'
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                        i === q.correctAnswer ? 'bg-emerald-500 text-white shadow-lg' : i === examState.answers[q.id] ? 'bg-rose-500 text-white shadow-lg' : 'bg-slate-800 text-slate-600'
                       }`}>
                         {String.fromCharCode(65 + i)}
                       </div>
@@ -613,7 +613,7 @@ export default function Practice({ profile }: PracticeProps) {
             ))}
             <button
               onClick={() => setStep('results')}
-              className="w-full bg-gray-100 text-[#545454] py-4 rounded-2xl font-bold hover:bg-gray-200"
+              className="w-full bg-slate-800 text-slate-400 py-4 rounded-2xl font-bold hover:bg-slate-700 transition-all border border-slate-700 shadow-xl"
             >
               Back to Results
             </button>
