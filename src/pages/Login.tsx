@@ -45,44 +45,54 @@ export default function Login() {
 
     try {
       if (authMode === 'register' && selectedRole === 'student') {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            displayName,
+            role: 'student',
+          }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'নিবন্ধন ব্যর্থ হয়েছে।');
+        }
+
+        // Successfully created server-side in Auth and Firestore.
+        // Sign the student in client-side to establish full session state.
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         await sendEmailVerification(user);
         
-        const newProfile: UserProfile = {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: displayName || user.email?.split('@')[0] || 'User',
-          photoURL: `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
-          role: 'student',
-          createdAt: new Date().toISOString(),
-        };
-        
-        await setDoc(doc(db, 'students', user.uid), newProfile);
-        await setDoc(doc(db, 'global_stats', 'counters'), { 
-          studentsCount: increment(1) 
-        }, { merge: true });
-        
         navigate('/verify-email');
       } else if (authMode === 'request' && selectedRole === 'admin') {
-        // Admin Request Access
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        const adminRequest: UserProfile = {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: displayName || user.email?.split('@')[0] || 'Admin Candidate',
-          photoURL: `https://ui-avatars.com/api/?name=${displayName || 'Admin'}&background=random`,
-          role: 'admin',
-          adminType: 'question_holder',
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        };
-        
-        await setDoc(doc(db, 'admins', user.uid), adminRequest);
+        // Admin Request Access - completely via server-safe Admin SDK processes
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            displayName,
+            role: 'admin',
+            adminType: 'question_holder',
+            status: 'pending',
+          }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'অ্যাডমিন অ্যাকাউন্ট আবেদন ব্যর্থ হয়েছে।');
+        }
+
         setMessage("আবেদন পাঠানো হয়েছে! একজন অ্যাডমিনিস্ট্রেটর শীঘ্রই আপনার অ্যাকাউন্টটি পর্যালোচনা করবেন। অনুমোদনের আগে আপনি লগইন করতে পারবেন না।");
-        await signOut(auth);
         setAuthMode('login');
       } else {
         // Login Flow

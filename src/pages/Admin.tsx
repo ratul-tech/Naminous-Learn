@@ -953,25 +953,31 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
     setError('');
 
     try {
-      const secondaryApp = getApps().find(app => app.name === 'secondary') || initializeApp(firebaseConfig, 'secondary');
-      const secondaryAuth = getAuth(secondaryApp);
-      
-      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-      const user = userCredential.user;
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error('Authorized administrator token could not be fetched.');
+      }
 
-      const newAdmin: UserProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: name,
-        photoURL: `https://ui-avatars.com/api/?name=${name}&background=random`,
-        role: 'admin',
-        adminType,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-      };
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          displayName: name,
+          role: 'admin',
+          adminType,
+          status: 'active',
+        }),
+      });
 
-      await setDoc(doc(db, 'admins', user.uid), newAdmin);
-      await signOut(secondaryAuth);
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to create administrative credentials.');
+      }
       
       setShowAdd(false);
       setEmail('');
