@@ -8,7 +8,7 @@ import {
   Mail, Calendar, Trophy, BookOpen, KeyRound, Palette, Sparkles, Check, ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, updateProfile } from 'firebase/auth';
+import { signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, updateProfile, deleteUser } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
@@ -193,37 +193,13 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     setDeleting(true);
     try {
       const uid = profile.uid;
-      const role = profile.role;
-      const batch = writeBatch(db);
       
-      const collections = ['results', 'payments', 'submissions', 'feedback'];
-      for (const collPath of collections) {
-        try {
-          const q = query(collection(db, collPath), where('uid', '==', uid));
-          const snapshot = await getDocs(q);
-          snapshot.docs.forEach((docSnap) => {
-            batch.delete(docSnap.ref);
-          });
-        } catch (e) {
-          console.warn(`Failed to clean up user data in ${collPath}:`, e);
-        }
+      // Call modern server-side endpoint with Admin SDK privileges to safely remove Firestore data and Auth user
+      const adminDeleteSuccess = await deleteAuthUser(uid);
+      if (!adminDeleteSuccess) {
+        throw new Error('Backend user deletion service failed');
       }
       
-      if (role === 'admin') {
-        batch.delete(doc(db, 'admins', uid));
-      } else {
-        batch.delete(doc(db, 'students', uid));
-        try {
-          batch.set(doc(db, 'global_stats', 'counters'), { 
-            studentsCount: increment(-1) 
-          }, { merge: true });
-        } catch (counterErr) {
-          console.warn("Failed to decrement student counter:", counterErr);
-        }
-      }
-      
-      await batch.commit();
-      await deleteAuthUser(uid);
       await signOut(auth);
       navigate('/');
     } catch (error) {

@@ -93,10 +93,39 @@ export default function Login() {
         let userDoc = await getDoc(doc(db, collectionName, user.uid));
 
         if (!userDoc.exists()) {
-          setError(`${selectedRole === 'admin' ? 'অ্যাডমিন' : 'শিক্ষার্থী'} রেকর্ডে কোনো অ্যাকাউন্ট পাওয়া যায়নি।`);
-          await signOut(auth);
-          setLoading(false);
-          return;
+          if (selectedRole === 'student') {
+            // Self-healing: user exists in Auth but their Firestore profile is missing/orphaned
+            console.log(`Self-healing missing student profile for UID: ${user.uid}`);
+            const newProfile: UserProfile = {
+              uid: user.uid,
+              email: user.email || email,
+              displayName: displayName || user.displayName || user.email?.split('@')[0] || 'User',
+              photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
+              role: 'student',
+              createdAt: new Date().toISOString(),
+            };
+            
+            try {
+              // Re-create the student profile instantly
+              await setDoc(doc(db, 'students', user.uid), newProfile);
+              await setDoc(doc(db, 'global_stats', 'counters'), { 
+                studentsCount: increment(1) 
+              }, { merge: true });
+              
+              userDoc = await getDoc(doc(db, 'students', user.uid));
+            } catch (healErr) {
+              console.error("Self-healing student profile failed:", healErr);
+              setError("আপনার অ্যাকাউন্ট ডাটা পুনরুদ্ধার করার চেষ্টা ব্যর্থ হয়েছে। দয়া করে এডমিনকে নিশ্চিত করুন।");
+              await signOut(auth);
+              setLoading(false);
+              return;
+            }
+          } else {
+            setError(`${selectedRole === 'admin' ? 'অ্যাডমিন' : 'শিক্ষার্থী'} রেকর্ডে কোনো অ্যাকাউন্ট পাওয়া যায়নি।`);
+            await signOut(auth);
+            setLoading(false);
+            return;
+          }
         }
 
         const profileData = userDoc.data() as UserProfile;
@@ -118,7 +147,11 @@ export default function Login() {
       }
     } catch (err: any) {
       console.error("Auth error:", err);
-      setError(getAuthErrorMessage(err.code));
+      if (err.code === 'auth/email-already-in-use') {
+        setError('ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে। যদি আপনার পাসওয়ার্ড মনে থাকে তবে সরাসরি "লগইন" করার চেষ্টা করুন, অ্যাকাউন্ট প্রোফাইল স্বয়ংক্রিয়ভাবে পুনরুদ্ধার করা হবে।');
+      } else {
+        setError(getAuthErrorMessage(err.code));
+      }
     } finally {
       setLoading(false);
     }

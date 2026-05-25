@@ -101,14 +101,82 @@ async function startServer() {
           throw verifyErr;
         }
       }
-      const isBootstrapAdmin = decodedToken.email === 'shahriarislam275@gmail.com' && decodedToken.email_verified;
-      
-      // Allow if bootstrap admin, if deleting own account, OR if they are a verified logged-in user
+      const isBootstrapAdmin = decodedToken.email === 'shahriarislam275@gmail.com';
       const isSelf = decodedToken.uid === uid;
-      const isVerifiedUser = decodedToken.email_verified === true;
+      
+      // Allow if bootstrap admin, if deleting own account, OR if they are an active admin in Firestore
+      let isActiveAdmin = false;
+      try {
+        const requesterAdminDoc = await db.collection('admins').doc(decodedToken.uid).get();
+        if (requesterAdminDoc.exists && requesterAdminDoc.data()?.status === 'active') {
+          isActiveAdmin = true;
+        }
+      } catch (adminErr) {
+        console.warn("Backend failed to fetch requester admin status:", adminErr);
+      }
 
-      if (!isBootstrapAdmin && !isSelf && !isVerifiedUser) {
+      if (!isBootstrapAdmin && !isSelf && !isActiveAdmin) {
         return res.status(403).json({ error: "Forbidden: Not authorized to delete this user" });
+      }
+
+      console.log(`Starting Firestore cleanup for user: ${uid}`);
+      
+      // We will perform Firestore deletions first.
+      const batchLimit = 500;
+      let batch = db.batch();
+      let operationCount = 0;
+
+      // Clean up records in user-associated collections
+      const collections = ['results', 'payments', 'submissions', 'feedback'];
+      for (const collPath of collections) {
+        try {
+          const snapshot = await db.collection(collPath).where('uid', '==', uid).get();
+          console.log(`Found ${snapshot.size} documents for user ${uid} in collection ${collPath}`);
+          for (const docSnap of snapshot.docs) {
+            batch.delete(docSnap.ref);
+            operationCount++;
+            if (operationCount >= batchLimit) {
+              await batch.commit();
+              batch = db.batch();
+              operationCount = 0;
+            }
+          }
+        } catch (colErr) {
+          console.error(`Error querying or deleting from collection ${collPath}:`, colErr);
+        }
+      }
+
+      // Check if user is a student or admin and delete their profile
+      const studentDocRef = db.collection('students').doc(uid);
+      const adminDocRef = db.collection('admins').doc(uid);
+
+      const studentDoc = await studentDocRef.get();
+      const adminDoc = await adminDocRef.get();
+
+      if (studentDoc.exists) {
+        batch.delete(studentDocRef);
+        operationCount++;
+        // Decrement student count globally
+        try {
+          const statsDocRef = db.collection('global_stats').doc('counters');
+          batch.set(statsDocRef, {
+            studentsCount: admin.firestore.FieldValue.increment(-1)
+          }, { merge: true });
+          operationCount++;
+        } catch (statErr) {
+          console.error('Error batch-decrementing student counter:', statErr);
+        }
+      }
+
+      if (adminDoc.exists) {
+        batch.delete(adminDocRef);
+        operationCount++;
+      }
+
+      // Commit any remaining Firestore deletes
+      if (operationCount > 0) {
+        await batch.commit();
+        console.log(`Successfully committed Firestore cleanups for user: ${uid}`);
       }
 
       console.log(`Starting Auth deletion for user: ${uid}`);
