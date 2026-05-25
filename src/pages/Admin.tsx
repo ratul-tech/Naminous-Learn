@@ -38,13 +38,19 @@ export default function Admin({ profile }: AdminProps) {
   
   useEffect(() => {
     let timer: any;
-    if (confirmModal && confirmModal.show && countdown > 0) {
+    if (confirmModal && confirmModal.show) {
       timer = setInterval(() => {
-        setCountdown(prev => prev - 1);
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [confirmModal, countdown]);
+  }, [confirmModal?.show]);
   
   useEffect(() => {
     if (activeTab === 'profile') {

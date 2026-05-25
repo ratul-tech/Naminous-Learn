@@ -54,13 +54,19 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
 
   useEffect(() => {
     let timer: any;
-    if (showDeleteConfirm && deleteTimer > 0) {
+    if (showDeleteConfirm) {
       timer = setInterval(() => {
-        setDeleteTimer((prev) => prev - 1);
+        setDeleteTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [showDeleteConfirm, deleteTimer]);
+  }, [showDeleteConfirm]);
 
   const calculateCompletion = () => {
     const fields = [
