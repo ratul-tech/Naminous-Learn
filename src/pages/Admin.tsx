@@ -7,7 +7,7 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle, PlusCircle, Filter, Trophy, Clock, AlertTriangle, ExternalLink, ShieldPlus, Search } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle, PlusCircle, Filter, Trophy, Clock, AlertTriangle, ExternalLink, ShieldPlus, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType, Resource } from '../types';
@@ -33,6 +33,7 @@ export default function Admin({ profile }: AdminProps) {
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const isFullAdmin = profile?.role === 'admin';
   
@@ -192,6 +193,7 @@ export default function Admin({ profile }: AdminProps) {
       message: 'Are you sure you want to delete this student record? This action will permanently remove all associated user and exam data.',
       onConfirm: async () => {
         try {
+          setDeletingUserId(uid);
           console.log(`Admin client-side initiating deletion cleanup for student: ${uid}...`);
           
           // 1. Clean up associated collections on client side
@@ -240,6 +242,8 @@ export default function Admin({ profile }: AdminProps) {
           setConfirmModal(null);
         } catch (error) {
           handleFirestoreError(error, OperationType.DELETE, `students/${uid}`);
+        } finally {
+          setDeletingUserId(null);
         }
       }
     });
@@ -573,7 +577,7 @@ export default function Admin({ profile }: AdminProps) {
                   </div>
                 )}
                 
-                {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} />}
+                {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} deletingUserId={deletingUserId} />}
                 {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
                 {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
                 {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
@@ -1350,7 +1354,7 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
   );
 }
 
-function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid: string) => void }) {
+function UserManager({ users, onDelete, deletingUserId }: { users: UserProfile[], onDelete: (uid: string) => void, deletingUserId: string | null }) {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
   const [saving, setSaving] = useState(false);
@@ -1522,10 +1526,15 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
                       </button>
                       <button 
                         onClick={() => onDelete(u.uid)} 
-                        className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20" 
-                        title="Revoke Access"
+                        disabled={deletingUserId === u.uid}
+                        className={`p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20 ${deletingUserId === u.uid ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                        title={deletingUserId === u.uid ? "Deleting..." : "Revoke Access"}
                       >
-                        <Trash2 className="w-5 h-5" />
+                        {deletingUserId === u.uid ? (
+                          <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
+                        ) : (
+                          <Trash2 className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
                   </td>

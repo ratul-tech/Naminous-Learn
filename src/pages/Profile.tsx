@@ -204,55 +204,57 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     try {
       const uid = profile.uid;
       
-      console.log('Initiating client-side Firestore record cleanup...');
-      
-      // Part 1: Clean up associated collections on client side where active user is authenticated.
-      const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
-      const batch = writeBatch(db);
-      let opCount = 0;
-      
-      for (const colName of collectionsToClean) {
-        try {
-          const q = query(collection(db, colName), where('uid', '==', uid));
-          const snapshot = await getDocs(q);
-          snapshot.forEach((docSnap) => {
-            batch.delete(docSnap.ref);
-            opCount++;
-          });
-        } catch (colErr) {
-          console.error(`Client failed to fetch/delete in ${colName}:`, colErr);
-        }
-      }
-      
-      // Part 2: Delete profile document
-      if (profile.role === 'student') {
-        batch.delete(doc(db, 'students', uid));
-        opCount++;
-        
-        // Also decrement student count
-        try {
-          const countersRef = doc(db, 'global_stats', 'counters');
-          batch.set(countersRef, {
-            studentsCount: increment(-1)
-          }, { merge: true });
-          opCount++;
-        } catch (statErr) {
-          console.error('Failed to decrement student counter on client:', statErr);
-        }
-      } else if (profile.role === 'admin') {
-        batch.delete(doc(db, 'admins', uid));
-        opCount++;
-      }
-      
-      if (opCount > 0) {
-        await batch.commit();
-        console.log('Client-side Firestore cleanup succeeded.');
-      }
-      
-      // Call modern server-side endpoint with Admin SDK privileges to remove Auth user and handle any residual deletions
+      // Call modern server-side endpoint with Admin SDK privileges to remove Auth user and handle all associated deletions first
+      console.log('Initiating secure server-side user deletion...');
       const adminDeleteSuccess = await deleteAuthUser(uid);
+      
       if (!adminDeleteSuccess) {
-        console.warn('Backend user deletion service failed. Attempting client-side fallback auth deletion...');
+        console.warn('Backend user deletion service failed. Attempting client-side fallback account deletion...');
+        
+        // Client-side fallback cleanup of associated collections
+        const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
+        const batch = writeBatch(db);
+        let opCount = 0;
+        
+        for (const colName of collectionsToClean) {
+          try {
+            const q = query(collection(db, colName), where('uid', '==', uid));
+            const snapshot = await getDocs(q);
+            snapshot.forEach((docSnap) => {
+              batch.delete(docSnap.ref);
+              opCount++;
+            });
+          } catch (colErr) {
+            console.error(`Client fallback failed to fetch/delete in ${colName}:`, colErr);
+          }
+        }
+        
+        // Delete profile document
+        if (profile.role === 'student') {
+          batch.delete(doc(db, 'students', uid));
+          opCount++;
+          
+          // Also decrement student count
+          try {
+            const countersRef = doc(db, 'global_stats', 'counters');
+            batch.set(countersRef, {
+              studentsCount: increment(-1)
+            }, { merge: true });
+            opCount++;
+          } catch (statErr) {
+            console.error('Failed to decrement student counter on client:', statErr);
+          }
+        } else if (profile.role === 'admin') {
+          batch.delete(doc(db, 'admins', uid));
+          opCount++;
+        }
+        
+        if (opCount > 0) {
+          await batch.commit();
+          console.log('Client-side fallback Firestore cleanup succeeded.');
+        }
+
+        // Try direct auth user deletion
         try {
           if (auth.currentUser) {
             await deleteUser(auth.currentUser);
@@ -268,6 +270,8 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
             throw new Error('Failed to delete account. Please try again.');
           }
         }
+      } else {
+        console.log('Secure server-side user deletion succeeded.');
       }
       
       await signOut(auth);

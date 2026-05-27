@@ -18,8 +18,6 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
   const [error, setError] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [emailVerified, setEmailVerified] = useState(false);
-  const [adminApproved, setAdminApproved] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
 
   const fetchStatus = async () => {
@@ -29,24 +27,6 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
     await auth.currentUser.reload();
     const isEmailVerified = auth.currentUser.emailVerified;
     setEmailVerified(isEmailVerified);
-
-    // Check Firestore student profile status
-    try {
-      const studentDoc = await getDoc(doc(db, 'students', auth.currentUser.uid));
-      if (studentDoc.exists()) {
-        const data = studentDoc.data() as UserProfile;
-        setProfile(data);
-        setAdminApproved(data.status === 'active');
-      } else {
-        // If they are an admin, they are automatically approved
-        const adminDoc = await getDoc(doc(db, 'admins', auth.currentUser.uid));
-        if (adminDoc.exists()) {
-          setAdminApproved(true);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch profile status:", err);
-    }
   };
 
   useEffect(() => {
@@ -60,7 +40,7 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
 
   // Monitor status to trigger onVerified and redirect once fully cleared
   useEffect(() => {
-    if (emailVerified && adminApproved) {
+    if (emailVerified) {
       if (onVerified) {
         onVerified().then(() => {
           setTimeout(() => {
@@ -73,7 +53,7 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
         }, 1500);
       }
     }
-  }, [emailVerified, adminApproved, navigate, onVerified]);
+  }, [emailVerified, navigate, onVerified]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -116,18 +96,11 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
       await fetchStatus();
       
       const isEmailOk = auth.currentUser.emailVerified;
-      const studentDoc = await getDoc(doc(db, 'students', auth.currentUser.uid));
-      const freshProfile = studentDoc.exists() ? (studentDoc.data() as UserProfile) : null;
-      const isAdminOk = freshProfile ? freshProfile.status === 'active' : true;
 
-      if (isEmailOk && isAdminOk) {
+      if (isEmailOk) {
         setMessage('Verification completed successfully! Redirecting...');
-      } else if (!isEmailOk && !isAdminOk) {
-        setError("Both email verification and admin approval are still pending.");
-      } else if (!isEmailOk) {
-        setError("Your email verification is still pending. Please click the link in your email.");
       } else {
-        setMessage("Email verification is successful! Now awaiting administrator approval.");
+        setError("Your email verification is still pending. Please click the link in your email.");
       }
     } catch (err: any) {
       console.error('Check error:', err);
@@ -142,7 +115,7 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
     navigate('/login');
   };
 
-  const fullyVerified = emailVerified && adminApproved;
+  const fullyVerified = emailVerified;
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
@@ -163,7 +136,7 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
           {fullyVerified ? 'Account Activated!' : 'Verification Required'}
         </h1>
         <p className="text-xs text-slate-500 font-medium px-4 mb-6">
-          Complete the security checkpoints below to unlock access
+          Please verify your email address to unlock access
         </p>
         
         <div className="space-y-4 mb-8 text-left">
@@ -177,33 +150,12 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-200">Checkpoint 1: Email Link</p>
+              <p className="text-xs font-bold text-slate-200">Email Verification Link</p>
               <div className="text-[10px] text-slate-500 font-medium mt-1">
                 {emailVerified ? (
                   <span className="text-emerald-400 font-bold">✓ Verified Link Clicked</span>
                 ) : (
                   <span>Resent link to <strong className="text-[#D4AF37] font-bold">{auth.currentUser?.email}</strong>. Check inbox/spam folder.</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Checkpoint 2: Admin Security Verification */}
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 flex items-start space-x-3.5">
-            <div className="mt-1">
-              {adminApproved ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              ) : (
-                <div className="w-5 h-5 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-200">Checkpoint 2: Admin Approval & Link</p>
-              <div className="text-[10px] text-slate-400 mt-1">
-                {adminApproved ? (
-                  <span className="text-emerald-400 font-bold">✓ Approved & Verified by Curator</span>
-                ) : (
-                  <span className="text-amber-500 font-medium font-mono text-[9px] uppercase tracking-wider block bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10 w-fit">Awaiting Administrative Review</span>
                 )}
               </div>
             </div>
