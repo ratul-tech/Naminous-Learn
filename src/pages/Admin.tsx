@@ -202,51 +202,55 @@ export default function Admin({ profile }: AdminProps) {
       onConfirm: async () => {
         try {
           setDeletingUserId(uid);
-          console.log(`Admin client-side initiating deletion cleanup for student: ${uid}...`);
+          console.log(`Admin client-side initiating secure server-side deletion for student: ${uid}...`);
           
-          // 1. Clean up associated collections on client side
-          const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
-          const batch = writeBatch(db);
-          let opCount = 0;
+          // 1. Call modern server-side endpoint with Admin SDK privileges to remove Auth user and handle all associated database deletions first (bypassing Firestore local rules)
+          const adminDeleteSuccess = await deleteAuthUser(uid);
           
-          for (const colName of collectionsToClean) {
-            try {
-              const q = query(collection(db, colName), where('uid', '==', uid));
-              const snapshot = await getDocs(q);
-              snapshot.forEach((docSnap) => {
-                batch.delete(docSnap.ref);
-                opCount++;
-              });
-            } catch (colErr) {
-              console.error(`Admin Client failed to delete collections for student ${uid}:`, colErr);
+          if (!adminDeleteSuccess) {
+            console.warn('Backend user deletion service failed. Attempting client-side fallback account deletion...');
+            
+            // 2. Client-side fallback cleanup of associated collections
+            const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
+            const batch = writeBatch(db);
+            let opCount = 0;
+            
+            for (const colName of collectionsToClean) {
+              try {
+                const q = query(collection(db, colName), where('uid', '==', uid));
+                const snapshot = await getDocs(q);
+                snapshot.forEach((docSnap) => {
+                  batch.delete(docSnap.ref);
+                  opCount++;
+                });
+              } catch (colErr) {
+                console.error(`Admin Client failed to delete collections for student ${uid}:`, colErr);
+              }
             }
-          }
-          
-          // 2. Delete student profile document
-          batch.delete(doc(db, 'students', uid));
-          opCount++;
-          
-          // 3. Decrement global student counter
-          try {
-            const countersRef = doc(db, 'global_stats', 'counters');
-            batch.set(countersRef, {
-              studentsCount: increment(-1)
-            }, { merge: true });
+            
+            // Delete student profile document
+            batch.delete(doc(db, 'students', uid));
             opCount++;
-          } catch (statErr) {
-            console.error('Admin Client failed to update studentsCount state:', statErr);
+            
+            // Decrement global student counter
+            try {
+              const countersRef = doc(db, 'global_stats', 'counters');
+              batch.set(countersRef, {
+                studentsCount: increment(-1)
+              }, { merge: true });
+              opCount++;
+            } catch (statErr) {
+              console.error('Admin Client failed to update studentsCount state:', statErr);
+            }
+            
+            if (opCount > 0) {
+              await batch.commit();
+              console.log('Admin Client-side fallback Firestore cleanup completed.');
+            }
+          } else {
+            console.log('Backend user deletion successfully deleted Firestore records & Auth record.');
           }
           
-          if (opCount > 0) {
-            await batch.commit();
-            console.log('Admin Client-side Firestore cleanup completed.');
-          }
-          
-          // 4. Request Firebase Auth deletion via backend service
-          const ok = await deleteAuthUser(uid);
-          if (!ok) {
-            console.warn('Backend Auth user deletion service returned failure, but client-side database cleanup was fully successful.');
-          }
           setConfirmModal(null);
         } catch (error) {
           handleFirestoreError(error, OperationType.DELETE, `students/${uid}`);
@@ -276,39 +280,42 @@ export default function Admin({ profile }: AdminProps) {
       message: 'Are you sure you want to remove this administrator? They will be permanently removed from the system and lose all access.',
       onConfirm: async () => {
         try {
-          console.log(`Admin client-side initiating deletion cleanup for admin: ${uid}...`);
+          console.log(`Admin client-side initiating secure server-side deletion for admin: ${uid}...`);
           
-          // 1. Clean up associated collections on client side
-          const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
-          const batch = writeBatch(db);
-          let opCount = 0;
+          // 1. Call modern server-side endpoint with Admin SDK privileges to handle deletion first
+          const adminDeleteSuccess = await deleteAuthUser(uid);
           
-          for (const colName of collectionsToClean) {
-            try {
-              const q = query(collection(db, colName), where('uid', '==', uid));
-              const snapshot = await getDocs(q);
-              snapshot.forEach((docSnap) => {
-                batch.delete(docSnap.ref);
-                opCount++;
-              });
-            } catch (colErr) {
-              console.error(`Admin Client failed to delete collections for admin ${uid}:`, colErr);
+          if (!adminDeleteSuccess) {
+            console.warn('Backend user deletion service failed. Attempting client-side fallback admin deletion...');
+            
+            // 2. Clean up associated collections on client side
+            const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
+            const batch = writeBatch(db);
+            let opCount = 0;
+            
+            for (const colName of collectionsToClean) {
+              try {
+                const q = query(collection(db, colName), where('uid', '==', uid));
+                const snapshot = await getDocs(q);
+                snapshot.forEach((docSnap) => {
+                  batch.delete(docSnap.ref);
+                  opCount++;
+                });
+              } catch (colErr) {
+                console.error(`Admin Client failed to delete collections for admin ${uid}:`, colErr);
+              }
             }
-          }
-          
-          // 2. Delete admin profile document
-          batch.delete(doc(db, 'admins', uid));
-          opCount++;
-          
-          if (opCount > 0) {
-            await batch.commit();
-            console.log('Admin Client-side profile deletions complete.');
-          }
-          
-          // 3. Request Firebase Auth deletion via backend service
-          const ok = await deleteAuthUser(uid);
-          if (!ok) {
-            console.warn('Backend Auth user deletion service returned failure, but client-side database cleanup was fully successful.');
+            
+            // Delete admin profile document
+            batch.delete(doc(db, 'admins', uid));
+            opCount++;
+            
+            if (opCount > 0) {
+              await batch.commit();
+              console.log('Admin Client-side fallback profile deletions complete.');
+            }
+          } else {
+            console.log('Backend user deletion successfully deleted Admin Firestore record & Auth record.');
           }
           setConfirmModal(null);
         } catch (error) {
