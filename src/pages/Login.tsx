@@ -66,10 +66,8 @@ export default function Login() {
         // Successfully created server-side in Auth and Firestore.
         // Sign the student in client-side to establish full session state.
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        await sendEmailVerification(user);
         
-        navigate('/verify-email');
+        navigate('/dashboard');
       } else {
         // Login Flow
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -123,11 +121,7 @@ export default function Login() {
           return;
         }
 
-        if (!user.emailVerified && profileData.role !== 'admin') {
-          navigate('/verify-email');
-          setLoading(false);
-          return;
-        }
+
 
         navigate('/dashboard');
       }

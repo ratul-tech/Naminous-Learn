@@ -42,14 +42,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
       );
     }
 
-    if (!user.emailVerified && profile?.role !== 'admin') {
-      return (
-        <Routes>
-          <Route path="/verify-email" element={<VerifyEmail onVerified={refreshUser} />} />
-          <Route path="*" element={<Navigate to="/verify-email" />} />
-        </Routes>
-      );
-    }
+
 
     const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
 
@@ -137,7 +130,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser ? { ...firebaseUser } : null);
-      if (firebaseUser && firebaseUser.emailVerified) {
+      if (firebaseUser) {
         let userDoc;
         
         userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
@@ -150,7 +143,7 @@ export default function App() {
           setProfile(data);
         } else {
           // Special case for bootstrap admin
-          if (firebaseUser.email === 'shahriarislam275@gmail.com' && firebaseUser.emailVerified) {
+          if (firebaseUser.email === 'shahriarislam275@gmail.com') {
             setProfile({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
@@ -686,7 +679,7 @@ function Footer({ user }: { user: User | null }) {
   return (
     <footer className="bg-[#0f172a] border-t border-slate-800 mt-auto">
       <div className="container mx-auto px-4 py-12">
-        {(!user || !user.emailVerified) && (
+        {!user && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-6">
