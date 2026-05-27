@@ -87,23 +87,13 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
     );
   };
 
-  const isPlainAdminDashboard = profile?.role === 'admin' && location.pathname === '/admin' && localStorage.getItem('admin_preview_mode') !== 'true';
-
   return (
     <div className="min-h-screen bg-[#020617] text-slate-300 font-sans flex flex-col transition-colors duration-500">
-      {!isPlainAdminDashboard && (
-        <Navbar user={user} profile={profile} onLogout={onLogout} />
-      )}
+      <Navbar user={user} profile={profile} onLogout={onLogout} />
       
-      {isPlainAdminDashboard ? (
-        <div className="flex-grow flex flex-col min-h-0">
-          {renderContent()}
-        </div>
-      ) : (
-        <main className="container mx-auto px-4 flex-grow py-4">
-          {renderContent()}
-        </main>
-      )}
+      <main className="container mx-auto px-4 flex-grow py-4">
+        {renderContent()}
+      </main>
 
       {!user && <Footer user={user} />}
     </div>
@@ -249,7 +239,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
   const navLinks = getNavLinks();
 
   return (
-    <nav className="bg-[#0f172a]/90 backdrop-blur-xl sticky top-0 z-50 border-b border-indigo-500/10 shadow-2xl transition-all duration-300">
+    <nav className="bg-[#0f172a]/90 backdrop-blur-xl sticky top-0 z-50 border-b border-indigo-500/10 shadow-2xl transition-all duration-300 relative">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex justify-between items-center h-16 md:h-20">
           
@@ -379,14 +369,14 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100]"
+              className="absolute inset-0 min-h-screen bg-black/70 backdrop-blur-md z-[100]"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xs bg-[#0f172a] z-[110] shadow-2xl flex flex-col border-l border-indigo-500/10"
+              className="absolute right-0 top-0 h-screen w-full max-w-xs bg-[#0f172a] z-[110] shadow-2xl flex flex-col border-l border-indigo-500/10"
             >
               <div className="p-6 flex justify-between items-center border-b border-slate-800 bg-slate-950/20">
                 <div className="flex items-center space-x-3">
