@@ -50,109 +50,98 @@ export default function FeedbackForm({ profile }: FeedbackProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
-      <div className="bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-800">
-        <div className="bg-[#7A4900] p-8 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16" />
-          <div className="relative z-10 flex items-center space-x-4 mb-2">
-            <div className="p-3 bg-white/10 rounded-2xl">
-              <MessageSquare className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Feedback</h1>
-              <p className="text-white/70">Help us improve Numinous Learn</p>
-            </div>
-          </div>
-        </div>
+    <div className="max-w-xl mx-auto space-y-12 pb-10">
+      <header className="px-1 py-4 text-center">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 uppercase leading-none tracking-tight">Feedback & <span className="text-[#D4AF37]">Support</span></h1>
+        <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-none">Share your thoughts and shape our academic platform</p>
+      </header>
 
-        <div className="p-8">
-          {success ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
+      <div className="space-y-6">
+        {success ? (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16 border border-dashed border-slate-905 rounded-3xl"
+          >
+            <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 shadow-inner">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Thank You!</h2>
+            <p className="text-slate-500 text-xs font-semibold leading-relaxed max-w-sm mx-auto">Your feedback has been successfully preserved in our system. We read and value every submission.</p>
+            <button
+              onClick={() => setSuccess(false)}
+              className="mt-8 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/5 px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer animate-none"
             >
-              <div className="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
-                <CheckCircle2 className="w-10 h-10" />
+              Submit another feedback
+            </button>
+          </motion.div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8 py-2">
+            <div className="space-y-4">
+              <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider">What would you like to do?</label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setType('Suggestion')}
+                  className={`p-5 rounded-2xl border transition-all flex flex-col items-center space-y-2 select-none cursor-pointer ${
+                    type === 'Suggestion'
+                      ? 'border-[#D4AF37] bg-slate-950 text-[#D4AF37] shadow-xl'
+                      : 'border-slate-900 bg-transparent text-slate-500 hover:text-slate-300 hover:border-slate-800'
+                  }`}
+                >
+                  <MessageSquare className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black uppercase tracking-widest">Suggestion</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType('Issue')}
+                  className={`p-5 rounded-2xl border transition-all flex flex-col items-center space-y-2 select-none cursor-pointer ${
+                    type === 'Issue'
+                      ? 'border-[#D4AF37] bg-slate-950 text-[#D4AF37] shadow-xl'
+                      : 'border-slate-900 bg-transparent text-slate-500 hover:text-slate-300 hover:border-slate-800'
+                  }`}
+                >
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-black uppercase tracking-widest">Report Issue</span>
+                </button>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Thank You!</h2>
-              <p className="text-slate-400">Your feedback has been submitted successfully. We appreciate your input.</p>
-              <button
-                onClick={() => setSuccess(false)}
-                className="mt-8 text-[#D4AF37] font-bold hover:underline"
-              >
-                Submit another feedback
-              </button>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-4">What would you like to do?</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setType('Suggestion')}
-                    className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center space-y-2 ${
-                      type === 'Suggestion'
-                        ? 'border-[#D4AF37] bg-amber-500/5 text-[#D4AF37]'
-                        : 'border-slate-800 text-slate-500 hover:border-slate-700'
-                    }`}
-                  >
-                    <MessageSquare className="w-6 h-6" />
-                    <span className="font-bold">Suggestion</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setType('Issue')}
-                    className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center space-y-2 ${
-                      type === 'Issue'
-                        ? 'border-[#D4AF37] bg-amber-500/5 text-[#D4AF37]'
-                        : 'border-slate-800 text-slate-500 hover:border-slate-700'
-                    }`}
-                  >
-                    <AlertCircle className="w-6 h-6" />
-                    <span className="font-bold">Report Issue</span>
-                  </button>
-                </div>
-              </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">Your Message</label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder={type === 'Suggestion' ? "Tell us how we can make Numinous Learn better..." : "Describe the issue you encountered..."}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950 focus:border-[#D4AF37] text-white outline-none min-h-[200px] placeholder-slate-700"
-                  required
-                />
-              </div>
+            <div className="space-y-3">
+              <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Your Message</label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder={type === 'Suggestion' ? "Tell us how we can make Numinous Learn better..." : "Describe the issue you encountered..."}
+                className="w-full px-4 py-4 rounded-2xl border border-slate-900 bg-slate-950 focus:border-[#D4AF37]/50 text-white outline-none min-h-[160px] placeholder-slate-700 font-semibold text-sm transition-all focus:ring-1 focus:ring-[#D4AF37]/10"
+                required
+              />
+            </div>
 
-              {error && (
-                <div className="flex items-center space-x-2 text-rose-500 text-sm font-medium bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
-                  <AlertCircle className="w-5 h-5" />
-                  <span>{error}</span>
-                </div>
+            {error && (
+              <div className="flex items-center space-x-2 text-rose-500 text-xs font-bold bg-rose-500/5 p-4 rounded-xl border border-rose-500/10">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting || !message.trim()}
+              className="w-full bg-[#D4AF37] hover:bg-[#B8860B] active:scale-95 text-slate-950 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center space-x-2 disabled:opacity-30 cursor-pointer shadow-md shadow-amber-950/20"
+            >
+              {submitting ? (
+                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>Submit Feedback</span>
+                </>
               )}
-
-              <button
-                type="submit"
-                disabled={submitting || !message.trim()}
-                className="w-full bg-[#D4AF37] text-slate-950 py-4 rounded-2xl font-bold text-lg hover:bg-[#B8860B] shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
-              >
-                {submitting ? (
-                  <div className="w-6 h-6 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    <span>Submit Feedback</span>
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-        </div>
+            </button>
+          </form>
+        )}
       </div>
     </div>
-
   );
 }

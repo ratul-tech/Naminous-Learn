@@ -344,11 +344,6 @@ export default function Admin({ profile }: AdminProps) {
     </div>
   );
 
-  const handlePreview = () => {
-    // We'll use a local storage flag or a state in App.tsx that StudentShell respects
-    localStorage.setItem('admin_preview_mode', 'true');
-    window.location.href = '/dashboard';
-  };
 
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
@@ -376,25 +371,16 @@ export default function Admin({ profile }: AdminProps) {
           </div>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1">Management Suite v3.0 • Enterprise Edition</p>
         </div>
-        
         <div className="flex items-center gap-3">
           {activeTab !== 'menu' && (
             <button 
               onClick={() => setActiveTab('menu')}
-              className="flex items-center space-x-2 bg-slate-900 shadow-md hover:bg-slate-800 px-4 py-2 border border-slate-800 hover:border-slate-700 text-xs font-bold tracking-wide text-slate-350 rounded-xl transition-all cursor-pointer"
+              className="flex items-center space-x-2 bg-slate-900 shadow-md hover:bg-slate-800 px-4 py-2 border border-slate-800 hover:border-slate-700 text-xs font-bold tracking-wide text-slate-355 rounded-xl transition-all cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Menu</span>
             </button>
           )}
-
-          <button 
-            onClick={handlePreview}
-            className="group flex items-center space-x-2 bg-slate-900 shadow-md hover:bg-slate-800 px-4 py-2 border border-slate-800 hover:border-indigo-500/30 transition-all text-xs font-bold tracking-wide text-slate-355 rounded-xl cursor-pointer select-none"
-          >
-            <Eye className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Student Preview</span>
-          </button>
         </div>
       </div>
 
