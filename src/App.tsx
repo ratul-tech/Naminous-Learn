@@ -24,9 +24,6 @@ import Resources from './pages/Resources';
 // Shells
 import StudentShell from './components/StudentShell';
 
-import NotFound from './pages/NotFound';
-import ErrorBoundary from './components/ErrorBoundary';
-
 const LOGO_URL = "https://i.postimg.cc/0241N65R/received-982626700958526.jpg";
 
 function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: User | null, profile: UserProfile | null, setProfile: (p: UserProfile | null) => void, onLogout: () => void, refreshUser: () => Promise<void> }) {
@@ -40,7 +37,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<Navigate to="/login?role=admin" replace />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       );
     }
@@ -52,7 +49,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
       return (
         <Routes>
           <Route path="/verify-email" element={<VerifyEmail onVerified={refreshUser} />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/verify-email" />} />
         </Routes>
       );
     }
@@ -65,7 +62,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
           <Route path="/admin" element={<Admin profile={profile} />} />
           <Route path="/profile" element={<Profile profile={profile} setProfile={setProfile} />} />
           <Route path="/questions" element={<Questions profile={profile} />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/admin" />} />
         </Routes>
       );
     }
@@ -84,7 +81,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
           <Route path="/resources" element={<Resources profile={profile} />} />
           <Route path="/feedback" element={<FeedbackForm profile={profile} />} />
           <Route path="/questions" element={profile?.role === 'admin' ? <Questions profile={profile} /> : <Navigate to="/dashboard" />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Shell>
     );
@@ -202,9 +199,7 @@ export default function App() {
 
   return (
     <Router>
-      <ErrorBoundary>
-        <Layout user={user} profile={profile} setProfile={setProfile} onLogout={handleLogout} refreshUser={refreshUser} />
-      </ErrorBoundary>
+      <Layout user={user} profile={profile} setProfile={setProfile} onLogout={handleLogout} refreshUser={refreshUser} />
     </Router>
   );
 }
