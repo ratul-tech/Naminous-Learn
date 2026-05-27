@@ -60,7 +60,7 @@ export default function Login() {
 
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.error || 'নিবন্ধন ব্যর্থ হয়েছে।');
+          throw new Error(errData.error || 'Registration failed.');
         }
 
         // Successfully created server-side in Auth and Firestore.
@@ -89,10 +89,10 @@ export default function Login() {
 
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.error || 'অ্যাডমিন অ্যাকাউন্ট আবেদন ব্যর্থ হয়েছে।');
+          throw new Error(errData.error || 'Admin account application failed.');
         }
 
-        setMessage("আবেদন পাঠানো হয়েছে! একজন অ্যাডমিনিস্ট্রেটর শীঘ্রই আপনার অ্যাকাউন্টটি পর্যালোচনা করবেন। অনুমোদনের আগে আপনি লগইন করতে পারবেন না।");
+        setMessage("Application submitted successfully! An administrator will review your account shortly. You cannot log in before approval.");
         setAuthMode('login');
       } else {
         // Login Flow
@@ -125,13 +125,13 @@ export default function Login() {
               userDoc = await getDoc(doc(db, 'students', user.uid));
             } catch (healErr) {
               console.error("Self-healing student profile failed:", healErr);
-              setError("আপনার অ্যাকাউন্ট ডাটা পুনরুদ্ধার করার চেষ্টা ব্যর্থ হয়েছে। দয়া করে এডমিনকে নিশ্চিত করুন।");
+              setError("Failed to recover your account data. Please contact an administrator.");
               await signOut(auth);
               setLoading(false);
               return;
             }
           } else {
-            setError(`${selectedRole === 'admin' ? 'অ্যাডমিন' : 'শিক্ষার্থী'} রেকর্ডে কোনো অ্যাকাউন্ট পাওয়া যায়নি।`);
+            setError(`No account found in the ${selectedRole === 'admin' ? 'admin' : 'student'} records.`);
             await signOut(auth);
             setLoading(false);
             return;
@@ -141,7 +141,7 @@ export default function Login() {
         const profileData = userDoc.data() as UserProfile;
 
         if (profileData.role === 'admin' && profileData.status === 'pending') {
-          setError("আপনার অ্যাডমিনিস্ট্রেটর অ্যাকাউন্টটি অনুমোদনের অপেক্ষায় রয়েছে। দয়া করে অপেক্ষা করুন।");
+          setError("Your administrator account is pending approval. Please wait.");
           await signOut(auth);
           setLoading(false);
           return;
@@ -158,7 +158,7 @@ export default function Login() {
     } catch (err: any) {
       console.error("Auth error:", err);
       if (err.code === 'auth/email-already-in-use') {
-        setError('ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে। যদি আপনার পাসওয়ার্ড মনে থাকে তবে সরাসরি "লগইন" করার চেষ্টা করুন, অ্যাকাউন্ট প্রোফাইল স্বয়ংক্রিয়ভাবে পুনরুদ্ধার করা হবে।');
+        setError('The email is already in use. If you remember your password, try logging in directly to automatically recover your profile.');
       } else {
         setError(getAuthErrorMessage(err.code));
       }

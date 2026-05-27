@@ -263,9 +263,9 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
         } catch (authClientErr: any) {
           console.error('Client-side Auth user deletion failed:', authClientErr);
           if (authClientErr.code === 'auth/requires-recent-login') {
-            throw new Error('নিরাপত্তার স্বার্থে অ্যাকাউন্টটি মুছে ফেলার জন্য আপনাকে আবার লগইন করতে হবে। অনুগ্রহ করে লগআউট করে নতুন করে লগইন করে এই কাজ সম্পন্ন করুন।');
+            throw new Error('For security reasons, you must re-authenticate (log out and log back in) before deleting your account.');
           } else {
-            throw new Error('অ্যাকাউন্ট মুছে ফেলা ব্যর্থ হয়েছে, দয়া করে আবার চেষ্টা করুন।');
+            throw new Error('Failed to delete account. Please try again.');
           }
         }
       }

@@ -1945,7 +1945,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fee (৳)</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fee (BDT)</label>
                         <input type="number" value={eventData.entryFee} onChange={(e) => setEventData({ ...eventData, entryFee: parseInt(e.target.value) || 0 })} className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none text-emerald-400 font-bold transition-all" required />
                       </div>
                       <div className="space-y-2">

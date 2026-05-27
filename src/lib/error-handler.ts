@@ -4,23 +4,23 @@ import { OperationType, FirestoreErrorInfo } from '../types';
 export function getAuthErrorMessage(code: string): string {
   switch (code) {
     case 'auth/email-already-in-use':
-      return 'ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে।';
+      return 'This email is already in use.';
     case 'auth/invalid-email':
-      return 'অকার্যকর ইমেইল ঠিকানা।';
+      return 'Invalid email address.';
     case 'auth/weak-password':
-      return 'পাসওয়ার্ডটি খুব দুর্বল।';
+      return 'The password is too weak.';
     case 'auth/user-not-found':
-      return 'এই ইমেইল দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি।';
+      return 'No account found with this email.';
     case 'auth/wrong-password':
-      return 'ভুল পাসওয়ার্ড।';
+      return 'Incorrect password.';
     case 'auth/too-many-requests':
-      return 'অনেক বেশি চেষ্টা করা হয়েছে। পরে আবার চেষ্টা করুন।';
+      return 'Too many attempts. Please try again later.';
     case 'auth/network-request-failed':
-      return 'নেটওয়ার্ক সংযোগ ত্রুটি।';
+      return 'Network connection error.';
     case 'auth/invalid-credential':
-      return 'ইমেল বা পাসওয়ার্ড সঠিক নয়।';
+      return 'Incorrect email or password.';
     default:
-      return 'কিছু ভুল হয়েছে। পরে আবার চেষ্টা করুন।';
+      return 'Something went wrong. Please try again later.';
   }
 }
 
