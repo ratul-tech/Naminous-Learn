@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType, Resource } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
+import { ALL_SUBJECTS } from '../constants';
 
 interface AdminProps {
   profile: UserProfile | null;
@@ -2239,12 +2240,11 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
                     <input type="url" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} placeholder="https://drive.google.com/..." className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200" required />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Classification Target</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Classification Target (Subject)</label>
                     <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200 appearance-none">
-                      <option value="Physics">Physics</option>
-                      <option value="Chemistry">Chemistry</option>
-                      <option value="Biology">Biology</option>
-                      <option value="Mathematics">Mathematics</option>
+                      {ALL_SUBJECTS.map(subject => (
+                        <option key={subject} value={subject}>{subject}</option>
+                      ))}
                       <option value="General">General</option>
                     </select>
                   </div>
