@@ -991,13 +991,6 @@ function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
 }
 
 function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins: UserProfile[], onDelete: (uid: string) => void, onActivate: (uid: string) => void, currentProfile: UserProfile | null }) {
-  const [showAdd, setShowAdd] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [adminType, setAdminType] = useState<'full' | 'question_holder'>('question_holder');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredAdmins = admins.filter(a => 
@@ -1013,50 +1006,6 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
       await updateDoc(doc(db, 'admins', uid), { adminType: newType });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `admins/${uid}`);
-    }
-  };
-
-  const handleCreateAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const idToken = await auth.currentUser?.getIdToken();
-      if (!idToken) {
-        throw new Error('Authorized administrator token could not be fetched.');
-      }
-
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          displayName: name,
-          role: 'admin',
-          adminType,
-          status: 'active',
-        }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to create administrative credentials.');
-      }
-      
-      setShowAdd(false);
-      setEmail('');
-      setPassword('');
-      setName('');
-    } catch (err: any) {
-      console.error("Admin creation error:", err);
-      setError(err.message || "Failed to create admin account.");
-    } finally {
-      setLoading(false);
     }
   };
 
