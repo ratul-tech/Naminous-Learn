@@ -1355,12 +1355,22 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active'>('all');
 
-  const filteredUsers = users.filter(u => 
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.phone?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          u.phone?.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (statusFilter === 'pending') {
+      return u.status === 'pending';
+    }
+    if (statusFilter === 'active') {
+      return u.status === 'active' || !u.status;
+    }
+    return true;
+  });
 
   const handleEdit = (user: UserProfile) => {
     setEditingUser(user);
@@ -1394,6 +1404,28 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
           <p className="text-xs text-slate-500 font-medium">Configure pupil profiles and access levels</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          {/* Status Filter */}
+          <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800 w-full sm:w-auto">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-wider ${statusFilter === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setStatusFilter('pending')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-wider ${statusFilter === 'pending' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              Pending
+            </button>
+            <button
+              onClick={() => setStatusFilter('active')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-wider ${statusFilter === 'active' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              Active
+            </button>
+          </div>
+
           <div className="relative w-full sm:w-64 group">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
               <Search className="w-4 h-4" />
@@ -1421,6 +1453,7 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
                 <th className="px-6 py-5">Academic Info</th>
                 <th className="px-6 py-5">Institution</th>
                 <th className="px-6 py-5">Contact</th>
+                <th className="px-6 py-5">Status</th>
                 <th className="px-8 py-5 text-right">Operations</th>
               </tr>
             </thead>
@@ -1432,7 +1465,7 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
                       {u.photoURL ? (
                         <div className="relative">
                           <img src={u.photoURL} alt="" className="w-10 h-10 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/50 transition-colors shrink-0" referrerPolicy="no-referrer" />
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+                          <div className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-slate-900 rounded-full ${(!u.status || u.status === 'active') ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                         </div>
                       ) : (
                         <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
@@ -1455,6 +1488,28 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
                   </td>
                   <td className="px-6 py-5">
                     <p className="text-slate-300 font-mono text-xs">{u.phone || '— Unspecified —'}</p>
+                  </td>
+                  <td className="px-6 py-5">
+                    {(!u.status || u.status === 'active') ? (
+                      <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-xl text-[10px] font-bold tracking-widest uppercase border border-emerald-500/20">Active</span>
+                    ) : (
+                      <div className="flex flex-col items-start space-y-2">
+                        <span className="bg-amber-500/10 text-amber-500 px-3 py-1 rounded-xl text-[10px] font-bold tracking-widest uppercase border border-amber-500/10">Pending Approval</span>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await updateDoc(doc(db, 'students', u.uid), { status: 'active' });
+                            } catch (err) {
+                              handleFirestoreError(err, OperationType.UPDATE, `students/${u.uid}`);
+                            }
+                          }}
+                          className="text-[9px] bg-indigo-600 hover:bg-indigo-500 hover:shadow-indigo-500/30 text-white font-extrabold px-2.5 py-1.5 rounded-lg transition-all uppercase tracking-wider flex items-center space-x-1 cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Approve</span>
+                        </button>
+                      </div>
+                    )}
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end space-x-2">

@@ -42,7 +42,17 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
       );
     }
 
+    const isStudent = profile?.role === 'student';
+    const isNotVerified = isStudent && (!user.emailVerified || profile?.status !== 'active');
 
+    if (isNotVerified) {
+      return (
+        <Routes>
+          <Route path="/verify-email" element={<VerifyEmail onVerified={refreshUser} />} />
+          <Route path="*" element={<Navigate to="/verify-email" />} />
+        </Routes>
+      );
+    }
 
     const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
 

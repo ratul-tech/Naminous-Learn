@@ -691,19 +691,6 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                       </select>
                     </div>
 
-                    {/* Math Rendering Preference */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Math Rendering Preference</label>
-                      <select
-                        value={formData.mathEngine}
-                        onChange={(e) => setFormData({ ...formData, mathEngine: e.target.value as MathEngine })}
-                        className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm cursor-pointer"
-                      >
-                        <option value="katex">KaTeX (Ultra Fast & Smooth)</option>
-                        <option value="mathjax">MathJax (Strict & Comprehensive)</option>
-                      </select>
-                    </div>
-
                     {/* Accessibility Theme Preference */}
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400 flex items-center space-x-1.5">
