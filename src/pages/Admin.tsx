@@ -7,7 +7,7 @@ import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
-import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle, PlusCircle, Filter, Trophy, Clock, AlertTriangle, ExternalLink, ShieldPlus, Search, Loader2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Users, User, BookOpen, CreditCard, Calendar, Settings, MessageSquare, AlertCircle, Shield, Edit, Save, X, FileText, LayoutDashboard, Database, Activity, LogOut, ChevronRight, Download, ArrowLeft, Eye, UserCircle, PlusCircle, Filter, Trophy, Clock, AlertTriangle, ExternalLink, ShieldPlus, Search, Loader2, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType, Resource } from '../types';
@@ -34,6 +34,7 @@ export default function Admin({ profile }: AdminProps) {
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const isFullAdmin = profile?.role === 'admin';
   
@@ -356,7 +357,7 @@ export default function Admin({ profile }: AdminProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 -mx-4 -mt-8">
+    <div className="min-h-screen bg-[#0f172a] text-slate-200 flex flex-col">
       {activeTab === 'menu' ? (
         <div className="p-4 sm:p-8 lg:p-12 max-w-7xl mx-auto">
           <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -438,61 +439,237 @@ export default function Admin({ profile }: AdminProps) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col h-screen">
-          <header className="px-6 py-4 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between z-50 sticky top-0">
-            <div className="flex items-center space-x-6">
-              <button 
-                onClick={() => setActiveTab('menu')}
-                className="p-2.5 bg-slate-950 rounded-xl border border-slate-800 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all shadow-inner"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div className="h-8 w-px bg-slate-800" />
-              <div>
-                <div className="flex items-center space-x-2">
-                  <h2 className="text-xl font-bold text-white tracking-tight">
-                    {navItems.find(i => i.id === activeTab)?.label}
-                  </h2>
+        <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden bg-slate-950">
+          {/* Robust Desktop Persistent Side Navigation */}
+          <aside className="hidden lg:flex flex-col w-64 bg-slate-900 border-r border-slate-800/80 shrink-0 h-full p-4 justify-between z-45 relative">
+            <div className="flex flex-col flex-grow overflow-hidden">
+              {/* Back to Launcher Link */}
+              <div className="mb-5 flex items-center justify-between px-2 pt-1">
+                <button 
+                  onClick={() => setActiveTab('menu')}
+                  className="group flex items-center space-x-2 text-[#D4AF37] hover:text-[#ffdf64] transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest">Back to Hub</span>
+                </button>
+                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Curator Console</span>
+              </div>
+
+              {/* Branding Section */}
+              <div className="px-2 pb-4 mb-4 border-b border-slate-800/80 flex items-center space-x-3 shrink-0">
+                <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20 shadow-md shadow-indigo-500/5">
+                  <Shield className="w-5 h-5 animate-pulse" />
                 </div>
-                <div className="flex items-center space-x-2 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Terminal</span>
+                <div className="overflow-hidden">
+                  <h2 className="text-sm font-black text-white tracking-tight truncate">Academic Deck</h2>
+                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] leading-none mt-0.5">Admin Central</p>
                 </div>
               </div>
+
+              {/* Nav Items Panel */}
+              <nav className="flex-1 space-y-1 overflow-y-auto pr-1 select-none scrollbar-thin scrollbar-thumb-slate-800">
+                {navItems.map((item) => {
+                  if (item.fullAdminOnly && !isFullAdmin) return null;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id as AdminTab)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all duration-200 border group text-left ${
+                        isActive
+                          ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 shadow-lg shadow-amber-500/5'
+                          : 'text-slate-400 hover:text-white hover:bg-white/[0.02] border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3.5">
+                        <item.icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isActive ? 'text-[#D4AF37]' : 'text-slate-550 group-hover:text-slate-350'}`} />
+                        <span className="tracking-tight">{item.label}</span>
+                      </div>
+                      {isActive && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,1)]" />
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              {activeTab !== 'profile' && (
-                <button 
-                  onClick={handlePreview}
-                  className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 rounded-xl border border-slate-800 text-slate-400 transition-all shadow-sm"
-                >
-                  <Eye className="w-4 h-4 text-indigo-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Preview Mode</span>
-                </button>
-              )}
-              <div className="h-6 w-px bg-slate-800 mx-2" />
-              {profile?.photoURL ? (
-                <img src={profile.photoURL} alt="" className="w-8 h-8 rounded-lg border border-slate-800" referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700">
-                  <User className="w-4 h-4 text-slate-500" />
+
+            {/* Profile footer section */}
+            <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3 px-2 shrink-0">
+              <div className="flex items-center space-x-2.5 overflow-hidden">
+                {profile?.photoURL ? (
+                  <img src={profile.photoURL} alt="" className="w-8 h-8 rounded-xl border border-slate-800 object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center border border-slate-750">
+                    <User className="w-4 h-4 text-slate-500" />
+                  </div>
+                )}
+                <div className="overflow-hidden">
+                  <p className="text-[11px] font-bold text-slate-200 truncate leading-tight select-none">{profile?.displayName?.split(' ')[0] || 'Curator'}</p>
+                  <p className="text-[9px] text-[#D4AF37] font-semibold uppercase tracking-wider">{isFullAdmin ? 'Super' : 'Staff'}</p>
                 </div>
-              )}
-            </div>
-          </header>
-
-
-          <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 scroll-smooth bg-slate-950">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="pb-24 max-w-7xl mx-auto"
+              </div>
+              <button 
+                onClick={() => auth.signOut()}
+                className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
+                title="Terminate Session"
               >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </aside>
+
+          {/* Mobile Navigation left-drawer overlay and transition */}
+          <AnimatePresence>
+            {isMobileSidebarOpen && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] lg:hidden"
+                />
+                <motion.div
+                  initial={{ x: '-100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '-100%' }}
+                  transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+                  className="fixed left-0 top-0 bottom-0 w-full max-w-xs bg-[#0f172a] z-[110] shadow-2xl flex flex-col border-r border-slate-800/80 p-5 lg:hidden"
+                >
+                  {/* Drawer branding header */}
+                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800/80 shrink-0">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+                        <Shield className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-black text-white tracking-tight">Academic Control</h2>
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Management Deck</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsMobileSidebarOpen(false)}
+                      className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-colors border border-slate-800"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Drawer links */}
+                  <nav className="flex-grow space-y-1.5 overflow-y-auto select-none pr-1">
+                    {navItems.map((item) => {
+                      if (item.fullAdminOnly && !isFullAdmin) return null;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveTab(item.id as AdminTab);
+                            setIsMobileSidebarOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all duration-200 border group text-left ${
+                            isActive
+                              ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 shadow-lg shadow-amber-500/5'
+                              : 'text-slate-400 hover:text-white hover:bg-white/[0.02] border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3.5">
+                            <item.icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isActive ? 'text-[#D4AF37]' : 'text-slate-550 group-hover:text-slate-350'}`} />
+                            <span className="tracking-tight">{item.label}</span>
+                          </div>
+                          {isActive && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </nav>
+
+                  {/* Drawer footer utilities */}
+                  <div className="pt-4 mt-4 border-t border-slate-800 space-y-2 shrink-0">
+                    <button 
+                      onClick={() => {
+                        setActiveTab('menu');
+                        setIsMobileSidebarOpen(false);
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 bg-slate-900 border border-slate-800 py-3 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-850 hover:border-slate-705 font-bold transition-all"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Back to Hub Launchpad</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Right Master Workspace Container */}
+          <div className="flex-grow flex flex-col min-h-screen lg:h-screen lg:overflow-hidden min-w-0">
+            <header className="px-6 py-4 bg-slate-900/50 backdrop-blur-md border-b border-slate-850 flex items-center justify-between z-35 sticky top-0 shrink-0">
+              <div className="flex items-center space-x-4">
+                {/* Menu Button below lg screens */}
+                <button 
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                  className="lg:hidden p-2.5 bg-slate-950 rounded-xl border border-slate-800 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all shadow-inner"
+                  aria-label="Open sub-modules list"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                {/* Back button and label */}
+                <button 
+                  onClick={() => setActiveTab('menu')}
+                  className="hidden lg:flex p-2.5 bg-slate-950 rounded-xl border border-slate-850 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all shadow-inner"
+                  title="Back to Launchpad"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="h-8 w-px bg-slate-800" />
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h2 className="text-xl font-bold text-white tracking-tight">
+                      {navItems.find(i => i.id === activeTab)?.label}
+                    </h2>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Terminal</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                {activeTab !== 'profile' && (
+                  <button 
+                    onClick={handlePreview}
+                    className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 rounded-xl border border-slate-800 text-slate-400 transition-all shadow-sm"
+                  >
+                    <Eye className="w-4 h-4 text-indigo-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Preview Mode</span>
+                  </button>
+                )}
+                <div className="h-6 w-px bg-slate-800 mx-2" />
+                {profile?.photoURL ? (
+                  <img src={profile.photoURL} alt="" className="w-8 h-8 rounded-lg border border-slate-800 object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700">
+                    <User className="w-4 h-4 text-slate-500" />
+                  </div>
+                )}
+              </div>
+            </header>
+
+            {/* Sidebar content panel with adaptive sizing */}
+            <div className="flex-grow p-4 sm:p-8 lg:p-12 lg:overflow-y-auto scroll-smooth bg-slate-950">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="pb-24 max-w-7xl mx-auto"
+                >
                 {activeTab === 'dashboard' && (
                   <div className="space-y-10">
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -587,6 +764,7 @@ export default function Admin({ profile }: AdminProps) {
                 {activeTab === 'resources' && <ResourceManager key="resources" resources={resources} onDelete={handleDeleteResource} />}
               </motion.div>
             </AnimatePresence>
+          </div>
           </div>
         </div>
       )}

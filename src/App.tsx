@@ -95,9 +95,15 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
         <Navbar user={user} profile={profile} onLogout={onLogout} />
       )}
       
-      <main className="container mx-auto px-4 flex-grow py-4">
-        {renderContent()}
-      </main>
+      {isPlainAdminDashboard ? (
+        <div className="flex-grow flex flex-col min-h-0">
+          {renderContent()}
+        </div>
+      ) : (
+        <main className="container mx-auto px-4 flex-grow py-4">
+          {renderContent()}
+        </main>
+      )}
 
       {!user && <Footer user={user} />}
     </div>
