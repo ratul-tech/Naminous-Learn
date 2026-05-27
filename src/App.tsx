@@ -106,6 +106,14 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Sync high-contrast theme preference
+  useEffect(() => {
+    const activePref = profile?.themePreference || (localStorage.getItem('theme_high_contrast') === 'true' ? 'high-contrast' : 'normal');
+    const isHighContrast = activePref === 'high-contrast';
+    document.documentElement.classList.toggle('high-contrast', isHighContrast);
+    localStorage.setItem('theme_high_contrast', isHighContrast ? 'true' : 'false');
+  }, [profile?.themePreference]);
+
   useEffect(() => {
     async function testConnection() {
       try {

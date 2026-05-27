@@ -21,3 +21,120 @@
     @apply font-serif text-white;
   }
 }
+
+/* ==========================================
+   HIGH CONTRAST MODE OVERRIDES (ACCESSIBILITY)
+   ========================================== */
+html.high-contrast,
+html.high-contrast body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast {
+  --color-bg: #000000 !important;
+  --color-surface: #000000 !important;
+  --color-primary: #ffff00 !important;
+  --color-accent: #ffff00 !important;
+  --color-secondary: #ffffff !important;
+}
+
+/* Card wrappers, headers and main overlays */
+html.high-contrast .bg-slate-900,
+html.high-contrast .bg-slate-950,
+html.high-contrast .bg-slate-800,
+html.high-contrast .bg-slate-920,
+html.high-contrast .bg-indigo-950,
+html.high-contrast .bg-emerald-950,
+html.high-contrast .bg-stone-900,
+html.high-contrast .bg-amber-950,
+html.high-contrast .bg-slate-950\/40,
+html.high-contrast .bg-[#020617],
+html.high-contrast .bg-[#0f172a],
+html.high-contrast .bg-[#0d1527],
+html.high-contrast .bg-slate-900\/50 {
+  background-color: #000000 !important;
+  border-color: #ffffff !important;
+  border-width: 2px !important;
+}
+
+/* Overriding typography slate shades to stark white */
+html.high-contrast .text-slate-400,
+html.high-contrast .text-slate-500,
+html.high-contrast .text-slate-300,
+html.high-contrast .text-slate-200,
+html.high-contrast .text-slate-100,
+html.high-contrast .text-gray-400,
+html.high-contrast .text-gray-300,
+html.high-contrast .text-teal-400,
+html.high-contrast .text-indigo-200 {
+  color: #ffffff !important;
+}
+
+html.high-contrast .text-white {
+  color: #ffffff !important;
+}
+
+/* Highlight essential gold and active indicators with strong high-contrast yellow */
+html.high-contrast .text-[#D4AF37],
+html.high-contrast .text-amber-500,
+html.high-contrast .text-[#facc15],
+html.high-contrast .text-amber-400,
+html.high-contrast .text-indigo-400,
+html.high-contrast .text-emerald-400 {
+  color: #ffff00 !important;
+}
+
+/* Action button overrides: strong outline and contrast */
+html.high-contrast .bg-[#D4AF37],
+html.high-contrast .bg-amber-500,
+html.high-contrast .bg-emerald-600,
+html.high-contrast .bg-[#4f46e5],
+html.high-contrast .bg-indigo-600 {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* Solid white borders for layouts instead of faint grays */
+html.high-contrast .border-slate-800,
+html.high-contrast .border-slate-700,
+html.high-contrast .border-slate-850,
+html.high-contrast .border-slate-900,
+html.high-contrast .border-indigo-500\/20,
+html.high-contrast .border-white\/10,
+html.high-contrast .border-amber-500\/20,
+html.high-contrast .border-slate-800\/50,
+html.high-contrast .border-slate-800\/80 {
+  border-color: #ffffff !important;
+  border-width: 2px !important;
+}
+
+/* Forms contrast enhancements */
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  outline: 2px solid transparent !important;
+}
+
+html.high-contrast button {
+  border: 2px solid #ffffff !important;
+}
+
+/* Disable faint backdrops, glows and blurred ambient rings */
+html.high-contrast .shadow-xl,
+html.high-contrast .shadow-2xl,
+html.high-contrast .shadow-md,
+html.high-contrast .shadow-lg,
+html.high-contrast .shadow-inner,
+html.high-contrast .shadow-sm {
+  box-shadow: none !important;
+}
+
+html.high-contrast svg {
+  stroke: currentColor !important;
+}

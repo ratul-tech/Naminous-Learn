@@ -42,7 +42,8 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     school: profile?.school || '',
     group: profile?.group || 'Science' as Group,
     mathEngine: profile?.mathEngine || 'katex',
-    photoURL: profile?.photoURL || ''
+    photoURL: profile?.photoURL || '',
+    themePreference: profile?.themePreference || 'normal' as 'normal' | 'high-contrast'
   });
   
   const [passwords, setPasswords] = useState({
@@ -77,10 +78,19 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
         school: profile.school || '',
         group: profile.group || 'Science',
         mathEngine: profile.mathEngine || 'katex',
-        photoURL: profile.photoURL || ''
+        photoURL: profile.photoURL || '',
+        themePreference: profile.themePreference || 'normal'
       });
     }
   }, [profile]);
+
+  // Instantly preview high-contrast mode when changed in the dropdown
+  useEffect(() => {
+    if (formData.themePreference) {
+      const isHighContrast = formData.themePreference === 'high-contrast';
+      document.documentElement.classList.toggle('high-contrast', isHighContrast);
+    }
+  }, [formData.themePreference]);
 
   // Load admins list for view
   useEffect(() => {
@@ -194,17 +204,77 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     try {
       const uid = profile.uid;
       
-      // Call modern server-side endpoint with Admin SDK privileges to safely remove Firestore data and Auth user
+      console.log('Initiating client-side Firestore record cleanup...');
+      
+      // Part 1: Clean up associated collections on client side where active user is authenticated.
+      const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
+      const batch = writeBatch(db);
+      let opCount = 0;
+      
+      for (const colName of collectionsToClean) {
+        try {
+          const q = query(collection(db, colName), where('uid', '==', uid));
+          const snapshot = await getDocs(q);
+          snapshot.forEach((docSnap) => {
+            batch.delete(docSnap.ref);
+            opCount++;
+          });
+        } catch (colErr) {
+          console.error(`Client failed to fetch/delete in ${colName}:`, colErr);
+        }
+      }
+      
+      // Part 2: Delete profile document
+      if (profile.role === 'student') {
+        batch.delete(doc(db, 'students', uid));
+        opCount++;
+        
+        // Also decrement student count
+        try {
+          const countersRef = doc(db, 'global_stats', 'counters');
+          batch.set(countersRef, {
+            studentsCount: increment(-1)
+          }, { merge: true });
+          opCount++;
+        } catch (statErr) {
+          console.error('Failed to decrement student counter on client:', statErr);
+        }
+      } else if (profile.role === 'admin') {
+        batch.delete(doc(db, 'admins', uid));
+        opCount++;
+      }
+      
+      if (opCount > 0) {
+        await batch.commit();
+        console.log('Client-side Firestore cleanup succeeded.');
+      }
+      
+      // Call modern server-side endpoint with Admin SDK privileges to remove Auth user and handle any residual deletions
       const adminDeleteSuccess = await deleteAuthUser(uid);
       if (!adminDeleteSuccess) {
-        throw new Error('Backend user deletion service failed');
+        console.warn('Backend user deletion service failed. Attempting client-side fallback auth deletion...');
+        try {
+          if (auth.currentUser) {
+            await deleteUser(auth.currentUser);
+            console.log('Client-side Auth user deletion succeeded.');
+          } else {
+            throw new Error('No current authenticated auth user available for fallback deletion.');
+          }
+        } catch (authClientErr: any) {
+          console.error('Client-side Auth user deletion failed:', authClientErr);
+          if (authClientErr.code === 'auth/requires-recent-login') {
+            throw new Error('নিরাপত্তার স্বার্থে অ্যাকাউন্টটি মুছে ফেলার জন্য আপনাকে আবার লগইন করতে হবে। অনুগ্রহ করে লগআউট করে নতুন করে লগইন করে এই কাজ সম্পন্ন করুন।');
+          } else {
+            throw new Error('অ্যাকাউন্ট মুছে ফেলা ব্যর্থ হয়েছে, দয়া করে আবার চেষ্টা করুন।');
+          }
+        }
       }
       
       await signOut(auth);
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting account:', error);
-      alert('Failed to delete account. Please try again.');
+      alert(error.message || 'Failed to delete account. Please try again.');
     } finally {
       setDeleting(false);
     }
@@ -621,7 +691,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                       </select>
                     </div>
 
-                    {/* Math Expression Engine Render Choice */}
+                    {/* Math Rendering Preference */}
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400">Math Rendering Preference</label>
                       <select
@@ -631,6 +701,25 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                       >
                         <option value="katex">KaTeX (Ultra Fast & Smooth)</option>
                         <option value="mathjax">MathJax (Strict & Comprehensive)</option>
+                      </select>
+                    </div>
+
+                    {/* Accessibility Theme Preference */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400 flex items-center space-x-1.5">
+                        <Palette className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <span>Accessibility Theme</span>
+                      </label>
+                      <select
+                        value={formData.themePreference}
+                        onChange={(e) => {
+                          const val = e.target.value as 'normal' | 'high-contrast';
+                          setFormData({ ...formData, themePreference: val });
+                        }}
+                        className="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm cursor-pointer"
+                      >
+                        <option value="normal">Normal Mode (Default Dark Slate)</option>
+                        <option value="high-contrast">High Contrast Mode (Pure Stark Accent)</option>
                       </select>
                     </div>
 

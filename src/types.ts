@@ -49,6 +49,7 @@ export interface UserProfile {
   adminType?: AdminType;
   status?: 'pending' | 'active';
   mathEngine?: MathEngine;
+  themePreference?: 'normal' | 'high-contrast';
   createdAt: string;
 }
 

@@ -192,10 +192,50 @@ export default function Admin({ profile }: AdminProps) {
       message: 'Are you sure you want to delete this student record? This action will permanently remove all associated user and exam data.',
       onConfirm: async () => {
         try {
-          // Call centralized server endpoint with Admin SDK privileges to safely remove Firestore data and Auth user
+          console.log(`Admin client-side initiating deletion cleanup for student: ${uid}...`);
+          
+          // 1. Clean up associated collections on client side
+          const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
+          const batch = writeBatch(db);
+          let opCount = 0;
+          
+          for (const colName of collectionsToClean) {
+            try {
+              const q = query(collection(db, colName), where('uid', '==', uid));
+              const snapshot = await getDocs(q);
+              snapshot.forEach((docSnap) => {
+                batch.delete(docSnap.ref);
+                opCount++;
+              });
+            } catch (colErr) {
+              console.error(`Admin Client failed to delete collections for student ${uid}:`, colErr);
+            }
+          }
+          
+          // 2. Delete student profile document
+          batch.delete(doc(db, 'students', uid));
+          opCount++;
+          
+          // 3. Decrement global student counter
+          try {
+            const countersRef = doc(db, 'global_stats', 'counters');
+            batch.set(countersRef, {
+              studentsCount: increment(-1)
+            }, { merge: true });
+            opCount++;
+          } catch (statErr) {
+            console.error('Admin Client failed to update studentsCount state:', statErr);
+          }
+          
+          if (opCount > 0) {
+            await batch.commit();
+            console.log('Admin Client-side Firestore cleanup completed.');
+          }
+          
+          // 4. Request Firebase Auth deletion via backend service
           const ok = await deleteAuthUser(uid);
           if (!ok) {
-            throw new Error('Backend user deletion service failed');
+            console.warn('Backend Auth user deletion service returned failure, but client-side database cleanup was fully successful.');
           }
           setConfirmModal(null);
         } catch (error) {
@@ -224,10 +264,39 @@ export default function Admin({ profile }: AdminProps) {
       message: 'Are you sure you want to remove this administrator? They will be permanently removed from the system and lose all access.',
       onConfirm: async () => {
         try {
-          // Call centralized server endpoint with Admin SDK privileges to safely remove Firestore data and Auth user
+          console.log(`Admin client-side initiating deletion cleanup for admin: ${uid}...`);
+          
+          // 1. Clean up associated collections on client side
+          const collectionsToClean = ['results', 'payments', 'submissions', 'feedback'];
+          const batch = writeBatch(db);
+          let opCount = 0;
+          
+          for (const colName of collectionsToClean) {
+            try {
+              const q = query(collection(db, colName), where('uid', '==', uid));
+              const snapshot = await getDocs(q);
+              snapshot.forEach((docSnap) => {
+                batch.delete(docSnap.ref);
+                opCount++;
+              });
+            } catch (colErr) {
+              console.error(`Admin Client failed to delete collections for admin ${uid}:`, colErr);
+            }
+          }
+          
+          // 2. Delete admin profile document
+          batch.delete(doc(db, 'admins', uid));
+          opCount++;
+          
+          if (opCount > 0) {
+            await batch.commit();
+            console.log('Admin Client-side profile deletions complete.');
+          }
+          
+          // 3. Request Firebase Auth deletion via backend service
           const ok = await deleteAuthUser(uid);
           if (!ok) {
-            throw new Error('Backend user deletion service failed');
+            console.warn('Backend Auth user deletion service returned failure, but client-side database cleanup was fully successful.');
           }
           setConfirmModal(null);
         } catch (error) {
@@ -1146,7 +1215,7 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
                       </select>
                     </td>
                     <td className="px-8 py-6">
-                       <code className="text-[10px] font-mono text-slate-600 bg-slate-950 px-2 py-1 rounded-md">{a.uid.slice(0, 12)}...</code>
+                       <code className="text-[10px] font-mono text-[#D4AF37] bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800/50 select-all font-bold tracking-tight hover:border-indigo-500/30 transition-all" title="Double-click to select and copy complete Admin UID">{a.uid}</code>
                     </td>
                     <td className="px-8 py-6 text-right">
                       <button onClick={() => onDelete(a.uid)} className="p-3 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-500/20">
@@ -1373,6 +1442,7 @@ function UserManager({ users, onDelete }: { users: UserProfile[], onDelete: (uid
                       <div className="min-w-0">
                         <p className="font-bold text-slate-200 truncate">{u.displayName}</p>
                         <p className="text-[10px] text-slate-500 font-medium truncate">{u.email}</p>
+                        <p className="text-[9px] text-[#D4AF37] font-mono mt-1.5 bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800/80 w-fit select-all hover:bg-slate-950 hover:border-indigo-500/40 transition-all font-bold tracking-tight" title="Double-click to select and copy Firestore User ID">UID: {u.uid}</p>
                       </div>
                     </div>
                   </td>

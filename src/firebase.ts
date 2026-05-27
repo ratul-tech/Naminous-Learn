@@ -1,11 +1,23 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = firebaseConfig.firestoreDatabaseId 
+  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+  : getFirestore(app);
+
+// Initialize analytics safely (can throw in iframe or sandboxed environments)
+try {
+  if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+    getAnalytics(app);
+  }
+} catch (analyticsErr) {
+  console.warn("Analytics initialization skipped or failed in this runtime sandbox:", analyticsErr);
+}
 
 // Test connection to Firestore
 async function testConnection() {

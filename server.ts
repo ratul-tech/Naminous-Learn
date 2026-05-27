@@ -61,7 +61,9 @@ async function startServer() {
     try {
       const configPath = path.join(process.cwd(), "firebase-applet-config.json");
       const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-      const db = getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId);
+      const db = firebaseConfig.firestoreDatabaseId 
+        ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId)
+        : getFirestore(admin.app());
 
       // Determine final state variables securely
       let finalStatus = status;
@@ -197,7 +199,9 @@ async function startServer() {
       const configPath = path.join(process.cwd(), "firebase-applet-config.json");
       const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
       // Use getFirestore with databaseId
-      const db = getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId);
+      const db = firebaseConfig.firestoreDatabaseId 
+        ? getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId)
+        : getFirestore(admin.app());
       
       let decodedToken;
       try {
@@ -274,33 +278,44 @@ async function startServer() {
       const studentDocRef = db.collection('students').doc(uid);
       const adminDocRef = db.collection('admins').doc(uid);
 
-      const studentDoc = await studentDocRef.get();
-      const adminDoc = await adminDocRef.get();
-
-      if (studentDoc.exists) {
-        batch.delete(studentDocRef);
-        operationCount++;
-        // Decrement student count globally
-        try {
-          const statsDocRef = db.collection('global_stats').doc('counters');
-          batch.set(statsDocRef, {
-            studentsCount: admin.firestore.FieldValue.increment(-1)
-          }, { merge: true });
+      try {
+        const studentDoc = await studentDocRef.get();
+        if (studentDoc.exists) {
+          batch.delete(studentDocRef);
           operationCount++;
-        } catch (statErr) {
-          console.error('Error batch-decrementing student counter:', statErr);
+          // Decrement student count globally
+          try {
+            const statsDocRef = db.collection('global_stats').doc('counters');
+            batch.set(statsDocRef, {
+              studentsCount: admin.firestore.FieldValue.increment(-1)
+            }, { merge: true });
+            operationCount++;
+          } catch (statErr) {
+            console.error('Error batch-decrementing student counter:', statErr);
+          }
         }
+      } catch (studentErr) {
+        console.error('Error getting or deleting student record:', studentErr);
       }
 
-      if (adminDoc.exists) {
-        batch.delete(adminDocRef);
-        operationCount++;
+      try {
+        const adminDoc = await adminDocRef.get();
+        if (adminDoc.exists) {
+          batch.delete(adminDocRef);
+          operationCount++;
+        }
+      } catch (adminDocErr) {
+        console.error('Error getting or deleting admin record:', adminDocErr);
       }
 
       // Commit any remaining Firestore deletes
       if (operationCount > 0) {
-        await batch.commit();
-        console.log(`Successfully committed Firestore cleanups for user: ${uid}`);
+        try {
+          await batch.commit();
+          console.log(`Successfully committed Firestore cleanups for user: ${uid}`);
+        } catch (commitErr) {
+          console.error('Error committing Firestore delete batch:', commitErr);
+        }
       }
 
       console.log(`Starting Auth deletion for user: ${uid}`);
