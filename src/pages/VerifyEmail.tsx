@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sendEmailVerification, signOut, reload } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Mail, Send, CheckCircle2, AlertCircle, LogOut, RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -27,6 +27,15 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
     await auth.currentUser.reload();
     const isEmailVerified = auth.currentUser.emailVerified;
     setEmailVerified(isEmailVerified);
+
+    if (isEmailVerified) {
+      try {
+        const studentDocRef = doc(db, 'students', auth.currentUser.uid);
+        await updateDoc(studentDocRef, { status: 'active' });
+      } catch (err) {
+        console.error("Failed to update student database status to active:", err);
+      }
+    }
   };
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
 import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft, FileText } from 'lucide-react';
@@ -130,6 +130,25 @@ export default function App() {
     if (auth.currentUser) {
       await auth.currentUser.reload();
       setUser({ ...auth.currentUser });
+      
+      // Fetch the updated Firestore profile!
+      let userDoc = await getDoc(doc(db, 'admins', auth.currentUser.uid));
+      if (!userDoc.exists()) {
+        userDoc = await getDoc(doc(db, 'students', auth.currentUser.uid));
+      }
+      if (userDoc.exists()) {
+        const data = userDoc.data() as UserProfile;
+        if (data.role === 'student' && data.status === 'pending' && auth.currentUser.emailVerified) {
+          try {
+            const studentRef = doc(db, 'students', auth.currentUser.uid);
+            await updateDoc(studentRef, { status: 'active' });
+            data.status = 'active';
+          } catch (err) {
+            console.error("Failed to auto-activate student status in refreshUser:", err);
+          }
+        }
+        setProfile(data);
+      }
     }
   };
 
@@ -147,6 +166,18 @@ export default function App() {
 
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
+          
+          // Auto-activate student account if email is verified in Auth but pending in DB
+          if (data.role === 'student' && data.status === 'pending' && firebaseUser.emailVerified) {
+            try {
+              const studentRef = doc(db, 'students', firebaseUser.uid);
+              await updateDoc(studentRef, { status: 'active' });
+              data.status = 'active';
+            } catch (err) {
+              console.error("Failed to auto-activate student status inside auth state transition:", err);
+            }
+          }
+          
           setProfile(data);
         } else {
           // Special case for bootstrap admin

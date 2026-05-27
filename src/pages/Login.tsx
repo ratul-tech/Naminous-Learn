@@ -62,7 +62,7 @@ export default function Login() {
           displayName: displayName || user.displayName || user.email?.split('@')[0] || 'User',
           photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
           role: 'student',
-          status: 'active',
+          status: 'pending',
           createdAt: new Date().toISOString(),
         };
 
@@ -195,7 +195,7 @@ export default function Login() {
             displayName: user.displayName || user.email?.split('@')[0] || 'Google User',
             photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`,
             role: 'student',
-            status: 'active',
+            status: user.emailVerified ? 'active' : 'pending',
             createdAt: new Date().toISOString(),
           };
 
