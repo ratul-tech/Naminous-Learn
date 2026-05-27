@@ -197,6 +197,15 @@ export default function Dashboard({ profile }: DashboardProps) {
                   </div>
                 </motion.div>
               ))}
+              <div className="pt-6 flex justify-end">
+                <Link
+                  to="/history"
+                  className="inline-flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#D4AF37] hover:text-[#ffdf64] transition-colors border border-[#D4AF37]/25 hover:border-[#D4AF37]/50 px-5 py-3 rounded-2xl bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10 shadow-sm"
+                >
+                  <span>View Complete Exam History</span>
+                  <ArrowRight className="w-4.5 h-4.5" />
+                </Link>
+              </div>
             </div>
           ) : (
             <motion.div 

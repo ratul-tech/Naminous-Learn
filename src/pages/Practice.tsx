@@ -147,6 +147,8 @@ export default function Practice({ profile }: PracticeProps) {
           subject: config.subject,
           class: profile.class || 'N/A',
           type: 'Practice',
+          answers: results.answers,
+          questions: filteredQuestions,
           createdAt: new Date().toISOString(),
         });
       }

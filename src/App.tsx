@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft, FileText } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -20,6 +20,7 @@ import Login from './pages/Login';
 import FeedbackForm from './pages/Feedback';
 import VerifyEmail from './pages/VerifyEmail';
 import Resources from './pages/Resources';
+import ExamHistory from './pages/ExamHistory';
 
 // Shells
 import StudentShell from './components/StudentShell';
@@ -76,6 +77,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
           <Route path="/profile" element={<Profile profile={profile} setProfile={setProfile} />} />
           <Route path="/practice" element={<Practice profile={profile} />} />
           <Route path="/exam/:id" element={<Exam profile={profile} />} />
+          <Route path="/history" element={<ExamHistory profile={profile} />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/events" element={<Events profile={profile} />} />
           <Route path="/resources" element={<Resources profile={profile} />} />
@@ -258,6 +260,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
           { name: 'Exams', path: '/events', icon: Calendar },
           { name: 'Topic', path: '/practice', icon: BookOpen },
           { name: 'Library', path: '/resources', icon: FileText },
+          { name: 'History', path: '/history', icon: Clock },
           { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
           { name: 'Feedback', path: '/feedback', icon: MessageSquare },
         ];
@@ -274,6 +277,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
       { name: 'Exams', path: '/events', icon: Calendar },
       { name: 'Topic', path: '/practice', icon: BookOpen },
       { name: 'Library', path: '/resources', icon: FileText },
+      { name: 'History', path: '/history', icon: Clock },
       { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
       { name: 'Feedback', path: '/feedback', icon: MessageSquare },
     ];
