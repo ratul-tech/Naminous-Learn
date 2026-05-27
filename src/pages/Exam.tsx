@@ -7,6 +7,7 @@ import { Clock, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft, Send, Grad
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { MathRenderer } from '../components/MathRenderer';
+import { useExamSecurity } from '../hooks/useExamSecurity';
 
 interface ExamProps {
   profile: UserProfile | null;
@@ -26,24 +27,30 @@ export default function Exam({ profile }: ExamProps) {
   const [countdown, setCountdown] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [tabLossCount, setTabLossCount] = useState(0);
-  const [showWarningModal, setShowWarningModal] = useState(false);
-  const lastAwayTimestamp = useRef<number>(0);
 
   // Use refs to secure real-time inputs against stale closure state captures
   const answersRef = useRef(answers);
   const submittingRef = useRef(submitting);
   const hasSubmittedRef = useRef(hasSubmitted);
-  const tabLossCountRef = useRef(tabLossCount);
   const questionsRef = useRef(questions);
   const eventRef = useRef(event);
 
   useEffect(() => { answersRef.current = answers; }, [answers]);
   useEffect(() => { submittingRef.current = submitting; }, [submitting]);
   useEffect(() => { hasSubmittedRef.current = hasSubmitted; }, [hasSubmitted]);
-  useEffect(() => { tabLossCountRef.current = tabLossCount; }, [tabLossCount]);
   useEffect(() => { questionsRef.current = questions; }, [questions]);
   useEffect(() => { eventRef.current = event; }, [event]);
+
+  // Integrated proctoring security suite
+  const {
+    tabLossCount,
+    showWarningModal,
+    setShowWarningModal
+  } = useExamSecurity({
+    isActive: examStarted,
+    hasSubmitted: hasSubmitted,
+    onAutoSubmit: () => handleSubmit(true)
+  });
 
   useEffect(() => {
     if (!id || !profile) return;
@@ -138,66 +145,6 @@ export default function Exam({ profile }: ExamProps) {
 
     return () => clearInterval(timer);
   }, [event, examStarted, hasSubmitted]);
-
-  // Prevent closing/reloading the tab by mistake
-  useEffect(() => {
-    if (!examStarted || hasSubmitted) return;
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = 'Are you sure you want to leave? Your exam progress may be automatically submitted or lost!';
-      return e.returnValue;
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [examStarted, hasSubmitted]);
-
-  // Tab switching protection & active security detection logic (using stable refs)
-  useEffect(() => {
-    if (!examStarted || hasSubmittedRef.current) return;
-
-    const handleAway = () => {
-      if (hasSubmittedRef.current || submittingRef.current) return;
-
-      const now = Date.now();
-      // Debounce events firing inside the same moment to avoid multiple warning increments
-      if (now - lastAwayTimestamp.current < 2000) return;
-      lastAwayTimestamp.current = now;
-
-      setTabLossCount((prev) => {
-        const newCount = prev + 1;
-        if (newCount > 3) {
-          // Invoke automatic submission with violation parameter set to true
-          handleSubmit(true);
-          return newCount;
-        } else {
-          setShowWarningModal(true);
-          return newCount;
-        }
-      });
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        console.log('Live Exam Security: Tab switch detected (page hidden).');
-        handleAway();
-      }
-    };
-
-    const handleBlur = () => {
-      console.log('Live Exam Security: Window focus loss detected (window blur).');
-      handleAway();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleBlur);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, [examStarted]);
 
   const handleSubmit = async (isAutoViolation = false) => {
     const currentEvent = eventRef.current;
