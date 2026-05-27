@@ -228,63 +228,63 @@ export default function Events({ profile }: EventsProps) {
     }
   };
 
-  if (loading) return <div className="text-center py-32 text-slate-500 font-bold uppercase tracking-[0.3em] bg-slate-900 rounded-[3rem] border border-slate-800 shadow-inner flex flex-col items-center justify-center space-y-6">
+  if (loading) return <div className="text-center py-32 text-slate-500 font-bold uppercase tracking-[0.3em] bg-transparent rounded-none flex flex-col items-center justify-center space-y-6">
     <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(212,175,55,0.4)]" />
     <span>Loading Secure Data</span>
   </div>;
 
   return (
-    <div className="space-y-12">
-      <header className="relative overflow-hidden bg-slate-900 p-8 sm:p-14 md:p-20 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-2xl border border-slate-800 text-center group">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-50" />
+    <div className="space-y-16">
+      <header className="relative py-12 text-center group">
         <div className="relative z-10 px-4">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-block px-5 py-2 bg-amber-500/10 text-[#D4AF37] border border-amber-500/20 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] mb-6 shadow-lg"
+            className="inline-block px-0 py-1 text-[#D4AF37] rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] mb-4"
           >
             Numinous Arena
           </motion.div>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 font-serif leading-tight tracking-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-6 uppercase leading-none tracking-tight">
             Academic <span className="text-[#D4AF37]">Events</span>
           </h1>
-          <p className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-            Challenge your limits, earn prestigious recognition, and prepare for the world's most competitive examinations.
+          <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto leading-relaxed font-medium">
+            Challenge your limits, earn prestigious recognition, and prepare for competitive examinations.
           </p>
-        </div>
-        
-        {/* Background Decorative */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
-          <Calendar className="w-full h-full text-white" />
         </div>
       </header>
 
-      <div className="flex flex-col items-center space-y-8 bg-slate-950 p-6 sm:p-10 rounded-[3rem] border border-slate-900 shadow-inner">
-        <div className="inline-flex p-1.5 bg-slate-900 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-slate-800">
+      <div className="flex flex-col items-center space-y-6">
+        <div className="inline-flex p-1 bg-transparent border-b border-[#D4AF37]/20 pb-2">
           {(['ongoing', 'upcoming', 'ended'] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-6 sm:px-10 py-3.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all relative ${
+              className={`px-6 sm:px-8 py-2 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${
                 activeCategory === cat 
-                  ? 'bg-gradient-to-r from-amber-600 to-[#D4AF37] text-slate-950 shadow-xl' 
+                  ? 'text-[#D4AF37]' 
                   : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               {cat}
+              {activeCategory === cat && (
+                <motion.div 
+                  layoutId="activeCategoryBorder" 
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#D4AF37]" 
+                />
+              )}
             </button>
           ))}
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-2">
           {['All', 'Class 9', 'Class 10', 'SSC Candidate', 'College Admission'].map((c) => (
             <button
               key={c}
               onClick={() => setActiveClass(c)}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+              className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
                 activeClass === c 
-                  ? 'bg-slate-900 text-[#D4AF37] border-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]' 
-                  : 'bg-slate-900 text-slate-600 border-slate-800 hover:border-slate-700 hover:text-slate-400'
+                  ? 'text-[#D4AF37] border-b border-[#D4AF37]/45' 
+                  : 'text-slate-500 hover:text-slate-350'
               }`}
             >
               {c}
@@ -293,143 +293,135 @@ export default function Events({ profile }: EventsProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 pb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 pb-20">
         {filteredEvents.map((event, idx) => (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={event.id}
-            className="bg-slate-900 rounded-[3rem] shadow-2xl overflow-hidden border border-slate-800 hover:border-amber-500/30 transition-all flex flex-col group relative"
+            className="flex flex flex-col group relative py-8 border-b border-dashed border-slate-900/60"
           >
             {isAdmin && (
-              <div className="absolute top-8 right-8 flex space-x-3 z-20">
+              <div className="absolute top-2 right-2 flex space-x-2 z-20">
                 <button 
                   onClick={(e) => { e.stopPropagation(); startEdit(event); }}
-                  className="p-3.5 bg-slate-800/90 backdrop-blur shadow-xl rounded-2xl text-blue-400 hover:bg-blue-600 hover:text-white transition-all border border-slate-700 active:scale-95"
+                  className="p-2 bg-slate-900/95 border border-slate-800 rounded-xl text-blue-400 hover:text-white transition-all active:scale-95"
                   title="Edit Event"
                 >
-                  <Edit className="w-5 h-5" />
+                  <Edit className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }}
-                  className="p-3.5 bg-slate-800/90 backdrop-blur shadow-xl rounded-2xl text-rose-400 hover:bg-rose-600 hover:text-white transition-all border border-slate-700 active:scale-95"
+                  className="p-2 bg-slate-900/95 border border-slate-800 rounded-xl text-rose-450 hover:text-white transition-all active:scale-95"
                   title="Delete Event"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             )}
             
-            <div className="p-8 sm:p-12 flex-grow">
-              <div className="flex justify-between items-center mb-10">
-                <div className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.25em] flex items-center space-x-2 ${
-                  getCategory(event) === 'upcoming' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                  getCategory(event) === 'ended' ? 'bg-slate-800 text-slate-500 border border-slate-700' :
-                  'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+            <div className="flex-grow">
+              <div className="flex justify-between items-center mb-6">
+                <div className={`text-[10px] font-black uppercase tracking-[0.25em] flex items-center space-x-2 ${
+                  getCategory(event) === 'upcoming' ? 'text-blue-400' :
+                  getCategory(event) === 'ended' ? 'text-slate-600' :
+                  'text-[#D4AF37]'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${
-                    getCategory(event) === 'upcoming' ? 'bg-blue-400 animate-pulse' :
+                    getCategory(event) === 'upcoming' ? 'bg-blue-450 animate-pulse' :
                     getCategory(event) === 'ended' ? 'bg-slate-600' :
-                    'bg-emerald-400 animate-ping'
+                    'bg-[#D4AF37] animate-ping'
                   }`} />
                   <span>{getEventTimeStatus(event)}</span>
                 </div>
-                <div className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-[#D4AF37] bg-clip-text text-transparent font-serif drop-shadow-[0_0_10px_rgba(212,175,55,0.2)]">Tk {event.entryFee}</div>
+                <div className="text-xl font-extrabold text-[#D4AF37]">{event.entryFee ? `Tk ${event.entryFee}` : 'Free'}</div>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 font-serif group-hover:text-amber-500 transition-colors tracking-tight">{event.title}</h2>
-              <div className="inline-block px-3 py-1 bg-slate-950 text-[#D4AF37] border border-slate-800 rounded-lg text-[9px] font-black uppercase tracking-widest mb-8">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 tracking-tight group-hover:text-[#D4AF37] transition-all">{event.title}</h2>
+              <div className="inline-block text-[#D4AF37] text-[10px] font-black uppercase tracking-widest mb-6 border-b border-[#D4AF37]/20 pb-0.5">
                 {event.class || 'All Levels'}
               </div>
-              <p className="text-slate-400 mb-10 line-clamp-3 leading-relaxed text-sm sm:text-base font-medium">
+              <p className="text-slate-400 mb-8 line-clamp-3 leading-relaxed text-sm font-medium">
                 {event.description}
               </p>
               
-              <div className="grid grid-cols-2 gap-y-8 gap-x-6 p-8 bg-slate-950 rounded-[2.5rem] border border-slate-800 shadow-inner relative group/data overflow-hidden">
-                <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover/data:opacity-100 transition-opacity" />
-                <div className="relative z-10 space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Scheduled Date</p>
-                  <div className="flex items-center space-x-3 text-sm sm:text-base font-bold text-white">
-                    <Calendar className="w-5 h-5 text-amber-500/70" />
+              <div className="grid grid-cols-2 gap-4 pb-8 text-xs font-bold text-slate-400">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Scheduled</p>
+                  <div className="flex items-center space-x-2 text-white font-bold">
+                    <Calendar className="w-4 h-4 text-[#D4AF37]" />
                     <span>{new Date(event.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                   </div>
                 </div>
-                <div className="relative z-10 space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Chronometer</p>
-                  <div className="flex items-center space-x-3 text-sm sm:text-base font-bold text-white">
-                    <Clock className="w-5 h-5 text-amber-500/70" />
-                    <span>{event.duration} Minutes</span>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Chronometer</p>
+                  <div className="flex items-center space-x-2 text-white font-bold">
+                    <Clock className="w-4 h-4 text-[#D4AF37]" />
+                    <span>{event.duration} Mins</span>
                   </div>
                 </div>
-                <div className="relative z-10 space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Capacity Gate</p>
-                  <div className="flex items-center space-x-3 text-sm sm:text-base font-bold text-white">
-                    <Users className="w-5 h-5 text-amber-500/70" />
-                    <span>{event.maxCandidates} Global Candidates</span>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Capacity</p>
+                  <div className="flex items-center space-x-2 text-white font-bold">
+                    <Users className="w-4 h-4 text-[#D4AF37]" />
+                    <span>{event.maxCandidates} Nodes</span>
                   </div>
                 </div>
-                <div className="relative z-10 space-y-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Distinction</p>
-                  <div className="flex items-center space-x-3 text-sm sm:text-base font-bold text-white">
-                    <Trophy className="w-5 h-5 text-amber-500/70" />
-                    <span className="truncate">{event.prize}</span>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Award</p>
+                  <div className="flex items-center space-x-2 text-white font-bold">
+                    <Trophy className="w-4 h-4 text-[#D4AF37]" />
+                    <span className="truncate max-w-[120px]">{event.prize}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-8 sm:p-12 bg-slate-950/30 border-t border-slate-800">
+            <div className="pt-4">
               {getRegistrationStatus(event.id) === 'approved' ? (
                 hasSubmitted(event.id) ? (
-                  <div className="w-full bg-slate-900 text-slate-600 py-5 rounded-[1.5rem] font-bold text-center flex items-center justify-center space-x-3 border border-slate-800 shadow-inner grayscale opacity-60">
-                    <CheckCircle2 className="w-6 h-6" />
-                    <span className="uppercase tracking-widest text-xs">Assessment Finalized</span>
+                  <div className="w-full text-slate-500 py-3 font-bold text-center flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Assessment Finalized</span>
                   </div>
                 ) : getCategory(event) === 'upcoming' ? (
-                  <div className="w-full bg-blue-500/10 text-blue-400 py-5 rounded-[1.5rem] font-bold text-center border border-blue-500/20 flex flex-col items-center justify-center space-y-1">
-                    <div className="flex items-center space-x-3">
-                      <Clock className="w-6 h-6" />
+                  <div className="w-full text-blue-400 py-3 font-bold text-center flex flex-col items-center justify-center space-y-1">
+                    <div className="flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
+                      <Clock className="w-4 h-4" />
                       <span>Synchronization Active</span>
                     </div>
-                    <p className="text-[10px] font-bold uppercase tracking-tighter opacity-50">Proceed to hall at exact scheduled time</p>
                   </div>
                 ) : getCategory(event) === 'ended' ? (
-                  <div className="w-full bg-slate-900 text-slate-600 py-5 rounded-[1.5rem] font-bold text-center border border-slate-800 flex items-center justify-center space-x-3 grayscale">
-                    <AlertCircle className="w-6 h-6" />
-                    <span className="uppercase tracking-[0.2em] text-xs">Timeline Elapsed</span>
+                  <div className="w-full text-slate-600 py-3 font-bold text-center flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Timeline Elapsed</span>
                   </div>
                 ) : (
                   <button
                     onClick={() => navigate(`/exam/${event.id}`)}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-5 rounded-[1.5rem] font-bold hover:shadow-[0_0_25px_rgba(5,150,105,0.4)] transition-all flex items-center justify-center space-x-4 shadow-xl transform hover:-translate-y-1 active:scale-95 group/btn"
+                    className="w-full border border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-500/5 text-emerald-400 py-3 rounded-xl font-bold transition-all flex items-center justify-center space-x-2 text-xs uppercase tracking-widest"
                   >
-                    <Play className="w-6 h-6 group-hover/btn:scale-125 transition-transform" />
-                    <span className="uppercase tracking-[0.15em]">Enter Selection Hall</span>
+                    <Play className="w-4 h-4" />
+                    <span>Enter Selection Hall</span>
                   </button>
                 )
               ) : getRegistrationStatus(event.id) === 'pending' ? (
-                <div className="w-full bg-amber-500/5 text-amber-500 p-6 rounded-[1.5rem] font-bold text-center border border-amber-500/10 flex flex-col items-center justify-center space-y-2">
-                  <div className="flex items-center space-x-3">
-                    <motion.div
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Clock className="w-6 h-6" />
-                    </motion.div>
-                    <span className="uppercase tracking-[0.1em]">Verification Queue</span>
+                <div className="w-full text-amber-500 py-3 font-bold text-center flex flex-col items-center justify-center space-y-1">
+                  <div className="flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
+                    <Clock className="w-4 h-4 animate-pulse" />
+                    <span>Verification Queue</span>
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.25em] opacity-40">Reviewing Payment Transmission</p>
                 </div>
               ) : getRegistrationStatus(event.id) === 'rejected' ? (
-                <div className="space-y-4">
-                  <div className="w-full bg-rose-500/10 text-rose-400 py-5 rounded-[1.5rem] font-bold text-center border border-rose-500/20 flex items-center justify-center space-x-3 text-xs uppercase tracking-[0.3em] font-black">
-                    <X className="w-6 h-6" />
+                <div className="space-y-3">
+                  <div className="w-full text-rose-500 py-3 font-bold text-center flex items-center justify-center space-x-2 text-[10px] uppercase tracking-widest">
+                    <X className="w-4 h-4" />
                     <span>Rejected Access</span>
                   </div>
                   <button
                     onClick={() => setSelectedEvent(event)}
-                    className="w-full py-4 text-white bg-slate-900 rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all border border-slate-800 hover:border-slate-700 active:scale-95"
+                    className="w-full py-3 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase tracking-widest"
                   >
                     Resubmit Auth Token
                   </button>
@@ -438,10 +430,10 @@ export default function Events({ profile }: EventsProps) {
                 <button
                   onClick={() => setSelectedEvent(event)}
                   disabled={getCategory(event) === 'ended'}
-                  className={`w-full py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-2xl transform hover:-translate-y-1 active:scale-95 ${
+                  className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all ${
                     getCategory(event) === 'ended' 
-                      ? 'bg-slate-900 text-slate-700 cursor-not-allowed border border-slate-800' 
-                      : 'bg-gradient-to-r from-amber-600 to-[#D4AF37] text-slate-950 shadow-amber-900/40 hover:shadow-amber-500/30'
+                      ? 'text-slate-705 border border-slate-900 cursor-not-allowed' 
+                      : 'border border-[#D4AF37]/35 hover:bg-[#D4AF37]/5 text-[#D4AF37]'
                   }`}
                 >
                   {getCategory(event) === 'ended' ? 'Arena Closed' : 'Request Registry Access'}
@@ -450,7 +442,7 @@ export default function Events({ profile }: EventsProps) {
             </div>
           </motion.div>
         ))}
-        {filteredEvents.length === 0 && (
+      </div>  {filteredEvents.length === 0 && (
           <div className="col-span-full py-32 text-center bg-slate-900 p-8 sm:p-20 rounded-[3.5rem] border-2 border-dashed border-slate-800 shadow-inner flex flex-col items-center justify-center space-y-6">
             <Calendar className="w-24 h-24 text-slate-800 mb-6 opacity-30 rotate-6" />
             <div>
@@ -459,8 +451,7 @@ export default function Events({ profile }: EventsProps) {
             </div>
           </div>
         )}
-      </div>
-
+      
 
       <AnimatePresence>
         {selectedEvent && (

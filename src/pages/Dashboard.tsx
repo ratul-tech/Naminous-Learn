@@ -113,115 +113,103 @@ export default function Dashboard({ profile }: DashboardProps) {
 
   // --- STUDENT DASHBOARD CONTENT ---
   return (
-    <div className="space-y-8 sm:space-y-12 pb-20">
-      <header className="bg-slate-900 p-8 sm:p-12 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-2xl border border-slate-800 overflow-hidden relative group">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-50" />
-        
+    <div className="space-y-16 pb-20 pt-4">
+      <header className="py-6 overflow-hidden relative group">
         <div className="relative z-10">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="inline-block px-4 py-1.5 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-6 border border-amber-500/20"
+            className="inline-block px-0 py-1 text-amber-500 rounded-full text-[10px] font-black uppercase tracking-[0.25em] mb-4"
           >
             Performance Overview
           </motion.div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mb-4 font-serif">Academic Progress</h1>
-          <p className="text-slate-400 text-sm sm:text-lg leading-relaxed mb-8 max-w-xl">
-            Your academy average is <span className="font-bold text-[#D4AF37] text-xl">{stats.avgScore}%</span>. 
-            Maintain this momentum to reach the elite rankings.
-          </p>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+            <div>
+              <h1 className="text-4xl sm:text-6xl font-black text-white mb-2 leading-none tracking-tight font-sans">
+                Academic <span className="text-[#D4AF37]">Progress</span>
+              </h1>
+              <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-xl font-medium">
+                Your average stands at <span className="font-extrabold text-[#D4AF37]">{stats.avgScore}%</span>. Keep pushing forward to rise within the elite academic circle.
+              </p>
+            </div>
+            {/* Elegant Floating Metric Display with Radial Shadow Glow */}
+            <div className="flex items-center space-x-4 shrink-0">
+              <span className="text-7xl sm:text-8xl font-black text-[#D4AF37] font-sans tracking-tighter drop-shadow-[0_0_35px_rgba(212,175,55,0.45)]">
+                {stats.avgScore}%
+              </span>
+              <div className="flex flex-col text-[10px] uppercase font-black tracking-widest text-[#D4AF37]">
+                <span>Academy</span>
+                <span>Average</span>
+              </div>
+            </div>
+          </div>
           
-          <div className="w-full h-3 sm:h-4 bg-slate-950 rounded-full overflow-hidden shadow-inner border border-slate-800 p-0.5">
+          <div className="w-full h-[2px] bg-slate-905 overflow-hidden relative">
              <motion.div 
                initial={{ width: 0 }}
                animate={{ width: `${stats.avgScore}%` }}
                transition={{ duration: 1.5, ease: "easeOut" }}
-               className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-200 rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)]" 
+               className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-300 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.8)]" 
              />
           </div>
         </div>
-
-        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
-          <Trophy className="w-32 h-32 sm:w-64 sm:h-64 rotate-12" />
-        </div>
       </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <StudentAppShortcut icon={BookOpen} label="Practice" color="bg-amber-500/10 text-amber-500 border-amber-500/20" path="/practice" />
-        <StudentAppShortcut icon={Calendar} label="Live Exams" color="bg-purple-500/10 text-purple-400 border-purple-500/20" path="/events" />
-        <StudentAppShortcut icon={Trophy} label="Hall of Fame" color="bg-emerald-500/10 text-emerald-400 border-emerald-500/20" path="/leaderboard" />
-        <StudentAppShortcut icon={MessageSquare} label="Your Voice" color="bg-rose-500/10 text-rose-400 border-rose-500/20" path="/feedback" />
+      {/* Shortcuts without box layouts */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 py-6 border-y border-dashed border-slate-900">
+        <StudentAppShortcut icon={BookOpen} label="Practice" color="" path="/practice" />
+        <StudentAppShortcut icon={Calendar} label="Live Exams" color="" path="/events" />
+        <StudentAppShortcut icon={Trophy} label="Hall of Fame" color="" path="/leaderboard" />
+        <StudentAppShortcut icon={MessageSquare} label="Your Voice" color="" path="/feedback" />
       </div>
 
-      <section>
-        <div className="flex items-center justify-between mb-8 px-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-1.5 h-6 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-            <h3 className="text-xl font-bold text-white font-serif tracking-tight">Recent Activity</h3>
+      <section className="space-y-8">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center space-x-3.5">
+            <h3 className="text-2xl font-bold text-white tracking-tight uppercase">Recent Activity</h3>
           </div>
-          <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-[0.2em] bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-full">Last 5 Sessions</span>
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-[#D4AF37]/30 pb-1">Last 5 Sessions</span>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           {recentResults.length > 0 ? (
-            <div className="bg-slate-900 rounded-[2rem] border border-slate-800 overflow-hidden shadow-2xl">
-              <div className="divide-y divide-slate-800">
-                {recentResults.map((result, index) => (
-                  <motion.div
-                    key={result.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="p-6 sm:p-8 flex items-center justify-between group hover:bg-slate-950 transition-all cursor-default"
-                  >
-                    <div className="flex items-center space-x-6">
-                      <div className={`p-4 rounded-2xl ${
-                        result.type === 'Event' 
-                          ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
-                          : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                      }`}>
-                        <BookOpen className="w-7 h-7" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-white group-hover:text-amber-500 transition-colors text-lg">{result.type} Exam</h4>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-500" />
-                          <p className="text-xs text-slate-500 font-medium">Completed: {new Date(result.createdAt).toLocaleDateString()}</p>
-                        </div>
-                      </div>
+            <div className="divide-y divide-slate-900 border-t border-slate-900">
+              {recentResults.map((result, index) => (
+                <motion.div
+                  key={result.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="py-6 flex items-center justify-between group hover:pl-2 transition-all duration-300 cursor-default"
+                >
+                  <div className="flex items-center space-x-5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                    <div>
+                      <h4 className="font-bold text-white group-hover:text-[#D4AF37] transition-colors text-base uppercase tracking-wide">{result.type} Exam</h4>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mt-1">Completed: {new Date(result.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <div className="flex items-center space-x-8">
-                      <div className="text-right">
-                        <div className="flex items-end space-x-1">
-                          <p className="text-2xl sm:text-3xl font-bold text-white font-serif leading-none">{result.score}%</p>
-                        </div>
-                        <p className="text-[10px] font-bold uppercase text-amber-500/80 tracking-widest mt-1">{result.correctCount} Correct Responses</p>
-                      </div>
-                      <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-slate-800">
-                        <ArrowRight className="w-5 h-5 text-amber-500" />
-                      </div>
+                  </div>
+                  <div className="flex items-center space-x-6">
+                    <div className="text-right">
+                      <p className="text-2xl sm:text-3xl font-black text-white leading-none">{result.score}%</p>
+                      <p className="text-[9px] font-bold uppercase text-slate-500 tracking-wider mt-1">{result.correctCount} Correct Responses</p>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           ) : (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-slate-900 p-16 sm:p-24 rounded-[3.5rem] text-center border-2 border-dashed border-slate-800 shadow-inner flex flex-col items-center justify-center space-y-6"
+              className="py-20 text-center flex flex-col items-center justify-center space-y-6"
             >
-               <div className="w-24 h-24 bg-slate-950 rounded-full flex items-center justify-center text-slate-800 border border-slate-800 shadow-2xl relative">
-                 <BookOpen className="w-10 h-10" />
-                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500/10 rounded-full border border-amber-500/20 flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
-                 </div>
-               </div>
+               <BookOpen className="w-12 h-12 text-slate-700 opacity-40 animate-pulse" />
                <div>
-                 <h4 className="text-xl font-bold text-white mb-2 font-serif">Awaiting Your First Challenge</h4>
-                 <p className="text-slate-500 max-w-sm mx-auto font-medium">Your academic journey begins with your first response. Select a practice module or live event to start building your record.</p>
+                 <h4 className="text-lg font-bold text-white uppercase tracking-wider mb-2">Awaiting Your First Challenge</h4>
+                 <p className="text-slate-500 text-xs max-w-sm mx-auto leading-relaxed">Your academic journey begins with your first response. Select a practice module or live event to start building your record.</p>
                </div>
-               <Link to="/events" className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full font-bold transition-all border border-slate-800 text-sm">
+               <Link to="/events" className="text-xs uppercase tracking-widest text-[#D4AF37] font-black border-b border-[#D4AF37]/30 pb-0.5 hover:text-white hover:border-white transition-all">
                  Browse Live Events
                </Link>
             </motion.div>
@@ -236,14 +224,16 @@ function StudentAppShortcut({ icon: Icon, label, color, path }: { icon: any, lab
   return (
     <Link to={path}>
       <motion.div
-        whileHover={{ scale: 1.05, y: -5 }}
-        whileTap={{ scale: 0.95 }}
-        className="bg-slate-900 p-6 rounded-[2rem] shadow-xl border border-slate-800 flex flex-col items-center justify-center space-y-3 cursor-pointer text-center h-44 hover:border-indigo-500/30 transition-all sm:h-48 group shadow-indigo-500/5"
+        whileHover={{ y: -3 }}
+        whileTap={{ scale: 0.98 }}
+        className="flex flex-col items-center justify-center space-y-3 cursor-pointer text-center py-6 group relative"
       >
-        <div className={`p-4 rounded-2xl ${color} shadow-lg border transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]`}>
+        <div className={`p-4 rounded-full bg-slate-900/10 text-white transition-all duration-300 group-hover:scale-110 group-hover:text-[#D4AF37] relative z-10`}>
           <Icon className="w-8 h-8" />
         </div>
-        <span className="text-xs font-black text-slate-300 group-hover:text-white uppercase tracking-tighter transition-colors">{label}</span>
+        <span className="text-xs font-black text-slate-400 group-hover:text-[#D4AF37] uppercase tracking-widest transition-colors relative z-10">{label}</span>
+        {/* Underline animations on hover style */}
+        <span className="absolute bottom-1 w-0 h-[2px] bg-[#D4AF37] group-hover:w-1/2 transition-all duration-300 rounded-full" />
       </motion.div>
     </Link>
   );

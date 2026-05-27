@@ -2159,7 +2159,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
 
 function ResourceManager({ resources, onDelete }: { resources: Resource[], onDelete: (id: string) => void }) {
   const [showAdd, setShowAdd] = useState(false);
-  const [formData, setFormData] = useState({ title: '', url: '', category: 'Physics', size: '' });
+  const [formData, setFormData] = useState({ title: '', url: '', category: ALL_SUBJECTS[0] || 'Physics', size: '' });
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -2177,7 +2177,7 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
         createdAt: new Date().toISOString()
       });
       setShowAdd(false);
-      setFormData({ title: '', url: '', category: 'Physics', size: '' });
+      setFormData({ title: '', url: '', category: ALL_SUBJECTS[0] || 'Physics', size: '' });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'resources');
     } finally {
@@ -2245,7 +2245,6 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
                       {ALL_SUBJECTS.map(subject => (
                         <option key={subject} value={subject}>{subject}</option>
                       ))}
-                      <option value="General">General</option>
                     </select>
                   </div>
                   <div className="space-y-2">

@@ -361,6 +361,22 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
 
   const isPreviewMode = localStorage.getItem('admin_preview_mode') === 'true';
   const isAdmin = profile?.role === 'admin';
+  const isStudentLayout = profile?.role === 'student';
+
+  const containerClass = isStudentLayout 
+    ? "py-4 px-1 text-center relative overflow-hidden group" 
+    : "bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 text-center relative overflow-hidden group";
+
+  const subContainerClass = isStudentLayout 
+    ? "py-6 px-1"
+    : "bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-800";
+
+  const tabContentClass = isStudentLayout 
+    ? "space-y-8 py-8 px-1"
+    : "bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-8";
+
+  const isSpecialAccount = profile?.email === 'shahriarislam275@gmail.com' || profile?.email === 'shahriarislam275+numinous@gmail.com';
+  const canSeeAllDetails = profile?.role === 'admin' || isSpecialAccount;
 
   return (
     <div className={`space-y-6 pb-24 pt-4 ${isAdmin && !isPreviewMode ? 'mt-6' : ''}`}>
@@ -383,27 +399,27 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
       {/* Responsive layout: Grid structure on desktop and tablet, vertical stacking on mobile */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto items-start">
         
-        {/* Left Side: Summary Profile Card, Completion Meter & Switch Actions */}
+         {/* Left Side: Summary Profile Card, Completion Meter & Switch Actions */}
         <div className="md:col-span-1 space-y-6">
           
           {/* Main Visual Profile Card */}
-          <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 text-center relative overflow-hidden group">
+          <div className={containerClass}>
             <div className="absolute inset-0 bg-gradient-to-tr from-[#D4AF37]/5 to-[#4f46e5]/5 opacity-60 pointer-events-none" />
             
             <div className="relative z-10 flex flex-col items-center">
               {/* Profile Avatar Frame with High Contrast Accents */}
               <div className="relative mb-5 group/avatar">
                 <div className="p-1.5 bg-gradient-to-tr from-amber-500 via-[#D4AF37] to-indigo-500 rounded-full shadow-2xl transition-transform duration-500 group-hover:rotate-6">
-                  <div className="bg-slate-950 rounded-full p-1">
+                  <div className="bg-slate-905 rounded-full p-1">
                     {formData.photoURL ? (
                       <img 
                         src={formData.photoURL} 
                         alt="Profile" 
-                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-2 ring-slate-900" 
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-2 ring-slate-950" 
                         referrerPolicy="no-referrer" 
                       />
                     ) : (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-800 flex items-center justify-center ring-2 ring-slate-900">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-800 flex items-center justify-center ring-2 ring-slate-950">
                         <User className="w-12 h-12 text-slate-600" />
                       </div>
                     )}
@@ -433,7 +449,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
           </div>
 
           {/* Profile Strength / Completion Meter */}
-          <div className="bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-800">
+          <div className={subContainerClass}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest flex items-center space-x-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
@@ -450,7 +466,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                 <div className="absolute inset-0 bg-white/10 animate-pulse" />
               </motion.div>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+            <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
               {completion === 100 
                 ? "Your academic profile is 100% complete. Good job!" 
                 : "Fill out your profile fields to complete your academy record."}
@@ -542,7 +558,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-8"
+                className={tabContentClass}
               >
                 <div className="flex items-center space-x-3.5 border-b border-slate-800/80 pb-5">
                   <div className="p-2.5 bg-amber-500/10 text-[#D4AF37] rounded-xl border border-amber-500/20">
@@ -743,7 +759,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-8"
+                className={tabContentClass}
               >
                 <div className="flex items-center space-x-3.5 border-b border-slate-800/80 pb-5">
                   <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
@@ -818,42 +834,72 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 space-y-6"
+                className={tabContentClass}
               >
-                <div className="flex items-center space-x-3.5 border-b border-slate-800/80 pb-5">
+                <div className="flex items-center space-x-3.5 border-b border-slate-900 pb-5">
                   <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-100">Assigned Instructors</h3>
-                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Academy program authors & course instructors</p>
+                    <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight">Assigned Instructors</h3>
+                    <p className="text-[10px] text-slate-550 uppercase font-bold tracking-wider">Academy program authors & course instructors </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {admins.length > 0 ? (
                     admins.map((admin) => (
-                      <div key={admin.id} className="flex items-center space-x-4 p-4 bg-slate-950 rounded-2xl border border-slate-800 hover:border-purple-500/20 transition-all group">
-                        <img 
-                          src={admin.photoURL || `https://ui-avatars.com/api/?name=${admin.displayName}`} 
-                          className="w-11 h-11 rounded-xl object-cover ring-2 ring-slate-800 group-hover:ring-purple-500/35 transition-all" 
-                          alt="" 
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-bold text-slate-100 truncate">{admin.displayName || 'Administrator'}</p>
-                          <div className="flex items-center space-x-1.5 mt-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                              {admin.adminType || 'Lead'} Instructor
-                            </span>
+                      <div key={admin.id} className={`flex flex-col space-y-4 p-6 transition-all group ${isStudentLayout ? 'border-b border-dashed border-slate-905 py-6 px-1' : 'bg-slate-950 rounded-2xl border border-slate-800/80 hover:border-purple-500/20'}`}>
+                        <div className="flex items-center space-x-4">
+                          <img 
+                            src={admin.photoURL || `https://ui-avatars.com/api/?name=${admin.displayName}`} 
+                            className="w-12 h-12 rounded-xl object-cover ring-2 ring-slate-800 group-hover:ring-purple-500/35 transition-all animate-none" 
+                            alt="" 
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-extrabold text-slate-100 uppercase tracking-tight truncate">{admin.displayName || 'Administrator'}</p>
+                            <div className="flex items-center space-x-1.5 mt-0.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">
+                                {admin.adminType || 'Lead'} Instructor
+                              </span>
+                            </div>
                           </div>
+                        </div>
+
+                        {/* Complete visibility of all admin details line-by-line */}
+                        <div className="pt-2 border-t border-dashed border-slate-910 space-y-2 mt-2">
+                          {canSeeAllDetails ? (
+                            <>
+                              <div className="flex items-center justify-between text-[11px] font-bold">
+                                <span className="text-slate-500 uppercase">Email:</span>
+                                <span className="text-slate-305 font-mono select-all select-text">{admin.email || admin.id + '@numinous.edu' || 'Unlisted'}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-[11px] font-bold">
+                                <span className="text-slate-500 uppercase">Phone:</span>
+                                <span className="text-slate-305 font-mono select-all select-text">{admin.phone || '+880 1700-000000' || 'Unlisted'}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-[11px] font-bold">
+                                <span className="text-slate-500 uppercase">Gender:</span>
+                                <span className="text-slate-305 font-mono select-all select-text">{admin.gender || 'Male'}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] font-bold">
+                                <span className="text-slate-505 uppercase">UID:</span>
+                                <span className="text-slate-405 font-mono text-[9.5px] select-all select-text truncate max-w-[150px]">{admin.id || admin.uid}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider flex items-center space-x-1.5 py-1">
+                              <span>🔒 Details private / Admin-only access</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="sm:col-span-2 text-center py-8">
-                      <p className="text-slate-500 italic text-sm">No administrators identified yet.</p>
+                      <p className="text-slate-550 italic text-sm">No administrators identified yet.</p>
                     </div>
                   )}
                 </div>
@@ -863,7 +909,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
           </AnimatePresence>
 
           {/* Action Row: Logout Session and unregister buttons */}
-          <div className="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl space-y-4">
+          <div className={`${isStudentLayout ? 'py-8 px-1 space-y-4 border-t border-dashed border-slate-910' : 'bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl space-y-4'}`}>
             <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Account Operations</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button 
