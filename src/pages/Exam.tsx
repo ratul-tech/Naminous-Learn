@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -27,6 +27,9 @@ export default function Exam({ profile }: ExamProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [tabLossCount, setTabLossCount] = useState(0);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const lastAwayTimestamp = useRef<number>(0);
 
   useEffect(() => {
     if (!id || !profile) return;
@@ -122,7 +125,62 @@ export default function Exam({ profile }: ExamProps) {
     return () => clearInterval(timer);
   }, [event, examStarted, hasSubmitted, submitting]);
 
-  const handleSubmit = async () => {
+  // Prevent closing/reloading the tab by mistake
+  useEffect(() => {
+    if (!examStarted || hasSubmitted) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'Are you sure you want to leave? Your exam progress may be automatically submitted or lost!';
+      return e.returnValue;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [examStarted, hasSubmitted]);
+
+  // Tab switching protection & detection logic
+  useEffect(() => {
+    if (!examStarted || hasSubmitted || submitting) return;
+
+    const handleAway = () => {
+      const now = Date.now();
+      // Debounce events firing inside the same moment to avoid multiple warning increments
+      if (now - lastAwayTimestamp.current < 2000) return;
+      lastAwayTimestamp.current = now;
+
+      setTabLossCount(prev => {
+        const newCount = prev + 1;
+        if (newCount > 3) {
+          handleSubmit(true);
+          return newCount;
+        } else {
+          setShowWarningModal(true);
+          return newCount;
+        }
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        handleAway();
+      }
+    };
+
+    const handleBlur = () => {
+      handleAway();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [examStarted, hasSubmitted, submitting, event, profile, questions, answers]);
+
+  const handleSubmit = async (isAutoViolation = false) => {
     if (!event || !profile || submitting) return;
     setSubmitting(true);
 
@@ -142,6 +200,7 @@ export default function Exam({ profile }: ExamProps) {
         completed: true,
         startedAt: event.startTime,
         submittedAt: new Date().toISOString(),
+        ...(isAutoViolation ? { autoSubmitted: true, violationReason: 'Exceeded tab/window switching warnings' } : {})
       });
 
       // Save to results for dashboard
@@ -157,9 +216,13 @@ export default function Exam({ profile }: ExamProps) {
         type: 'Event',
         eventId: event.id,
         createdAt: new Date().toISOString(),
+        ...(isAutoViolation ? { autoSubmitted: true, violationReason: 'Exceeded tab/window switching warnings' } : {})
       });
 
       setHasSubmitted(true);
+      if (isAutoViolation) {
+        setError('Your exam has been automatically submitted because you left or switched tabs more than 3 times.');
+      }
     } catch (err) {
       handleFirestoreError(err, OperationType.CREATE, 'submissions');
     } finally {
@@ -283,12 +346,18 @@ export default function Exam({ profile }: ExamProps) {
           </div>
         </div>
         
-        <div className="flex items-center justify-between md:justify-end w-full md:w-auto space-x-4 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+        <div className="flex items-center justify-between md:justify-end w-full md:w-auto space-x-4 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800 gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
           <div className="text-left md:text-right">
             <p className="text-[8px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Status</p>
             <p className="text-[10px] sm:text-xs font-bold text-white">Item {currentQuestionIndex + 1} / {questions.length}</p>
           </div>
-          <div className={`flex items-center space-x-2 sm:space-x-3 px-4 sm:px-8 py-2 sm:py-4 rounded-xl sm:rounded-2xl font-mono font-bold text-lg sm:text-2xl shadow-inner ${timeLeft < 300 ? 'bg-rose-500/10 text-rose-500 animate-pulse border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'bg-slate-950 text-white border border-slate-800'}`}>
+
+          <div className={`flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl border font-mono font-bold text-[10px] sm:text-xs tracking-wider transition-colors shrink-0 ${tabLossCount > 0 ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-slate-950 border-slate-800 text-emerald-400'}`}>
+            <Shield className="w-3.5 h-3.5" />
+            <span>Saves: {Math.max(0, 3 - tabLossCount)} / 3</span>
+          </div>
+
+          <div className={`flex items-center space-x-2 sm:space-x-3 px-4 sm:px-8 py-2 sm:py-4 rounded-xl sm:rounded-2xl font-mono font-bold text-lg sm:text-2xl shadow-inner shrink-0 ${timeLeft < 300 ? 'bg-rose-500/10 text-rose-500 animate-pulse border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'bg-slate-950 text-white border border-slate-800'}`}>
             <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-[#D4AF37]" />
             <span>{formatTime(timeLeft)}</span>
           </div>
@@ -383,7 +452,7 @@ export default function Exam({ profile }: ExamProps) {
 
         {currentQuestionIndex === questions.length - 1 ? (
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={submitting}
             className="w-full sm:w-auto bg-emerald-600 text-white px-12 py-5 rounded-[2rem] font-bold text-xl shadow-2xl shadow-emerald-950/20 hover:bg-emerald-500 transition-all flex items-center justify-center space-x-3 disabled:opacity-50 transform hover:-translate-y-1"
           >
@@ -400,6 +469,51 @@ export default function Exam({ profile }: ExamProps) {
           </button>
         )}
       </div>
+
+      {/* Warning Alert Modal */}
+      <AnimatePresence>
+        {showWarningModal && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-slate-900 border-2 border-rose-500/30 p-8 sm:p-10 rounded-[2.5rem] max-w-md w-full text-center space-y-6 shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-rose-500" />
+              <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto border border-rose-500/20">
+                <AlertCircle className="w-12 h-12 text-rose-500 animate-bounce" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-white font-serif">Security Warning!</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  You moved away from the exam tab/window or lost focus.
+                </p>
+              </div>
+
+              <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-2">
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Warning Status</p>
+                <p className="text-xl font-bold text-white font-mono">
+                  {tabLossCount} / 3 Warnings Used
+                </p>
+                <p className="text-rose-400 text-xs font-semibold animate-pulse mt-2">
+                  {3 - tabLossCount === 0 
+                    ? "CRITICAL: Any further tab switch will trigger IMMEDIATE automatic submission!" 
+                    : `Saves remaining: ${3 - tabLossCount}`}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowWarningModal(false)}
+                className="w-full bg-[#D4AF37] hover:bg-amber-400 text-slate-950 font-bold py-4 px-6 rounded-xl transition-all shadow-lg active:scale-95"
+              >
+                I Understand, Resume Exam
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
 
   );
