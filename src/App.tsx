@@ -142,9 +142,10 @@ export default function App() {
       if (firebaseUser) {
         let userDoc;
         
-        userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
+        // Priority Role Resolution: fetch from admins first so multi-allocated uids resolve as admin
+        userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
         if (!userDoc.exists()) {
-          userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
+          userDoc = await getDoc(doc(db, 'students', firebaseUser.uid));
         }
 
         if (userDoc.exists()) {
@@ -182,7 +183,10 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = () => signOut(auth);
+  const handleLogout = () => {
+    localStorage.removeItem('admin_preview_mode');
+    return signOut(auth);
+  };
 
   if (loading) {
     return (

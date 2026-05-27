@@ -155,30 +155,63 @@ export default function Login() {
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
 
+      const adminDoc = await getDoc(doc(db, 'admins', user.uid));
       const studentDoc = await getDoc(doc(db, 'students', user.uid));
-      if (!studentDoc.exists()) {
-        const newProfile: UserProfile = {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: user.displayName || user.email?.split('@')[0] || 'Google User',
-          photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`,
-          role: 'student',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-        };
-
-        await setDoc(doc(db, 'students', user.uid), newProfile);
-        
-        try {
-          await setDoc(doc(db, 'global_stats', 'counters'), { 
-            studentsCount: increment(1) 
-          }, { merge: true });
-        } catch (counterErr) {
-          console.error("Failed to update student counter in stats:", counterErr);
-        }
-      }
       
-      navigate('/verify-email');
+      const isBootstrapAdminEmail = user.email === 'shahriarislam275@gmail.com' || user.email === 'shahriarislam275+numinous@gmail.com';
+
+      if (adminDoc.exists() || isBootstrapAdminEmail) {
+        // Known admin or bootstrap email -> make sure admin profile is created/kept
+        if (!adminDoc.exists()) {
+          const bootstrapProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || 'shahriarislam275@gmail.com',
+            displayName: user.displayName || 'Initial Admin',
+            photoURL: user.photoURL || `https://ui-avatars.com/api/?name=Initial+Admin&background=random`,
+            role: 'admin',
+            status: 'active',
+            adminType: 'full',
+            createdAt: new Date().toISOString(),
+          };
+          await setDoc(doc(db, 'admins', user.uid), bootstrapProfile);
+        }
+        
+        // Remove duplicate student profile if it exists to clean up database roles
+        if (studentDoc.exists()) {
+          try {
+            await setDoc(doc(db, 'students', user.uid), {}, { merge: false });
+            // Since deleteDoc is safer and exact, let's delete it if we want, or at least let the admin account take absolute precedent
+          } catch (delErr) {
+            console.warn("Could not clean up student record for admin:", delErr);
+          }
+        }
+
+        navigate('/admin');
+      } else {
+        if (!studentDoc.exists()) {
+          const newProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || user.email?.split('@')[0] || 'Google User',
+            photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`,
+            role: 'student',
+            status: 'active',
+            createdAt: new Date().toISOString(),
+          };
+
+          await setDoc(doc(db, 'students', user.uid), newProfile);
+          
+          try {
+            await setDoc(doc(db, 'global_stats', 'counters'), { 
+              studentsCount: increment(1) 
+            }, { merge: true });
+          } catch (counterErr) {
+            console.error("Failed to update student counter in stats:", counterErr);
+          }
+        }
+        
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       console.error("Google Auth error:", err);
       if (err.code === 'auth/popup-closed-by-user') {
