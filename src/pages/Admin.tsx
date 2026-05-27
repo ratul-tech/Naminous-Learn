@@ -1130,54 +1130,8 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
                 className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
               />
             </div>
-            <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg shadow-indigo-500/20 transition-all">
-              <Plus className="w-4 h-4" />
-              <span>Provision User</span>
-            </button>
           </div>
         </div>
-
-        {showAdd && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900 p-8 rounded-[2rem] border border-indigo-500/30 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-5">
-               <Shield className="w-32 h-32 text-indigo-500" />
-            </div>
-            <form onSubmit={handleCreateAdmin} className="space-y-6 relative">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Profile Legal Name</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-medium text-slate-200" required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">System Liaison Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@nexus.com" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-medium text-slate-200" required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Authorization Credential</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-mono text-slate-200" required minLength={6} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Privilege Tier</label>
-                  <select 
-                    value={adminType} 
-                    onChange={(e) => setAdminType(e.target.value as any)}
-                    className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-indigo-400 appearance-none cursor-pointer"
-                  >
-                    <option value="full">Nexus Superintendent (Full)</option>
-                    <option value="question_holder">Data Custodian (Questions)</option>
-                  </select>
-                </div>
-              </div>
-              {error && <p className="text-rose-500 text-xs font-bold bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">{error}</p>}
-              <div className="flex justify-end gap-4">
-                <button type="button" onClick={() => setShowAdd(false)} className="px-6 py-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors">Discard</button>
-                <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
-                  {loading ? 'Processing...' : 'Engage Creation Protocol'}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        )}
 
         <div className="bg-slate-900 rounded-3xl shadow-xl border border-slate-800 overflow-hidden">
           <div className="overflow-x-auto no-scrollbar">
