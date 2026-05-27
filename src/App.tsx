@@ -150,14 +150,22 @@ export default function App() {
         } else {
           // Special case for bootstrap admin
           if (firebaseUser.email === 'shahriarislam275@gmail.com') {
-            setProfile({
+            const bootstrapProfile: UserProfile = {
               uid: firebaseUser.uid,
-              email: firebaseUser.email,
+              email: firebaseUser.email || 'shahriarislam275@gmail.com',
               displayName: firebaseUser.displayName || 'Initial Admin',
+              photoURL: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=Initial+Admin&background=random`,
               role: 'admin',
               status: 'active',
+              adminType: 'full',
               createdAt: new Date().toISOString(),
-            } as UserProfile);
+            };
+            
+            // Self-heal: Save bootstrap admin to Firestore admins collection if not existing
+            setDoc(doc(db, 'admins', firebaseUser.uid), bootstrapProfile, { merge: true })
+              .catch((err) => console.error("Failed to self-heal bootstrap admin doc:", err));
+
+            setProfile(bootstrapProfile);
           } else {
             setProfile(null);
           }

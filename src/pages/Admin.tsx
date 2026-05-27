@@ -68,8 +68,14 @@ export default function Admin({ profile }: AdminProps) {
       const fetchedUsers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any));
       setUsers(fetchedUsers);
     });
-    const unsubAdmins = onSnapshot(query(collection(db, 'admins'), orderBy('createdAt', 'desc')), (snapshot) => {
-      setAdmins(snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any)));
+    const unsubAdmins = onSnapshot(collection(db, 'admins'), (snapshot) => {
+      const fetchedAdmins = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as any));
+      fetchedAdmins.sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
+      setAdmins(fetchedAdmins);
     });
     const unsubPayments = onSnapshot(query(collection(db, 'payments'), orderBy('createdAt', 'desc')), (snapshot) => {
       setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
