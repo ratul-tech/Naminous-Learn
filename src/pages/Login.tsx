@@ -11,7 +11,7 @@ import { handleFirestoreError, getAuthErrorMessage } from '../lib/error-handler'
 import { OperationType } from '../types';
 
 export default function Login() {
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'request'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -70,30 +70,6 @@ export default function Login() {
         await sendEmailVerification(user);
         
         navigate('/verify-email');
-      } else if (authMode === 'request' && selectedRole === 'admin') {
-        // Admin Request Access - completely via server-safe Admin SDK processes
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password,
-            displayName,
-            role: 'admin',
-            adminType: 'question_holder',
-            status: 'pending',
-          }),
-        });
-
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || 'Admin account application failed.');
-        }
-
-        setMessage("Application submitted successfully! An administrator will review your account shortly. You cannot log in before approval.");
-        setAuthMode('login');
       } else {
         // Login Flow
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -182,9 +158,7 @@ export default function Login() {
             {selectedRole === 'admin' ? 'Admin Portal' : 'Student Portal'}
           </h1>
           <p className="text-slate-400 mt-3 font-medium opacity-70">
-            {authMode === 'login' ? 'Access your dashboard' : 
-             authMode === 'register' ? 'Join our learning community' : 
-             'Request administrative privileges'}
+            {authMode === 'login' ? 'Access your dashboard' : 'Join our learning community'}
           </p>
         </div>
 
@@ -275,8 +249,8 @@ export default function Login() {
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                {authMode === 'login' ? <LogIn className="w-6 h-6" /> : authMode === 'register' ? <UserPlus className="w-6 h-6" /> : <ShieldCheck className="w-6 h-6" />}
-                <span>{authMode === 'login' ? 'Login' : authMode === 'register' ? 'Create Account' : 'Request Access'}</span>
+                {authMode === 'login' ? <LogIn className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}
+                <span>{authMode === 'login' ? 'Login' : 'Create Account'}</span>
               </>
             )}
           </button>
@@ -292,15 +266,7 @@ export default function Login() {
             </button>
           ) : (
             <div className="flex flex-col space-y-3">
-              <button
-                onClick={() => { setAuthMode(authMode === 'login' ? 'request' : 'login'); setError(''); setMessage(''); }}
-                className="text-[#D4AF37] font-bold hover:underline py-2"
-              >
-                {authMode === 'login' ? "Apply for Admin Access" : "Back to Admin Login"}
-              </button>
-              {authMode === 'login' && (
-                <p className="text-xs text-slate-500 font-medium italic">Admin accounts must be approved by the system owner.</p>
-              )}
+              <p className="text-xs text-slate-500 font-medium italic">Admin accounts must be configured via the database by the system owner.</p>
             </div>
           )}
         </div>
