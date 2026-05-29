@@ -385,21 +385,19 @@ export default function Exam({ profile }: ExamProps) {
                     key={i}
                     type="button"
                     onClick={() => setAnswers({ ...answers, [currentQuestion.id]: i })}
-                    className={`group w-full p-4  rounded-xl sm:rounded-2xl border text-left transition-all flex items-center space-x-3.5 relative overflow-hidden ${
+                    className={`w-full p-5 rounded-xl border transition-all flex items-center space-x-4 ${
                       isSelected
-                        ? 'border-[#D4AF37] bg-amber-500/5 shadow-md shadow-amber-900/15'
-                        : 'border-slate-800/60 hover:border-slate-700 bg-slate-950/60 hover:bg-slate-900 text-slate-400'
+                        ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
+                        : 'border-slate-850 bg-transparent hover:border-slate-650 hover:bg-slate-900/40 text-slate-400'
                     }`}
                   >
-                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 transition-all ${
-                      isSelected 
-                        ? 'bg-[#D4AF37] text-slate-950 shadow-md shadow-amber-950/30' 
-                        : 'bg-slate-900 text-slate-500 group-hover:text-[#D4AF37] border border-slate-800'
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs shrink-0 transition-colors ${
+                      isSelected ? 'bg-[#D4AF37] text-slate-950' : 'bg-slate-900 text-slate-500'
                     }`}>
                       {String.fromCharCode(65 + i)}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <MathRenderer content={option} className={`font-medium text-xs sm:text-base ${isSelected ? 'text-white' : 'text-slate-300'}`} engine={profile?.mathEngine} />
+                    <div className="min-w-0 flex-1 text-left">
+                      <MathRenderer content={option} className={`font-semibold text-sm ${isSelected ? 'text-[#D4AF37]' : 'text-slate-300'}`} engine={profile?.mathEngine} />
                     </div>
                   </button>
                 );

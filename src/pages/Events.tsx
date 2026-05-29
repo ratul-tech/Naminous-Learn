@@ -293,17 +293,28 @@ export default function Events({ profile }: EventsProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 pb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 pb-20">
         {filteredEvents.map((event, idx) => (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={event.id}
-            className="flex flex flex-col group relative py-8 border-b border-dashed border-slate-900/60"
+            className="flex flex-col group relative p-6 sm:p-8 rounded-[2rem] bg-slate-950/45 border border-slate-900/80 hover:border-[#D4AF37]/25 transition-all shadow-xl hover:shadow-[0_8px_35px_rgba(0,0,0,0.5)] overflow-hidden"
           >
+            {/* Custom Abstract Background Image Overlay */}
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.08] group-hover:opacity-[0.15] transition-all duration-700 scale-100 group-hover:scale-105">
+              <img 
+                src="/src/assets/images/exam_event_bg_1779876991995.png" 
+                alt="Exam Event Abstract Background" 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20" />
+            </div>
+
             {isAdmin && (
-              <div className="absolute top-2 right-2 flex space-x-2 z-20">
+              <div className="absolute top-4 right-4 flex space-x-2 z-20">
                 <button 
                   onClick={(e) => { e.stopPropagation(); startEdit(event); }}
                   className="p-2 bg-slate-900/95 border border-slate-800 rounded-xl text-blue-400 hover:text-white transition-all active:scale-95"
@@ -321,64 +332,65 @@ export default function Events({ profile }: EventsProps) {
               </div>
             )}
             
-            <div className="flex-grow">
-              <div className="flex justify-between items-center mb-6">
-                <div className={`text-[10px] font-black uppercase tracking-[0.25em] flex items-center space-x-2 ${
-                  getCategory(event) === 'upcoming' ? 'text-blue-400' :
-                  getCategory(event) === 'ended' ? 'text-slate-600' :
-                  'text-[#D4AF37]'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    getCategory(event) === 'upcoming' ? 'bg-blue-450 animate-pulse' :
-                    getCategory(event) === 'ended' ? 'bg-slate-600' :
-                    'bg-[#D4AF37] animate-ping'
-                  }`} />
-                  <span>{getEventTimeStatus(event)}</span>
+            <div className="relative z-10 flex-grow flex flex-col">
+              <div className="flex-grow">
+                <div className="flex justify-between items-center mb-6">
+                  <div className={`text-[10px] font-black uppercase tracking-[0.25em] flex items-center space-x-2 ${
+                    getCategory(event) === 'upcoming' ? 'text-blue-400' :
+                    getCategory(event) === 'ended' ? 'text-slate-600' :
+                    'text-[#D4AF37]'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      getCategory(event) === 'upcoming' ? 'bg-blue-450 animate-pulse' :
+                      getCategory(event) === 'ended' ? 'bg-slate-600' :
+                      'bg-[#D4AF37] animate-ping'
+                    }`} />
+                    <span>{getEventTimeStatus(event)}</span>
+                  </div>
+                  <div className="text-xl font-extrabold text-[#D4AF37]">{event.entryFee ? `Tk ${event.entryFee}` : 'Free'}</div>
                 </div>
-                <div className="text-xl font-extrabold text-[#D4AF37]">{event.entryFee ? `Tk ${event.entryFee}` : 'Free'}</div>
+
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-2 tracking-tight group-hover:text-[#D4AF37] transition-all">{event.title}</h2>
+                <div className="inline-block text-[#D4AF37] text-[10px] font-black uppercase tracking-widest mb-6 border-b border-[#D4AF37]/20 pb-0.5 font-mono">
+                  {event.class || 'All Levels'}
+                </div>
+                <p className="text-slate-400 mb-8 line-clamp-3 leading-relaxed text-xs sm:text-sm font-medium">
+                  {event.description}
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4 pb-8 text-xs font-bold text-slate-400">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Scheduled</p>
+                    <div className="flex items-center space-x-2 text-white font-bold">
+                      <Calendar className="w-4 h-4 text-[#D4AF37]" />
+                      <span>{new Date(event.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Chronometer</p>
+                    <div className="flex items-center space-x-2 text-white font-bold">
+                      <Clock className="w-4 h-4 text-[#D4AF37]" />
+                      <span>{event.duration} Mins</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Capacity</p>
+                    <div className="flex items-center space-x-2 text-white font-bold">
+                      <Users className="w-4 h-4 text-[#D4AF37]" />
+                      <span>{event.maxCandidates} Nodes</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Award</p>
+                    <div className="flex items-center space-x-2 text-white font-bold">
+                      <Trophy className="w-4 h-4 text-[#D4AF37]" />
+                      <span className="truncate max-w-[120px]">{event.prize}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 tracking-tight group-hover:text-[#D4AF37] transition-all">{event.title}</h2>
-              <div className="inline-block text-[#D4AF37] text-[10px] font-black uppercase tracking-widest mb-6 border-b border-[#D4AF37]/20 pb-0.5">
-                {event.class || 'All Levels'}
-              </div>
-              <p className="text-slate-400 mb-8 line-clamp-3 leading-relaxed text-sm font-medium">
-                {event.description}
-              </p>
-              
-              <div className="grid grid-cols-2 gap-4 pb-8 text-xs font-bold text-slate-400">
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Scheduled</p>
-                  <div className="flex items-center space-x-2 text-white font-bold">
-                    <Calendar className="w-4 h-4 text-[#D4AF37]" />
-                    <span>{new Date(event.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Chronometer</p>
-                  <div className="flex items-center space-x-2 text-white font-bold">
-                    <Clock className="w-4 h-4 text-[#D4AF37]" />
-                    <span>{event.duration} Mins</span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Capacity</p>
-                  <div className="flex items-center space-x-2 text-white font-bold">
-                    <Users className="w-4 h-4 text-[#D4AF37]" />
-                    <span>{event.maxCandidates} Nodes</span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/75">Award</p>
-                  <div className="flex items-center space-x-2 text-white font-bold">
-                    <Trophy className="w-4 h-4 text-[#D4AF37]" />
-                    <span className="truncate max-w-[120px]">{event.prize}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-4">
+              <div className="pt-4 border-t border-slate-900/60 mt-auto">
               {getRegistrationStatus(event.id) === 'approved' ? (
                 hasSubmitted(event.id) ? (
                   <div className="w-full text-slate-500 py-3 font-bold text-center flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
@@ -440,6 +452,7 @@ export default function Events({ profile }: EventsProps) {
                 </button>
               )}
             </div>
+          </div>
           </motion.div>
         ))}
       </div>  {filteredEvents.length === 0 && (
