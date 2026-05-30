@@ -8,6 +8,7 @@ import { handleFirestoreError } from '../lib/error-handler';
 import { getSubjectsForGroup } from '../constants';
 import { MathRenderer } from '../components/MathRenderer';
 import { useLocation } from 'react-router-dom';
+import { calculateQuizScoreBengali, toBengaliNumber } from '../lib/scoreCalculator';
 
 interface PracticeProps {
   profile: UserProfile | null;
@@ -155,17 +156,29 @@ export default function Practice({ profile }: PracticeProps) {
     if (examState.submitting) return;
     setExamState(prev => ({ ...prev, submitting: true }));
 
-    let score = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    
     filteredQuestions.forEach(q => {
-      if (examState.answers[q.id] === q.correctAnswer) {
-        score++;
+      const userAns = examState.answers[q.id];
+      if (userAns !== undefined && userAns !== null) {
+        if (userAns === q.correctAnswer) {
+          correctCount++;
+        } else {
+          wrongCount++;
+        }
       }
     });
 
+    const solvedCount = correctCount + wrongCount;
+    const rawScore = (correctCount * 1) + (wrongCount * -0.25);
+    const finalScore = parseFloat(rawScore.toFixed(2));
+
     const results = {
-      score: Math.round((score / (filteredQuestions.length || 1)) * 100),
-      correctCount: score,
-      wrongCount: filteredQuestions.length - score,
+      score: finalScore,
+      correctCount,
+      wrongCount,
+      solvedCount,
       totalQuestions: filteredQuestions.length,
       answers: examState.answers,
     };
@@ -179,6 +192,7 @@ export default function Practice({ profile }: PracticeProps) {
           score: results.score,
           correctCount: results.correctCount,
           wrongCount: results.wrongCount,
+          solvedCount: results.solvedCount,
           totalQuestions: results.totalQuestions,
           subject: config.subject,
           class: profile.class || 'N/A',
@@ -567,28 +581,68 @@ export default function Practice({ profile }: PracticeProps) {
             key="results"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="space-y-8 text-center"
+            className="space-y-8 text-center max-w-3xl mx-auto"
           >
             <div>
               <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h1 className="text-3xl sm:text-5xl font-black text-white mb-2 uppercase tracking-tight">Exam Completed!</h1>
-              <p className="text-slate-400 mb-12">Here is how you performed in {config.subject}</p>
+              <p className="text-slate-400 mb-10">Here is how you performed in {config.subject}</p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12 border-y border-dashed border-slate-900 py-10">
-                <div className="space-y-1">
-                  <p className="text-[10px] text-slate-550 uppercase font-black tracking-widest">Score</p>
-                  <p className="text-4xl sm:text-6xl font-black text-[#D4AF37]">{examState.results.score}%</p>
+              {/* Comprehensive Breakdown */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
+                  <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Total Questions</p>
+                  <p className="text-2xl sm:text-3xl font-black text-white">{examState.results.totalQuestions}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] text-slate-550 uppercase font-black tracking-widest">Correct</p>
-                  <p className="text-4xl sm:text-6xl font-black text-emerald-400">{examState.results.correctCount}</p>
+                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
+                  <p className="text-[9px] text-indigo-400 uppercase font-black tracking-widest mb-1">Solved (Attempted)</p>
+                  <p className="text-2xl sm:text-3xl font-black text-indigo-300">{examState.results.solvedCount ?? (examState.results.correctCount + examState.results.wrongCount)}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] text-slate-550 uppercase font-black tracking-widest">Wrong</p>
-                  <p className="text-4xl sm:text-6xl font-black text-rose-400">{examState.results.wrongCount}</p>
+                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
+                  <p className="text-[9px] text-emerald-400 uppercase font-black tracking-widest mb-1">Correct (+1.0)</p>
+                  <p className="text-2xl sm:text-3xl font-black text-emerald-400">+{examState.results.correctCount}</p>
                 </div>
+                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
+                  <p className="text-[9px] text-rose-400 uppercase font-black tracking-widest mb-1">Incorrect (-0.25)</p>
+                  <p className="text-2xl sm:text-3xl font-black text-rose-400">-{examState.results.wrongCount}</p>
+                </div>
+                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center col-span-2 md:col-span-1">
+                  <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Unsolved (Skipped)</p>
+                  <p className="text-2xl sm:text-3xl font-black text-slate-400">
+                    {examState.results.totalQuestions - (examState.results.solvedCount ?? (examState.results.correctCount + examState.results.wrongCount))}
+                  </p>
+                </div>
+              </div>
+
+              {/* Big Score Panel */}
+              <div className="bg-gradient-to-b from-[#1e293b]/20 to-[#0f172a]/50 border border-slate-850 rounded-2xl p-6 sm:p-8 mb-8 text-center relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/35 to-transparent" />
+                <p className="text-xs text-[#D4AF37] uppercase font-black tracking-widest mb-2">Final Penalty-adjusted Score</p>
+                <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-4">
+                  <p className="text-5xl sm:text-7xl font-black text-[#D4AF37] tracking-tighter">
+                    {examState.results.score.toFixed(2)}
+                  </p>
+                  <div className="text-left sm:border-l border-slate-800 sm:pl-4 mt-2 sm:mt-0">
+                    <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wide">Out of {examState.results.totalQuestions}.00 max marks</p>
+                    <p className="text-[9px] text-slate-600 font-extrabold uppercase mt-0.5">Formula: ({examState.results.correctCount} × 1) - ({examState.results.wrongCount} × 0.25)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bengali Score Translation Card */}
+              <div className="bg-slate-950 border border-dashed border-slate-900/80 rounded-2xl p-5 mb-10 max-w-lg mx-auto text-center">
+                <p className="text-[10px] font-black text-[#D4AF37]/80 uppercase tracking-[0.2em] mb-3">বাংলায় ফলাফল বিবরণী</p>
+                <pre className="text-emerald-450 text-lg sm:text-xl font-black font-sans leading-relaxed whitespace-pre-wrap">
+                  {calculateQuizScoreBengali({
+                    marksPerRight: 1,
+                    negativeMarksPerWrong: 0.25,
+                    totalQuestions: examState.results.totalQuestions,
+                    correctAnswers: examState.results.correctCount,
+                    wrongAnswers: examState.results.wrongCount
+                  })}
+                </pre>
               </div>
 
               <div className="flex flex-col sm:flex-row justify-center gap-4">

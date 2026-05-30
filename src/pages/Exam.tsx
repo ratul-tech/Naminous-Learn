@@ -159,18 +159,32 @@ export default function Exam({ profile }: ExamProps) {
     submittingRef.current = true;
 
     try {
-      let score = 0;
+      let correctCount = 0;
+      let wrongCount = 0;
       currentQuestions.forEach(q => {
-        if (currentAnswers[q.id] === q.correctAnswer) {
-          score++;
+        const userAns = currentAnswers[q.id];
+        if (userAns !== undefined && userAns !== null) {
+          if (userAns === q.correctAnswer) {
+            correctCount++;
+          } else {
+            wrongCount++;
+          }
         }
       });
+
+      const solvedCount = correctCount + wrongCount;
+      const rawScore = (correctCount * 1) + (wrongCount * -0.25);
+      const finalScore = parseFloat(rawScore.toFixed(2));
 
       await addDoc(collection(db, 'submissions'), {
         uid: currentProfile.uid,
         eventId: currentEvent.id,
         answers: currentAnswers,
-        score,
+        score: finalScore,
+        correctCount,
+        wrongCount,
+        solvedCount,
+        totalQuestions: currentQuestions.length,
         completed: true,
         startedAt: currentEvent.startTime,
         submittedAt: new Date().toISOString(),
@@ -182,9 +196,10 @@ export default function Exam({ profile }: ExamProps) {
         uid: currentProfile.uid,
         displayName: currentProfile.displayName,
         school: currentProfile.school || 'N/A',
-        score: Math.round((score / (currentQuestions.length || 1)) * 100),
-        correctCount: score,
-        wrongCount: currentQuestions.length - score,
+        score: finalScore,
+        correctCount,
+        wrongCount,
+        solvedCount,
         totalQuestions: currentQuestions.length,
         class: currentProfile.class || 'N/A',
         type: 'Event',
