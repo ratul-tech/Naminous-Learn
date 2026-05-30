@@ -166,9 +166,101 @@ $$
 
 ---
 
-## 8. Best Practices for High-Stakes Assessments
+## 8. Chemical Reactions & Chemistry Formulas
+
+Chemical equations have a distinct look. Since numbers inside elements are subscripts/superscripts and letters must not be italicized like mathematical variables, chemical symbols should be wrapped inside `\text{...}` blocks.
+
+### A. Element Symbols, Isotopes & Compounds
+* **Subscripts (Atoms in a Molecule):** Wrap the elements in `\text{...}` and put subscripts outside:
+  * `\text{H}_2\text{O}` $\rightarrow$ $\text{H}_2\text{O}$
+  * `\text{C}_6\text{H}_{12}\text{O}_6` $\rightarrow$ $\text{C}_6\text{H}_{12}\text{O}_6$
+* **Superscripts and Ions (Charges):** Subscriptions and superscript charges should align:
+  * `\text{Na}^+` $\rightarrow$ $\text{Na}^+$
+  * `\text{SO}_4^{2-}` $\rightarrow$ $\text{SO}_4^{2-}$
+  * `\text{Fe}^{3+}` $\rightarrow$ $\text{Fe}^{3+}$
+* **Isotopes (Atomic Mass / Number):** Place subscripts and superscripts to the left of the chemical symbol:
+  * `{}^{14}_{6}\text{C}` $\rightarrow$ ${}^{14}_{6}\text{C}$
+  * `{}^{235}_{92}\text{U}` $\rightarrow$ ${}^{235}_{92}\text{U}$
+* **Hydrates (Intermolecular Dots):** Use `\cdot` to denote water of crystallization:
+  * `\text{CuSO}_4 \cdot 5\text{H}_2\text{O}` $\rightarrow$ $\text{CuSO}_4 \cdot 5\text{H}_2\text{O}$
+
+### B. Reaction Arrows & States of Matter
+* **Forward Reaction Arrow:** Use `\rightarrow` or `\longrightarrow` for standard yields:
+  * `\rightarrow` or `\longrightarrow` $\rightarrow$ $\rightarrow$ or $\longrightarrow$
+* **Equilibrium / Reversible Arrows:** Use `\rightleftharpoons` to indicate dynamic equilibrium:
+  * `\rightleftharpoons` $\rightarrow$ $\rightleftharpoons$
+* **Gas Evolution & Precipitation:** Use up/down arrows or state abbreviations:
+  * Up arrow (gas evolution): `\uparrow` $\rightarrow$ $\uparrow$
+  * Down arrow (precipitation): `\downarrow` $\rightarrow$ $\downarrow$
+  * Matter States: `(s)` (solid), `(l)` (liquid), `(g)` (gas), `(aq)` (aqueous solute)
+    * `\text{NaCl}(aq)` $\rightarrow$ $\text{NaCl}(aq)$
+    * `\text{CO}_2(g)` $\rightarrow$ $\text{CO}_2(g)$
+
+### C. Over-Arrow & Under-Arrow Catalyst / Heat Conditions
+To show temperature increases, catalysts, or pressures above/below the reaction arrow, use the advanced arrow extension commands:
+* **Heat symbol ($\Delta$):** `\xrightarrow{\Delta}` $\rightarrow$ $\xrightarrow{\Delta}$
+* **Text catalyst state over arrow:** `\xrightarrow{\text{MnO}_2}` $\rightarrow$ $\xrightarrow{\text{MnO}_2}$
+* **Text / Compound pressure condition:** `\xrightarrow[\text{100 atm}]{\text{200}^\circ\text{C}}` $\rightarrow$ $\xrightarrow[\text{100 atm}]{\text{200}^\circ\text{C}}$
+
+### D. Complete Chemistry Examples
+* **Example 1: Photosynthesis Equation**
+  * `$$6\text{CO}_2(g) + 6\text{H}_2\text{O}(l) \xrightarrow{\text{light}} \text{C}_6\text{H}_{12}\text{O}_6(aq) + 6\text{O}_2(g)$$`
+  * **Rendered:**
+    $$6\text{CO}_2(g) + 6\text{H}_2\text{O}(l) \xrightarrow{\text{light}} \text{C}_6\text{H}_{12}\text{O}_6(aq) + 6\text{O}_2(g)$$
+
+* **Example 2: Haber Process for Nitrogen Fixation**
+  * `$$\text{N}_2(g) + 3\text{H}_2(g) \rightleftharpoons 2\text{NH}_3(g) \quad (\Delta H = -92.4 \text{ kJ/mol})$$`
+  * **Rendered:**
+    $$\text{N}_2(g) + 3\text{H}_2(g) \rightleftharpoons 2\text{NH}_3(g) \quad (\Delta H = -92.4 \text{ kJ/mol})$$
+
+---
+
+## 9. Applied Physics Symbols & Formulas
+
+Physics balances vectors, calculus constants, Greek operators, and precise script configurations.
+
+### A. Classical Mechanics
+* **Vector Kinematics / Force:** Use `\vec{...}` above variables:
+  * `\vec{F} = m \vec{a}` $\rightarrow$ $\vec{F} = m \vec{a}$
+  * `\vec{p} = m \vec{v}` $\rightarrow$ $\vec{p} = m \vec{v}$
+* **Rotational Torque (Cross Product):** Use `\times` for vector products:
+  * `\vec{\tau} = \vec{r} \times \vec{F}` $\rightarrow$ $\vec{\tau} = \vec{r} \times \vec{F}$
+* **Dot Product & Kinetic Work:** Use `\cdot` for scalar products:
+  * `W = \vec{F} \cdot \vec{d} = F d \cos\theta` $\rightarrow$ $W = \vec{F} \cdot \vec{d} = F d \cos\theta$
+* **Gravity and Planetary Orbits:**
+  * `F_g = G \frac{m_1 m_2}{r^2}` $\rightarrow$ $F_g = G \frac{m_1 m_2}{r^2}$
+
+### B. Electromagnetism & Field Constants
+* **Coulomb's Law / Electric Field constant ($\varepsilon_0$):**
+  * `F = \frac{1}{4\pi\varepsilon_0} \frac{|q_1 q_2|}{r^2}` $\rightarrow$ $F = \frac{1}{4\pi\varepsilon_0} \frac{|q_1 q_2|}{r^2}$
+* **Magnetic Permeability constant ($\mu_0$):**
+  * `B = \frac{\mu_0 I}{2\pi r}` $\rightarrow$ $B = \frac{\mu_0 I}{2\pi r}$
+* **Ohm's Law & Circuit Elements:**
+  * `V = I \cdot R \quad (R = \rho \frac{L}{A})` $\rightarrow$ $V = I \cdot R \quad (R = \rho \frac{L}{A})$
+
+### C. Thermodynamics & Energy
+* **First Law of Thermodynamics:** Use `\Delta` for macroscopic changes:
+  * `\Delta U = Q - W` $\rightarrow$ $\Delta U = Q - W$
+* **Entropy and Enthalpy (Microstates):**
+  * `S = k_B \ln \Omega` $\rightarrow$ $S = k_B \ln \Omega$
+  * `\Delta G = \Delta H - T \Delta S` $\rightarrow$ $\Delta G = \Delta H - T \Delta S$
+
+### D. Waves, Optics, and Modern Quantum Physics
+* **Planck Constant ($\hbar$ and $h$):** Use `\hbar` for the reduced Planck constant:
+  * `E = h\nu = \hbar \omega \quad \left(\omega = 2\pi f\right)` $\rightarrow$ $E = h\nu = \hbar \omega \quad \left(\omega = 2\pi f\right)$
+* **De Broglie Wavelength:**
+  * `\lambda = \frac{h}{p}` $\rightarrow$ $\lambda = \frac{h}{p}$
+* **Einstein's Mass-Energy Equivalence:**
+  * `E = mc^2` $\rightarrow$ $E = mc^2$
+* **Time-Dependent Schrödinger Equation ($\Psi$):**
+  * `i\hbar\frac{\partial}{\partial t}\Psi(\vec{r},t) = \hat{H}\Psi(\vec{r},t)` $\rightarrow$ $i\hbar\frac{\partial}{\partial t}\Psi(\vec{r},t) = \hat{H}\Psi(\vec{r},t)$
+
+---
+
+## 10. Best Practices for High-Stakes Assessments
 
 1. **Avoid text inside math blocks without formatting:** Wrapping physical descriptions in standard formatting makes spacing cramped (e.g. `$x = 10 meters$` renders as $x = 10meters$). Always use `\text{...}` for descriptive letters inside math: `$x = 10 \text{ meters}$` renders as $x = 10 \text{ meters}$.
 2. **Space out symbols:** Use `\,` (thin space), `\:` (medium space), or `\;` (thick space) to spread out equations if standard rendering binds elements too close.
 3. **Escaping special characters:** If you want to render literal dollar signs or curly braces in a question alongside math, escape them: use `\$` for a regular dollar and `\{` / `\}` for brackets.
 4. **Consistency**: Use standard variables (`x`, `y`, `z`) rather than words within equations to retain beautiful formatting.
+
