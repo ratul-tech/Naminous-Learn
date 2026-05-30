@@ -786,7 +786,7 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
                     <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform"><Activity className="w-12 h-12 text-amber-400" /></div>
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Success Ratio</p>
                     <p className="text-2xl font-black text-emerald-400 tracking-tighter">
-                      {Math.round((selectedSubmission.score / (events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 1)) * 100)}%
+                      {((selectedSubmission.score / (events.find(e => e.id === selectedSubmission.eventId)?.questions?.length || 1)) * 100).toFixed(2)}%
                     </p>
                     <p className="text-[10px] text-slate-600 font-bold uppercase mt-2 tracking-widest">Verified Efficiency</p>
                   </div>
@@ -2079,7 +2079,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
                                   </td>
                                   <td className="px-6 py-5 text-center">
                                     <div className="inline-flex flex-col items-center">
-                                        <span className="text-lg font-black text-indigo-400">{res.score}%</span>
+                                        <span className="text-lg font-black text-indigo-400">{Number(res.score).toFixed(2)}</span>
                                         <span className="text-[10px] text-slate-600 font-bold uppercase mt-1">{res.correctCount}/{res.totalQuestions} Correct</span>
                                     </div>
                                   </td>

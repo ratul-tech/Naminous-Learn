@@ -120,7 +120,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
   // Calculate high-level stats
   const totalExams = results.length;
   const avgScore = totalExams > 0 
-    ? Math.round(results.reduce((acc, curr) => acc + curr.score, 0) / totalExams) 
+    ? (results.reduce((acc, curr) => acc + curr.score, 0) / totalExams) 
     : 0;
   const bestScore = totalExams > 0 
     ? Math.max(...results.map(r => r.score)) 
@@ -199,7 +199,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
 
     if (result.type === 'Practice') {
       // Practice results without inline stores
-      setReviewError("Detailed question breakdowns are only stored for newly taken Topic Practice exams. Your score of " + result.score + "% is verified.");
+      setReviewError("Detailed question breakdowns are only stored for newly taken Topic Practice exams. Your score of " + Number(result.score).toFixed(2) + " is verified.");
       return;
     }
 
@@ -278,7 +278,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
   // Copy Summary Score to Clipboard
   const handleCopyClipboard = (res: ExamResult) => {
     const title = res.type === 'Event' ? 'Official Live assessment' : `${res.subject || 'General'} Practice`;
-    const msg = `📚 I completed the "${title}" on Bangla Academy!\n🎯 Score: ${res.score}%\n✅ Correct Answers: ${res.correctCount}/${res.totalQuestions}\n📅 Date: ${new Date(res.createdAt).toLocaleDateString()}\nKeep pushing boundaries!`;
+    const msg = `📚 I completed the "${title}" on Bangla Academy!\n🎯 Score: ${Number(res.score).toFixed(2)}\n✅ Correct Answers: ${res.correctCount}/${res.totalQuestions}\n📅 Date: ${new Date(res.createdAt).toLocaleDateString()}\nKeep pushing boundaries!`;
     navigator.clipboard.writeText(msg).then(() => {
       setCopiedId(res.id);
       setTimeout(() => setCopiedId(null), 2500);
@@ -559,7 +559,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                           <div>
                             <p className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Strongest Focus Area</p>
                             <p className="text-[#D4AF37] font-black text-base">{subjectAnalytics[0].name}</p>
-                            <p className="text-slate-400 text-xs mt-0.5 font-medium">Yielding an exceptional {subjectAnalytics[0].avgScore}% average score over {subjectAnalytics[0].count} assessment(s).</p>
+                            <p className="text-slate-400 text-xs mt-0.5 font-medium">Yielding an exceptional {Number(subjectAnalytics[0].avgScore).toFixed(2)} average score over {subjectAnalytics[0].count} assessment(s).</p>
                           </div>
                         </div>
                       )}
@@ -571,7 +571,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                           <div>
                             <p className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Target Improvement Area</p>
                             <p className="text-rose-400 font-bold text-sm">
-                              {subjectAnalytics[subjectAnalytics.length - 1].name} ({subjectAnalytics[subjectAnalytics.length - 1].avgScore}%)
+                              {subjectAnalytics[subjectAnalytics.length - 1].name} (avg: {Number(subjectAnalytics[subjectAnalytics.length - 1].avgScore).toFixed(2)})
                             </p>
                             <p className="text-slate-400 text-xs mt-0.5 font-medium">Dedicate extra topic practices to bridge performance deficits in this module.</p>
                           </div>
@@ -631,6 +631,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                   const title = isEvent 
                     ? `Official Live Exam` 
                     : `${result.subject || 'General'} Practice`;
+                  const percentage = result.totalQuestions > 0 ? (result.score / result.totalQuestions) * 100 : 0;
                   
                   return (
                     <tr key={result.id} className="group hover:bg-white/[0.012] transition-colors">
@@ -647,15 +648,15 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                       </td>
                       <td className="py-5">
                         <div className="flex items-center space-x-2">
-                          <span className="text-base font-black text-white">{result.score}%</span>
+                          <span className="text-base font-black text-white">{Number(result.score).toFixed(2)}</span>
                           <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${
-                            result.score >= 80 
+                            percentage >= 80 
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : result.score >= 50 
+                              : percentage >= 50 
                                 ? 'bg-amber-500/10 text-[#D4AF37] border border-amber-500/20' 
                                 : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                           }`}>
-                            {result.score >= 80 ? 'Elite' : result.score >= 50 ? 'Pass' : 'Deficit'}
+                            {percentage >= 80 ? 'Elite' : percentage >= 50 ? 'Pass' : 'Deficit'}
                           </span>
                         </div>
                       </td>
@@ -870,7 +871,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850 shadow-inner">
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Score Achieved</p>
-                        <p className="text-3xl font-black text-[#D4AF37] tracking-tight">{reviewingResult.score}%</p>
+                        <p className="text-3xl font-black text-[#D4AF37] tracking-tight">{Number(reviewingResult.score).toFixed(2)}</p>
                         <p className="text-[10px] text-slate-600 font-bold uppercase mt-1">Verified standing</p>
                       </div>
                       <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850 shadow-inner">

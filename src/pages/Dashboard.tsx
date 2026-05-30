@@ -43,8 +43,8 @@ export default function Dashboard({ profile }: DashboardProps) {
         const best = Math.max(...allResults.map(r => r.score));
         setStats({
           totalExams: total,
-          avgScore: Math.round(sum / total),
-          bestScore: best,
+          avgScore: Number((sum / total).toFixed(2)),
+          bestScore: Number(best.toFixed(2)),
         });
       }
     };
@@ -128,13 +128,13 @@ export default function Dashboard({ profile }: DashboardProps) {
                 Academic <span className="text-[#D4AF37]">Progress</span>
               </h1>
               <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-xl font-medium">
-                Your average stands at <span className="font-extrabold text-[#D4AF37]">{stats.avgScore}%</span>. Keep pushing forward to rise within the elite academic circle.
+                Your average stands at <span className="font-extrabold text-[#D4AF37]">{stats.avgScore.toFixed(2)}</span>. Keep pushing forward to rise within the elite academic circle.
               </p>
             </div>
             {/* Elegant Floating Metric Display with Radial Shadow Glow */}
             <div className="flex items-center space-x-4 shrink-0">
               <span className="text-7xl sm:text-8xl font-black text-[#D4AF37] font-sans tracking-tighter drop-shadow-[0_0_35px_rgba(212,175,55,0.45)]">
-                {stats.avgScore}%
+                {stats.avgScore.toFixed(2)}
               </span>
               <div className="flex flex-col text-[10px] uppercase font-black tracking-widest text-[#D4AF37]">
                 <span>Academy</span>
@@ -190,7 +190,7 @@ export default function Dashboard({ profile }: DashboardProps) {
                   </div>
                   <div className="flex items-center space-x-6">
                     <div className="text-right">
-                      <p className="text-2xl sm:text-3xl font-black text-white leading-none">{result.score}%</p>
+                      <p className="text-2xl sm:text-3xl font-black text-white leading-none">{Number(result.score).toFixed(2)}</p>
                       <p className="text-[9px] font-bold uppercase text-slate-500 tracking-wider mt-1">{result.correctCount} Correct Responses</p>
                     </div>
                   </div>

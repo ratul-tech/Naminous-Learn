@@ -183,7 +183,7 @@ export default function Leaderboard() {
                       </div>
                     </div>
                     <div className="col-span-4 sm:col-span-2">
-                      <div className="text-base sm:text-xl font-black text-white">{result.score}%</div>
+                      <div className="text-base sm:text-xl font-black text-white">{Number(result.score).toFixed(2)}</div>
                       <p className="text-[8px] uppercase font-black tracking-widest text-[#D4AF37]/80">{result.correctCount} Correct</p>
                     </div>
                     <div className="hidden sm:block col-span-2 text-right">
@@ -252,7 +252,7 @@ function PodiumItem({ result, rank, height, color, medalColor, delay }: { result
       >
         <span className={`text-6xl font-black mb-2 ${isFirst ? 'text-[#D4AF37]/25' : 'text-slate-700/20'}`}>{rank}</span>
         <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${isFirst ? 'bg-slate-950 text-[#D4AF37] border border-[#D4AF37]/35' : 'bg-slate-950 text-slate-400 border border-slate-850'}`}>
-          {result.score}%
+          {Number(result.score).toFixed(2)}
         </div>
       </motion.div>
     </motion.div>
