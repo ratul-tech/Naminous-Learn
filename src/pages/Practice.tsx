@@ -24,7 +24,7 @@ export default function Practice({ profile }: PracticeProps) {
   
   const [config, setConfig] = useState({
     subject: 'Physics',
-    class: profile?.class || 'Class 9',
+    class: profile?.class || 'SSC Candidate',
     mode: 'Complete Board' as Mode,
     time: 20, // minutes
     count: 10,
@@ -213,8 +213,8 @@ export default function Practice({ profile }: PracticeProps) {
             {/* Academic Level Selection */}
             <div>
               <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select Academic Level</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Class 9', 'Class 10', 'SSC Candidate', 'College Admission'].map(c => (
+              <div className="grid grid-cols-2 gap-4 max-w-xl">
+                {['SSC Candidate', 'College Admission'].map(c => (
                   <button
                     key={c}
                     onClick={() => setConfig({ ...config, class: c })}
@@ -411,6 +411,16 @@ export default function Practice({ profile }: PracticeProps) {
                       <div className="font-semibold text-slate-200 text-sm">
                         <MathRenderer content={q.text} engine={profile?.mathEngine} />
                       </div>
+                      {q.imageUrl && (
+                        <div className="mt-3 max-w-xs rounded-lg overflow-hidden border border-slate-800 bg-slate-950/20 p-1">
+                          <img 
+                            src={q.imageUrl} 
+                            alt="Question detail visual" 
+                            className="w-full h-auto object-contain max-h-36 rounded" 
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -451,6 +461,16 @@ export default function Practice({ profile }: PracticeProps) {
               <div className="text-2xl sm:text-3xl font-black text-white leading-relaxed tracking-tight font-serif">
                 <MathRenderer content={filteredQuestions[examState.currentQuestionIndex]?.text || ''} engine={profile?.mathEngine} />
               </div>
+              {filteredQuestions[examState.currentQuestionIndex]?.imageUrl && (
+                <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-850 bg-slate-950/40 p-2 mx-auto sm:mx-0">
+                  <img 
+                    src={filteredQuestions[examState.currentQuestionIndex].imageUrl} 
+                    alt="Question visual helper" 
+                    className="w-full h-auto object-contain max-h-60 rounded-lg mx-auto" 
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredQuestions[examState.currentQuestionIndex]?.options.map((option, i) => (
@@ -582,6 +602,16 @@ export default function Practice({ profile }: PracticeProps) {
                 <div className="text-xl font-black text-white mb-8 leading-relaxed font-serif">
                   <MathRenderer content={q.text} engine={profile?.mathEngine} />
                 </div>
+                {q.imageUrl && (
+                  <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-850 bg-slate-950/40 p-2">
+                    <img 
+                      src={q.imageUrl} 
+                      alt="Question detailed reference" 
+                      className="w-full h-auto object-contain max-h-52 rounded-lg" 
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {q.options.map((opt, i) => (
                     <div

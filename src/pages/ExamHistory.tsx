@@ -559,6 +559,16 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                             <div className="text-base sm:text-lg font-bold text-white mb-6 leading-relaxed text-left">
                               <MathRenderer content={q.text} engine={profile?.mathEngine} />
                             </div>
+                            {q.imageUrl && (
+                              <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-800 bg-slate-950/40 p-2">
+                                <img 
+                                  src={q.imageUrl} 
+                                  alt="Question representation" 
+                                  className="w-full h-auto object-contain max-h-52 rounded-lg" 
+                                  referrerPolicy="no-referrer"
+                                />
+                              </div>
+                            )}
 
                             {/* Option selections */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -277,7 +277,7 @@ export default function Events({ profile }: EventsProps) {
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
-          {['All', 'Class 9', 'Class 10', 'SSC Candidate', 'College Admission'].map((c) => (
+          {['All', 'SSC Candidate', 'College Admission'].map((c) => (
             <button
               key={c}
               onClick={() => setActiveClass(c)}
@@ -644,8 +644,6 @@ export default function Events({ profile }: EventsProps) {
                         onChange={(e) => setEventData({ ...eventData, class: e.target.value })}
                         className="w-full px-5 py-3 rounded-2xl border-2 border-slate-800 bg-slate-950 text-white focus:border-[#D4AF37]/50 outline-none font-bold"
                       >
-                        <option value="Class 9">Class 9</option>
-                        <option value="Class 10">Class 10</option>
                         <option value="SSC Candidate">SSC Candidate</option>
                         <option value="College Admission">College Admission</option>
                       </select>

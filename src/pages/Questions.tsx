@@ -32,8 +32,9 @@ export default function Questions({ profile }: QuestionsProps) {
     category: 'Board' as Category,
     board: 'Dhaka',
     college: 'NDC',
-    class: 'Class 9',
+    class: 'SSC Candidate',
     subject: 'Physics',
+    imageUrl: '',
   });
 
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
@@ -67,7 +68,7 @@ export default function Questions({ profile }: QuestionsProps) {
       }
       setShowAdd(false);
       setEditingId(null);
-      setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC', class: 'Class 9', subject: 'Physics' });
+      setNewQ({ text: '', options: ['', '', '', ''], correctAnswer: 0, category: 'Board', board: 'Dhaka', college: 'NDC', class: 'SSC Candidate', subject: 'Physics', imageUrl: '' });
     } catch (error) {
       handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, editingId ? `questions/${editingId}` : 'questions');
     }
@@ -81,8 +82,9 @@ export default function Questions({ profile }: QuestionsProps) {
       category: q.category,
       board: q.board || 'Dhaka',
       college: q.college || 'NDC',
-      class: q.class || 'Class 9',
+      class: q.class || 'SSC Candidate',
       subject: q.subject || 'Physics',
+      imageUrl: q.imageUrl || '',
     });
     setEditingId(q.id);
     setShowAdd(true);
@@ -162,8 +164,6 @@ export default function Questions({ profile }: QuestionsProps) {
                 className="w-full lg:w-40 px-4 py-3 rounded-xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-xs sm:text-sm appearance-none cursor-pointer hover:bg-slate-800 text-slate-300 shadow-inner"
               >
                 <option value="All">All Classes</option>
-                <option value="Class 9">Class 9</option>
-                <option value="Class 10">Class 10</option>
                 <option value="SSC Candidate">SSC Candidate</option>
                 <option value="College Admission">College Admission</option>
               </select>
@@ -319,8 +319,6 @@ export default function Questions({ profile }: QuestionsProps) {
                   onChange={(e) => setNewQ({ ...newQ, class: e.target.value })}
                   className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-slate-300 shadow-inner"
                 >
-                  <option value="Class 9">Class 9</option>
-                  <option value="Class 10">Class 10</option>
                   <option value="SSC Candidate">SSC Candidate</option>
                   <option value="College Admission">College Admission</option>
                 </select>
@@ -338,7 +336,7 @@ export default function Questions({ profile }: QuestionsProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {newQ.category === 'Board' ? (
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Board / Year</label>
@@ -364,6 +362,17 @@ export default function Questions({ profile }: QuestionsProps) {
                   />
                 </div>
               )}
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Image URL (Optional)</label>
+                <input
+                  type="url"
+                  value={newQ.imageUrl}
+                  onChange={(e) => setNewQ({ ...newQ, imageUrl: e.target.value })}
+                  placeholder="https://example.com/image.png"
+                  className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-medium text-white shadow-inner"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end space-x-4 pt-6">
@@ -408,6 +417,16 @@ export default function Questions({ profile }: QuestionsProps) {
                   <h3 className="text-base sm:text-lg font-bold text-slate-100 leading-relaxed font-serif">
                     <MathRenderer content={q.text} engine={profile?.mathEngine} />
                   </h3>
+                  {q.imageUrl && (
+                    <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-800/80 bg-slate-950/40 p-2">
+                      <img 
+                        src={q.imageUrl} 
+                        alt="Question visual context" 
+                        className="w-full h-auto object-contain max-h-60 rounded-lg" 
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-3">
                     {q.options.map((opt, i) => (
                       <div key={i} className={`flex items-start space-x-3 text-[13px] sm:text-sm ${i === q.correctAnswer ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>

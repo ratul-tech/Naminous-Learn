@@ -3,6 +3,7 @@ import { Group } from './types';
 export const SUBJECTS_BY_GROUP: Record<Group | 'Common', string[]> = {
   Common: [
     'Bangla',
+    'Bangla Second Paper',
     'English',
     'Math',
     'ICT',

@@ -376,6 +376,16 @@ export default function Exam({ profile }: ExamProps) {
             <div className="text-base sm:text-lg md:text-xl font-semibold text-white leading-relaxed">
               <MathRenderer content={currentQuestion?.text || ''} engine={profile?.mathEngine} />
             </div>
+            {currentQuestion?.imageUrl && (
+              <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-700/60 bg-slate-950/40 p-2">
+                <img 
+                  src={currentQuestion.imageUrl} 
+                  alt="Question visual" 
+                  className="w-full h-auto object-contain max-h-65 rounded-lg mx-auto" 
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {currentQuestion?.options.map((option, i) => {

@@ -38,7 +38,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     displayName: profile?.displayName || '',
     gender: profile?.gender || 'Male' as Gender,
     phone: profile?.phone || '',
-    class: profile?.class || 'Class 9',
+    class: profile?.class || 'SSC Candidate',
     school: profile?.school || '',
     group: profile?.group || 'Science' as Group,
     mathEngine: profile?.mathEngine || 'katex',
@@ -74,7 +74,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
         displayName: profile.displayName || '',
         gender: profile.gender || 'Male',
         phone: profile.phone || '',
-        class: profile.class || 'Class 9',
+        class: profile.class || 'SSC Candidate',
         school: profile.school || '',
         group: profile.group || 'Science',
         mathEngine: profile.mathEngine || 'katex',
@@ -673,9 +673,8 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                           onChange={(e) => setFormData({ ...formData, class: e.target.value })}
                           className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-[#D4AF37] text-white outline-none transition-all font-bold text-sm cursor-pointer"
                         >
-                          <option value="Class 9">Class 9</option>
-                          <option value="Class 10">Class 10</option>
                           <option value="SSC Candidate">SSC Candidate</option>
+                          <option value="College Admission">College Admission</option>
                         </select>
                       </div>
                     </div>

@@ -809,6 +809,16 @@ function SubmissionManager({ submissions, events, users, mathEngine }: { submiss
                             <span className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-slate-400 text-sm shrink-0">{idx + 1}</span>
                             <div className="min-w-0">
                               <MathRenderer content={q.text} className="font-bold text-white text-lg tracking-tight" engine={mathEngine} />
+                              {q.imageUrl && (
+                                <div className="my-3 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-800 bg-slate-900/50 p-1">
+                                  <img 
+                                    src={q.imageUrl} 
+                                    alt="Question context" 
+                                    className="w-full h-auto object-contain max-h-52 rounded-lg" 
+                                    referrerPolicy="no-referrer"
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className={`flex items-center px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest shrink-0 ml-4 ${isCorrect ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-rose-500 bg-rose-500/10 border border-rose-500/20'}`}>
@@ -1488,8 +1498,6 @@ function UserManager({ users, onDelete, deletingUserId }: { users: UserProfile[]
                       onChange={(e) => setEditData({ ...editData, class: e.target.value })}
                       className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 text-slate-200 font-bold transition-all appearance-none cursor-pointer"
                     >
-                      <option value="Class 9 text-slate-400">Class 9</option>
-                      <option value="Class 10">Class 10</option>
                       <option value="SSC Candidate">SSC Candidate</option>
                       <option value="College Admission">College Admission</option>
                     </select>
@@ -1678,7 +1686,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
     maxCandidates: 100,
     prize: '',
     questions: [],
-    class: 'Class 9',
+    class: 'SSC Candidate',
   });
 
   const filteredEvents = events.filter(e => 
@@ -1759,7 +1767,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
       maxCandidates: 100,
       prize: '',
       questions: [],
-      class: 'Class 9',
+      class: 'SSC Candidate',
     });
   };
 
@@ -1804,6 +1812,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
       text: '',
       options: ['', '', '', ''],
       correctAnswer: 0,
+      imageUrl: '',
     });
   };
 
@@ -1813,6 +1822,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
       text: q.text,
       options: [...q.options],
       correctAnswer: q.correctAnswer,
+      imageUrl: q.imageUrl || '',
     });
     setEditingQuestionIndex(index);
   };
@@ -1824,6 +1834,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
         text: '',
         options: ['', '', '', ''],
         correctAnswer: 0,
+        imageUrl: '',
       });
     }
     setEventData(prev => ({
@@ -1849,8 +1860,6 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
                   onChange={(e) => setEventData({ ...eventData, class: e.target.value })}
                   className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs uppercase tracking-widest text-slate-300 appearance-none shadow-inner"
                 >
-                  <option value="Class 9">Class 9</option>
-                  <option value="Class 10">Class 10</option>
                   <option value="SSC Candidate">SSC Candidate</option>
                   <option value="College Admission">College Admission</option>
                 </select>
@@ -1973,6 +1982,18 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
                             </div>
                           ))}
                         </div>
+
+                        <div className="space-y-1.5 mt-4">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Payload Image URL (Optional)</label>
+                          <input 
+                            type="url" 
+                            value={currentQuestion.imageUrl || ''} 
+                            onChange={(e) => setCurrentQuestion({ ...currentQuestion, imageUrl: e.target.value })} 
+                            placeholder="https://example.com/image.png"
+                            className="w-full bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800 outline-none text-slate-300 font-medium text-xs focus:border-indigo-500 transition-all"
+                          />
+                        </div>
+
                         <button 
                           type="button" 
                           onClick={addOrUpdateQuestion}

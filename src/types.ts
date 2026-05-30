@@ -64,6 +64,7 @@ export interface Question {
   college?: string;
   class?: string;
   subject?: string;
+  imageUrl?: string;
   createdAt: string;
 }
 
