@@ -236,7 +236,7 @@ export default function Questions({ profile }: QuestionsProps) {
                 value={newQ.text}
                 onChange={(e) => setNewQ({ ...newQ, text: e.target.value })}
                 placeholder="Enter question text here... Use $math$ for inline and $$math$$ for block."
-                className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-medium h-32 resize-none text-white placeholder:text-slate-700 shadow-inner"
+                className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-medium h-32 resize-y text-white placeholder:text-slate-700 shadow-inner"
                 required
               />
               

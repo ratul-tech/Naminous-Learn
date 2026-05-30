@@ -1951,7 +1951,7 @@ function EventManager({ events, onDelete, isFullAdmin, mathEngine }: { events: E
                           value={currentQuestion.text} 
                           onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })} 
                           placeholder="Cipher / Question Input" 
-                          className="w-full bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800 outline-none text-slate-200 font-medium text-sm focus:border-indigo-500 h-24 resize-none transition-all"
+                          className="w-full bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800 outline-none text-slate-200 font-medium text-sm focus:border-indigo-500 h-24 resize-y transition-all"
                         />
                         <div className="grid grid-cols-1 gap-3">
                           {currentQuestion.options?.map((opt, i) => (
