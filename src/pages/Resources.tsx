@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, Download, Search, Filter } from 'lucide-react';
+import { FileText, Download, Search, Filter, Calculator } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserProfile, Resource } from '../types';
+import { calculateQuizScoreBengali } from '../lib/scoreCalculator';
 
 interface ResourcesProps {
   profile: UserProfile | null;
@@ -14,6 +15,13 @@ export default function Resources({ profile }: ResourcesProps) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+  // Interactive Quiz Score Custom Calculator State
+  const [marksPerRight, setMarksPerRight] = useState<number>(1);
+  const [negativeMarksPerWrong, setNegativeMarksPerWrong] = useState<number>(0.25);
+  const [calcTotalQuestions, setCalcTotalQuestions] = useState<number>(100);
+  const [calcCorrectAnswers, setCalcCorrectAnswers] = useState<number>(80);
+  const [calcWrongAnswers, setCalcWrongAnswers] = useState<number>(20);
 
   useEffect(() => {
     const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
@@ -115,6 +123,103 @@ export default function Resources({ profile }: ResourcesProps) {
             <p className="text-slate-500 font-black uppercase text-[10px] tracking-widest">No resources found</p>
           </div>
         )}
+      </div>
+
+      {/* Dynamic Bengali Quiz Score Calculator Card */}
+      <div className="border border-slate-900 bg-[#0f172a]/50 rounded-2xl p-6 sm:p-8 space-y-6">
+        <div className="flex items-center space-x-3 border-b border-dashed border-slate-900 pb-4">
+          <div className="w-10 h-10 bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 rounded-xl flex items-center justify-center">
+            <Calculator className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-black uppercase text-white tracking-tight">Bengali Quiz Score Calculator</h2>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dynamic Score Calculation & Formatting</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Controls */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Marks Per Right (+)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={marksPerRight}
+                  onChange={(e) => setMarksPerRight(parseFloat(e.target.value) ?? 0)}
+                  className="w-full bg-[#030712] border border-slate-800 rounded-xl px-3 py-2 text-white font-bold text-sm outline-none focus:border-[#D4AF37]/45"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Negative Mark Per Wrong (-)</label>
+                <input
+                  type="number"
+                  step="0.05"
+                  value={negativeMarksPerWrong}
+                  onChange={(e) => setNegativeMarksPerWrong(parseFloat(e.target.value) ?? 0)}
+                  className="w-full bg-[#030712] border border-slate-800 rounded-xl px-3 py-2 text-white font-bold text-sm outline-none focus:border-[#D4AF37]/45"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Total Qs</label>
+                <input
+                  type="number"
+                  value={calcTotalQuestions}
+                  onChange={(e) => setCalcTotalQuestions(parseInt(e.target.value, 10) || 0)}
+                  className="w-full bg-[#030712] border border-slate-800 rounded-xl px-3 py-2 text-white font-bold text-sm outline-none focus:border-[#D4AF37]/45"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Correct</label>
+                <input
+                  type="number"
+                  value={calcCorrectAnswers}
+                  onChange={(e) => {
+                    const corr = parseInt(e.target.value, 10) || 0;
+                    setCalcCorrectAnswers(corr);
+                  }}
+                  className="w-full bg-[#030712] border border-slate-800 rounded-xl px-3 py-2 text-white font-bold text-sm outline-none focus:border-[#D4AF37]/45"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Wrong</label>
+                <input
+                  type="number"
+                  value={calcWrongAnswers}
+                  onChange={(e) => {
+                    const wr = parseInt(e.target.value, 10) || 0;
+                    setCalcWrongAnswers(wr);
+                  }}
+                  className="w-full bg-[#030712] border border-slate-800 rounded-xl px-3 py-2 text-white font-bold text-sm outline-none focus:border-[#D4AF37]/45"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Bengali Result Display */}
+          <div className="bg-[#030712] border border-dashed border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-wider">Bengali Formatted Result String</p>
+              <pre className="text-white text-base sm:text-lg font-black leading-relaxed whitespace-pre-wrap font-sans">
+                {calculateQuizScoreBengali({
+                  marksPerRight,
+                  negativeMarksPerWrong,
+                  totalQuestions: calcTotalQuestions,
+                  correctAnswers: calcCorrectAnswers,
+                  wrongAnswers: calcWrongAnswers,
+                })}
+              </pre>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-900/50 flex space-x-2">
+              <span className="text-[9px] bg-[#D4AF37]/10 text-[#D4AF37] font-bold px-2 py-0.5 rounded uppercase">Verified Format</span>
+              <span className="text-[9px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded uppercase font-mono">Autoconversion</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="py-10 border-t border-dashed border-slate-900 text-white relative overflow-hidden group">

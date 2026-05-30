@@ -81,14 +81,21 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
       const resultsRef = collection(db, 'results');
       const q = query(
         resultsRef,
-        where('uid', '==', profile.uid),
-        orderBy('createdAt', 'desc')
+        where('uid', '==', profile.uid)
       );
       const querySnapshot = await getDocs(q);
       const fetchedResults = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as ExamResult));
+      
+      // Sort client-side by createdAt desc
+      fetchedResults.sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
+      
       setResults(fetchedResults);
     } catch (err: any) {
       console.error("Error fetching exam history:", err);

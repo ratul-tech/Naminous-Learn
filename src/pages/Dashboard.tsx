@@ -23,20 +23,19 @@ export default function Dashboard({ profile }: DashboardProps) {
 
     const fetchStats = async () => {
       const resultsRef = collection(db, 'results');
-      const q = query(
-        resultsRef,
-        where('uid', '==', profile.uid),
-        orderBy('createdAt', 'desc'),
-        limit(5)
-      );
-      const querySnapshot = await getDocs(q);
-      const results = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamResult));
-      setRecentResults(results);
-
-      // Simple stats from all results
+      // Simple stats and list from all results for this user
       const allQ = query(resultsRef, where('uid', '==', profile.uid));
       const allSnapshot = await getDocs(allQ);
-      const allResults = allSnapshot.docs.map(doc => doc.data() as ExamResult);
+      const allResults = allSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamResult));
+      
+      // Sort client-side by createdAt desc
+      const sortedResults = [...allResults].sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
+
+      setRecentResults(sortedResults.slice(0, 5));
       
       if (allResults.length > 0) {
         const total = allResults.length;
