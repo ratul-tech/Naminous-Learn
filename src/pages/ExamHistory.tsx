@@ -126,6 +126,10 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
     ? Math.max(...results.map(r => r.score)) 
     : 0;
   
+  const totalCorrect = results.reduce((acc, curr) => acc + (curr.correctCount || 0), 0);
+  const totalQuestions = results.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
+  const accuracyRate = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+  
   const liveEventsCount = results.filter(r => r.type === 'Event').length;
   const practiceCount = results.filter(r => r.type === 'Practice').length;
 
@@ -325,24 +329,28 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
             <div className="flex items-center space-x-4 shrink-0 bg-slate-900/40 border border-slate-800/80 px-6 py-4 rounded-3xl backdrop-blur-md">
               <div className="text-right">
                 <span className="text-4xl sm:text-5xl font-black text-[#D4AF37] font-sans tracking-tight">
-                  {avgScore}%
+                  {avgScore.toFixed(2)}
                 </span>
                 <p className="text-[9px] uppercase font-black tracking-widest text-slate-500 mt-1">Average Score</p>
               </div>
               <div className="h-10 w-px bg-slate-800 mx-2" />
               <div className="text-right">
                 <span className="text-4xl sm:text-5xl font-black text-emerald-400 font-sans tracking-tight">
-                  {bestScore}%
+                  {bestScore.toFixed(2)}
                 </span>
                 <p className="text-[9px] uppercase font-black tracking-widest text-slate-500 mt-1">Best Yield</p>
               </div>
             </div>
           </div>
           
-          <div className="w-full h-[2px] bg-slate-900 overflow-hidden relative">
+          <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-500 tracking-wider mb-2">
+            <span>Overall Accuracy Rate</span>
+            <span className="text-[#D4AF37]">{accuracyRate.toFixed(2)}%</span>
+          </div>
+          <div className="w-full h-[2px] bg-slate-900 overflow-hidden relative font-sans">
              <motion.div 
                initial={{ width: 0 }}
-               animate={{ width: `${avgScore}%` }}
+               animate={{ width: `${accuracyRate}%` }}
                transition={{ duration: 1.5, ease: "easeOut" }}
                className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-300 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
              />
@@ -480,7 +488,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                         <LineChart data={timelineData} margin={{ top: 10, right: 30, left: -20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                           <XAxis dataKey="date" stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
-                          <YAxis domain={[0, 100]} stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
+                          <YAxis stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '16px' }}
                             itemStyle={{ color: '#D4AF37' }}
@@ -489,7 +497,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                           <Line 
                             type="monotone" 
                             dataKey="score" 
-                            name="Score %" 
+                            name="Points" 
                             stroke="#D4AF37" 
                             strokeWidth={3} 
                             activeDot={{ r: 8 }}
@@ -507,20 +515,20 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                         <BookOpen className="w-4 h-4 text-emerald-400" />
                         Benchmarks By Subject
                       </h3>
-                      <span className="text-[10px] font-bold text-slate-500">Average accuracy score</span>
+                      <span className="text-[10px] font-bold text-slate-500">Average points per category</span>
                     </div>
                     <div className="h-60 sm:h-72 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={subjectAnalytics} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                           <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
-                          <YAxis domain={[0, 100]} stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
+                          <YAxis stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '16px' }}
                             itemStyle={{ color: '#10b981' }}
                             labelStyle={{ color: 'white', fontWeight: 'bold' }}
                           />
-                          <Bar dataKey="avgScore" name="Avg Score %" radius={[8, 8, 0, 0]}>
+                          <Bar dataKey="avgScore" name="Avg Points" radius={[8, 8, 0, 0]}>
                             {subjectAnalytics.map((entry, index) => (
                               <Cell 
                                 key={`cell-${index}`} 
@@ -602,10 +610,10 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
 
                     <div className="flex justify-between items-center bg-slate-950/60 p-3.5 rounded-2xl border border-slate-900">
                       <div>
-                        <p className="text-xs text-white font-bold">Average Yield Ratio</p>
+                        <p className="text-xs text-white font-bold">Average Yield Score</p>
                         <p className="text-[10px] text-slate-500 font-bold">Performance Mean</p>
                       </div>
-                      <span className="text-[#D4AF37] font-black text-xl">{avgScore}%</span>
+                      <span className="text-[#D4AF37] font-black text-xl">{avgScore.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

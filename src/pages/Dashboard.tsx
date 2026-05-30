@@ -16,6 +16,7 @@ export default function Dashboard({ profile }: DashboardProps) {
     totalExams: 0,
     avgScore: 0,
     bestScore: 0,
+    accuracyRate: 0,
   });
 
   useEffect(() => {
@@ -41,10 +42,16 @@ export default function Dashboard({ profile }: DashboardProps) {
         const total = allResults.length;
         const sum = allResults.reduce((acc, curr) => acc + curr.score, 0);
         const best = Math.max(...allResults.map(r => r.score));
+        
+        const totalCorrect = allResults.reduce((acc, curr) => acc + (curr.correctCount || 0), 0);
+        const totalQs = allResults.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
+        const accuracyRate = totalQs > 0 ? (totalCorrect / totalQs) * 100 : 0;
+
         setStats({
           totalExams: total,
           avgScore: Number((sum / total).toFixed(2)),
           bestScore: Number(best.toFixed(2)),
+          accuracyRate: Number(accuracyRate.toFixed(2)),
         });
       }
     };
@@ -76,9 +83,9 @@ export default function Dashboard({ profile }: DashboardProps) {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          <StatCard icon={TrendingUp} label="Platform Average" value={`${stats.avgScore}%`} color="bg-blue-500/10 text-blue-400" />
+          <StatCard icon={TrendingUp} label="Platform Average" value={stats.avgScore} color="bg-blue-500/10 text-blue-400" />
           <StatCard icon={BookOpen} label="Total Evaluations" value={stats.totalExams} color="bg-emerald-500/10 text-emerald-400" />
-          <StatCard icon={Trophy} label="Elite Mastery" value={`${stats.bestScore}%`} color="bg-amber-500/10 text-amber-400" />
+          <StatCard icon={Trophy} label="Elite Mastery" value={stats.bestScore} color="bg-amber-500/10 text-amber-400" />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
@@ -143,10 +150,14 @@ export default function Dashboard({ profile }: DashboardProps) {
             </div>
           </div>
           
+          <div className="flex items-center justify-between text-[11px] font-black uppercase text-slate-500 tracking-wider mb-2">
+            <span>Accuracy Rate (Accuracy)</span>
+            <span className="text-[#D4AF37]">{stats.accuracyRate.toFixed(2)}%</span>
+          </div>
           <div className="w-full h-[2px] bg-slate-905 overflow-hidden relative">
              <motion.div 
                initial={{ width: 0 }}
-               animate={{ width: `${stats.avgScore}%` }}
+               animate={{ width: `${stats.accuracyRate}%` }}
                transition={{ duration: 1.5, ease: "easeOut" }}
                className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-300 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.8)]" 
              />

@@ -21,10 +21,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     let q = query(
-      collection(db, 'results'),
-      orderBy('score', 'desc'),
-      orderBy('createdAt', 'asc'),
-      limit(20)
+      collection(db, 'results')
     );
 
     if (filters.subject !== 'All') {
@@ -38,8 +35,54 @@ export default function Leaderboard() {
     }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamResult));
-      setTopResults(results);
+      const rawResults = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamResult));
+      
+      const studentMap: Record<string, any> = {};
+      
+      rawResults.forEach(r => {
+        if (!r.uid) return;
+        if (!studentMap[r.uid]) {
+          studentMap[r.uid] = {
+            id: r.uid,
+            uid: r.uid,
+            displayName: r.displayName || 'Anonymous',
+            school: r.school || 'N/A',
+            score: 0,
+            correctCount: 0,
+            wrongCount: 0,
+            totalQuestions: 0,
+            type: r.type,
+            examsCount: 0,
+            createdAt: r.createdAt || new Date().toISOString()
+          };
+        }
+        
+        const m = studentMap[r.uid];
+        m.score += Number(r.score || 0);
+        m.correctCount += Number(r.correctCount || 0);
+        m.wrongCount += Number(r.wrongCount || 0);
+        m.totalQuestions += Number(r.totalQuestions || 0);
+        m.examsCount += 1;
+        
+        if (r.createdAt && r.createdAt > m.createdAt) {
+          m.displayName = r.displayName || m.displayName;
+          m.school = r.school || m.school;
+          m.createdAt = r.createdAt;
+          m.type = r.type;
+        }
+      });
+      
+      const processed = Object.values(studentMap).map(s => {
+        const accuracyRate = s.totalQuestions > 0 ? (s.correctCount / s.totalQuestions) * 100 : 0;
+        return {
+          ...s,
+          accuracyRate: Number(accuracyRate.toFixed(2))
+        };
+      });
+      
+      processed.sort((a, b) => b.score - a.score || b.accuracyRate - a.accuracyRate);
+      
+      setTopResults(processed as any);
       setLoading(false);
     }, (error) => {
       console.error("Leaderboard error:", error);
@@ -185,6 +228,11 @@ export default function Leaderboard() {
                     <div className="col-span-4 sm:col-span-2">
                       <div className="text-base sm:text-xl font-black text-white">{Number(result.score).toFixed(2)}</div>
                       <p className="text-[8px] uppercase font-black tracking-widest text-[#D4AF37]/80">{result.correctCount} Correct</p>
+                      {(result as any).accuracyRate !== undefined && (
+                        <p className="text-[9px] uppercase font-bold text-emerald-400 mt-1">
+                          {(result as any).accuracyRate.toFixed(2)}% Accuracy
+                        </p>
+                      )}
                     </div>
                     <div className="hidden sm:block col-span-2 text-right">
                       <div className="inline-block px-3 py-1 bg-slate-950 text-[9px] font-black uppercase tracking-widest text-slate-500 rounded-full group-hover:bg-[#D4AF37]/10 group-hover:text-[#D4AF37] transition-colors whitespace-nowrap border border-slate-900">
@@ -254,6 +302,11 @@ function PodiumItem({ result, rank, height, color, medalColor, delay }: { result
         <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${isFirst ? 'bg-slate-950 text-[#D4AF37] border border-[#D4AF37]/35' : 'bg-slate-950 text-slate-400 border border-slate-850'}`}>
           {Number(result.score).toFixed(2)}
         </div>
+        {(result as any).accuracyRate !== undefined && (
+          <div className="text-[10px] font-black uppercase tracking-wider text-emerald-400 mt-3 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-900 shadow-sm">
+            {(result as any).accuracyRate.toFixed(2)}% Accuracy
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
