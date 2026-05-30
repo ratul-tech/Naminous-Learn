@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { getSubjectsForGroup } from '../constants';
 import { MathRenderer } from '../components/MathRenderer';
+import { useLocation } from 'react-router-dom';
 
 interface PracticeProps {
   profile: UserProfile | null;
@@ -16,18 +17,22 @@ type Step = 'config' | 'selection' | 'exam' | 'results' | 'review';
 type Mode = 'Complete Board' | 'Selected Board';
 
 export default function Practice({ profile }: PracticeProps) {
+  const location = useLocation();
   const [step, setStep] = useState<Step>('config');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [config, setConfig] = useState({
-    subject: 'Physics',
-    class: profile?.class || 'SSC Candidate',
-    mode: 'Complete Board' as Mode,
-    time: 20, // minutes
-    count: 10,
+  const [config, setConfig] = useState(() => {
+    const locState = location.state as any;
+    return {
+      subject: locState?.subject || 'Physics',
+      class: locState?.class || profile?.class || 'SSC Candidate',
+      mode: locState?.mode || ('Complete Board' as Mode),
+      time: locState?.time || 20, // minutes
+      count: locState?.count || 10,
+    };
   });
 
   const [examState, setExamState] = useState({
@@ -47,6 +52,37 @@ export default function Practice({ profile }: PracticeProps) {
       setConfig(prev => ({ ...prev, subject: subjects[0] }));
     }
   }, [subjects]);
+
+  // Support retake / autoStart from location state
+  useEffect(() => {
+    if (!loading && filteredQuestions.length > 0 && location.state?.autoStart && !examState.examStarted) {
+      const locState = location.state as any;
+      
+      let examQuestions = [];
+      if (locState.mode === 'Complete Board') {
+        const size = locState.count || 10;
+        examQuestions = [...filteredQuestions].sort(() => 0.5 - Math.random()).slice(0, size);
+      } else if (locState.mode === 'Selected Board' && locState.selectedQuestionIds) {
+        examQuestions = filteredQuestions.filter(q => locState.selectedQuestionIds.includes(q.id));
+      } else {
+        const size = locState.count || 10;
+        examQuestions = [...filteredQuestions].sort(() => 0.5 - Math.random()).slice(0, size);
+      }
+
+      if (examQuestions.length > 0) {
+        setFilteredQuestions(examQuestions);
+        setExamState({
+          currentQuestionIndex: 0,
+          answers: {},
+          timeLeft: (locState.time || 20) * 60,
+          examStarted: true,
+          submitting: false,
+          results: null,
+        });
+        setStep('exam');
+      }
+    }
+  }, [loading, filteredQuestions, location.state, examState.examStarted]);
 
   useEffect(() => {
     const fetchQuestions = async () => {

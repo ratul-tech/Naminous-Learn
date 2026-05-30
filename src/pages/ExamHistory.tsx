@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
+import { useState, useEffect, useMemo } from 'react';
+import { collection, query, where, orderBy, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { UserProfile, ExamResult, Question } from '../types';
+import { UserProfile, ExamResult, Question, OperationType } from '../types';
 import { 
   Trophy, 
   BookOpen, 
@@ -18,23 +18,47 @@ import {
   Activity, 
   RefreshCw,
   FileQuestion,
-  ExternalLink
+  ExternalLink,
+  Trash2,
+  Copy,
+  Check,
+  Flame,
+  ThumbsUp,
+  BrainCircuit,
+  BarChart2,
+  Sparkles,
+  RotateCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MathRenderer } from '../components/MathRenderer';
+import { handleFirestoreError } from '../lib/error-handler';
+import { useNavigate } from 'react-router-dom';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  Cell
+} from 'recharts';
 
 interface ExamHistoryProps {
   profile: UserProfile | null;
 }
 
 export default function ExamHistory({ profile }: ExamHistoryProps) {
+  const navigate = useNavigate();
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'event' | 'practice'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'event' | 'practice' | 'analytics'>('all');
 
   // Review Modal State
   const [reviewingResult, setReviewingResult] = useState<ExamResult | null>(null);
@@ -42,35 +66,39 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
   const [reviewQuestions, setReviewQuestions] = useState<Question[]>([]);
   const [reviewAnswers, setReviewAnswers] = useState<Record<string, number>>({});
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [modalFilter, setModalFilter] = useState<'all' | 'correct' | 'incorrect' | 'unanswered'>('all');
+
+  // Share Feedback Alert State
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fetch results
-  useEffect(() => {
+  const fetchHistory = async () => {
     if (!profile) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const resultsRef = collection(db, 'results');
+      const q = query(
+        resultsRef,
+        where('uid', '==', profile.uid),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const fetchedResults = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as ExamResult));
+      setResults(fetchedResults);
+    } catch (err: any) {
+      console.error("Error fetching exam history:", err);
+      setError("Unable to retrieve exam history. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchHistory = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const resultsRef = collection(db, 'results');
-        const q = query(
-          resultsRef,
-          where('uid', '==', profile.uid),
-          orderBy('createdAt', 'desc')
-        );
-        const querySnapshot = await getDocs(q);
-        const fetchedResults = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as ExamResult));
-        setResults(fetchedResults);
-      } catch (err: any) {
-        console.error("Error fetching exam history:", err);
-        setError("Unable to retrieve exam history. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchHistory();
   }, [profile]);
 
@@ -96,9 +124,9 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
 
   // Filter and search results
   const filteredResults = results.filter(r => {
-    const matchesTab = activeTab === 'all' || r.type.toLowerCase() === activeTab;
+    // If activeTab is 'analytics', it has its own dashboard view, but we list matching runs if they switch back
+    const isMatchedType = activeTab === 'all' || activeTab === 'analytics' || r.type.toLowerCase() === activeTab;
     
-    // Check if subject/class or custom titles match
     const titleText = r.type === 'Event' 
       ? 'Official Live Assessment' 
       : `${r.subject || 'General'} Practice`;
@@ -108,8 +136,43 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
       (r.subject && r.subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (r.class && r.class.toLowerCase().includes(searchTerm.toLowerCase()));
       
-    return matchesTab && matchesSearch;
+    return isMatchedType && matchesSearch;
   });
+
+  // Calculate subject benchmarks & strengths for Analytics Tab
+  const subjectAnalytics = useMemo(() => {
+    const stats: Record<string, { totalScore: number; count: number; correct: number; totalQ: number }> = {};
+    
+    results.forEach(r => {
+      const subjectName = r.subject || (r.type === 'Event' ? 'Live Events' : 'General');
+      if (!stats[subjectName]) {
+        stats[subjectName] = { totalScore: 0, count: 0, correct: 0, totalQ: 0 };
+      }
+      stats[subjectName].totalScore += r.score;
+      stats[subjectName].count += 1;
+      stats[subjectName].correct += r.correctCount || 0;
+      stats[subjectName].totalQ += r.totalQuestions || 0;
+    });
+
+    return Object.entries(stats).map(([name, data]) => ({
+      name,
+      avgScore: Math.round(data.totalScore / data.count),
+      count: data.count,
+      accuracy: data.totalQ > 0 ? Math.round((data.correct / data.totalQ) * 100) : 0,
+    })).sort((a, b) => b.avgScore - a.avgScore);
+  }, [results]);
+
+  // Timeline analysis Data for Recharts
+  const timelineData = useMemo(() => {
+    return [...results]
+      .reverse() // Oldest first for chronological order
+      .map((r, idx) => ({
+        index: idx + 1,
+        date: new Date(r.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        score: r.score,
+        name: r.type === 'Event' ? 'Live Exam' : `${r.subject || 'Practice'}`
+      }));
+  }, [results]);
 
   // Handle Review Answer trigger
   const handleReview = async (result: ExamResult) => {
@@ -117,6 +180,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
     setReviewQuestions([]);
     setReviewAnswers({});
     setReviewError(null);
+    setModalFilter('all'); // Reset filter to all when opening review
 
     // If it's Practice and we've successfully saved questions/answers inline
     const practiceWithData = result as any;
@@ -127,7 +191,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
     }
 
     if (result.type === 'Practice') {
-      // Legacy practice results without inline stores
+      // Practice results without inline stores
       setReviewError("Detailed question breakdowns are only stored for newly taken Topic Practice exams. Your score of " + result.score + "% is verified.");
       return;
     }
@@ -174,6 +238,59 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
       setReviewError("Unable to locate parent event reference.");
     }
   };
+
+  // Safe deletion of practice results
+  const handleDeleteResult = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this practice run from your performance logs? This action is permanent.")) {
+      return;
+    }
+    setDeletingId(id);
+    try {
+      await deleteDoc(doc(db, 'results', id));
+      setResults(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, 'results');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Re-run Practice Config Redirection
+  const handleRetakePractice = (result: ExamResult) => {
+    navigate('/practice', {
+      state: {
+        subject: result.subject || 'Physics',
+        class: result.class || profile?.class || 'SSC Candidate',
+        mode: 'Complete Board',
+        count: result.totalQuestions || 10,
+        autoStart: true
+      }
+    });
+  };
+
+  // Copy Summary Score to Clipboard
+  const handleCopyClipboard = (res: ExamResult) => {
+    const title = res.type === 'Event' ? 'Official Live assessment' : `${res.subject || 'General'} Practice`;
+    const msg = `📚 I completed the "${title}" on Bangla Academy!\n🎯 Score: ${res.score}%\n✅ Correct Answers: ${res.correctCount}/${res.totalQuestions}\n📅 Date: ${new Date(res.createdAt).toLocaleDateString()}\nKeep pushing boundaries!`;
+    navigator.clipboard.writeText(msg).then(() => {
+      setCopiedId(res.id);
+      setTimeout(() => setCopiedId(null), 2500);
+    });
+  };
+
+  // Filter questions for the active modal breakdown
+  const filteredModalQuestions = useMemo(() => {
+    return reviewQuestions.filter(q => {
+      const userAnswer = reviewAnswers[q.id];
+      const isCorrect = userAnswer === q.correctAnswer;
+      const isAnswered = userAnswer !== undefined;
+
+      if (modalFilter === 'correct') return isCorrect;
+      if (modalFilter === 'incorrect') return isAnswered && !isCorrect;
+      if (modalFilter === 'unanswered') return !isAnswered;
+      return true; // all
+    });
+  }, [reviewQuestions, reviewAnswers, modalFilter]);
 
   return (
     <div className="space-y-12 pb-24 pt-4">
@@ -249,20 +366,20 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
         <div className="bg-slate-900/30 p-5 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-all duration-350"><Activity className="w-12 h-12 text-[#D4AF37]" /></div>
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Efficiency Rating</p>
-          <p className="text-3xl font-black text-emerald-450 text-[#D4AF37] tracking-tight">{avgScore >= 80 ? 'Master' : avgScore >= 60 ? 'Scholar' : 'Initiate'}</p>
+          <p className="text-3xl font-black text-emerald-400 tracking-tight">{avgScore >= 80 ? 'Master' : avgScore >= 60 ? 'Scholar' : 'Initiate'}</p>
           <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">Derived standing</p>
         </div>
       </div>
 
-      {/* Main Control Panel and History table */}
-      <section className="bg-slate-900/30 border border-slate-805/85 rounded-3xl p-6 sm:p-8 space-y-6">
+      {/* Main Control Panel and History table / Analytics */}
+      <section className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           
-          {/* Custom Tabs */}
-          <div className="flex items-center space-x-1 sm:space-x-2 bg-slate-950 p-1 rounded-2xl border border-slate-800 w-full sm:w-auto">
+          {/* Custom Tabs including Analytics */}
+          <div className="flex flex-wrap items-center gap-1 bg-slate-950 p-1 rounded-2xl border border-slate-800 w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('all')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                 activeTab === 'all' 
                   ? 'bg-[#D4AF37] text-slate-950 shadow-lg shadow-amber-500/10' 
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
@@ -272,7 +389,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
             </button>
             <button
               onClick={() => setActiveTab('event')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                 activeTab === 'event' 
                   ? 'bg-blue-500 text-white shadow-lg' 
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
@@ -282,7 +399,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
             </button>
             <button
               onClick={() => setActiveTab('practice')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                 activeTab === 'practice' 
                   ? 'bg-purple-500 text-white shadow-lg' 
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
@@ -290,33 +407,206 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
             >
               Practice
             </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-1 ${
+                activeTab === 'analytics' 
+                  ? 'bg-emerald-500 text-slate-950 shadow-lg font-black' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              <span>Insights & Chart</span>
+            </button>
           </div>
 
           {/* Search Box */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search by subject or class..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950/60 border border-slate-800 text-xs text-white py-2.5 pl-10 pr-4 rounded-xl focus:outline-none focus:border-[#D4AF37]/50"
-            />
-          </div>
+          {activeTab !== 'analytics' && (
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search by subject or class..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-950/60 border border-slate-800 text-xs text-white py-2.5 pl-10 pr-4 rounded-xl focus:outline-none focus:border-[#D4AF37]/50"
+              />
+            </div>
+          )}
         </div>
 
-        {/* Results Container */}
+        {/* Results / Analytics Container */}
         {loading ? (
           <div className="py-24 text-center">
             <RefreshCw className="w-8 h-8 text-[#D4AF37] animate-spin mx-auto mb-4" />
-            <p className="text-xs text-slate-500 uppercase font-black tracking-widest">Sychronizing evaluation list...</p>
+            <p className="text-xs text-slate-500 uppercase font-black tracking-widest">Synchronizing evaluation list...</p>
           </div>
         ) : error ? (
           <div className="py-16 text-center text-rose-500 space-y-3">
             <XCircle className="w-12 h-12 mx-auto" />
             <p className="font-bold text-sm">{error}</p>
           </div>
+        ) : activeTab === 'analytics' ? (
+          // Analytics View
+          <div className="space-y-12">
+            {totalExams === 0 ? (
+              <div className="py-16 text-center text-slate-500">
+                <BrainCircuit className="w-12 h-12 mx-auto mb-4 text-slate-700 opacity-50" />
+                <p className="font-bold">No data compiled yet</p>
+                <p className="text-xs">Take practice modules or event examinations first to unlock performance insights.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Visual Charts (Left and Center) */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* Performance Trend */}
+                  <div className="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-[#D4AF37]" />
+                        Chronological Progress Trend
+                      </h3>
+                      <span className="text-[10px] font-bold text-slate-500">All assessments</span>
+                    </div>
+                    <div className="h-64 sm:h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={timelineData} margin={{ top: 10, right: 30, left: -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                          <XAxis dataKey="date" stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
+                          <YAxis domain={[0, 100]} stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '16px' }}
+                            itemStyle={{ color: '#D4AF37' }}
+                            labelStyle={{ color: 'white', fontWeight: 'bold' }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="score" 
+                            name="Score %" 
+                            stroke="#D4AF37" 
+                            strokeWidth={3} 
+                            activeDot={{ r: 8 }}
+                            dot={{ fill: '#0f172a', strokeWidth: 2, r: 4 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Subject Comparison */}
+                  <div className="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4 text-emerald-400" />
+                        Benchmarks By Subject
+                      </h3>
+                      <span className="text-[10px] font-bold text-slate-500">Average accuracy score</span>
+                    </div>
+                    <div className="h-60 sm:h-72 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={subjectAnalytics} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                          <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
+                          <YAxis domain={[0, 100]} stroke="rgba(255,255,255,0.4)" fontSize={10} tickLine={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '16px' }}
+                            itemStyle={{ color: '#10b981' }}
+                            labelStyle={{ color: 'white', fontWeight: 'bold' }}
+                          />
+                          <Bar dataKey="avgScore" name="Avg Score %" radius={[8, 8, 0, 0]}>
+                            {subjectAnalytics.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.avgScore >= 85 ? '#10b981' : entry.avgScore >= 65 ? '#D4AF37' : '#ec4899'} 
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cognitive Insights Board (Right sidebar) */}
+                <div className="space-y-6">
+                  <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/20 p-6 rounded-3xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                      <Sparkles className="w-12 h-12 text-[#D4AF37]" />
+                    </div>
+                    <h4 className="text-sm font-black uppercase text-[#D4AF37] tracking-widest mb-4 flex items-center gap-2">
+                      <BrainCircuit className="w-4 h-4" />
+                      Logical Analytics
+                    </h4>
+                    
+                    <div className="space-y-5 text-sm text-slate-300 leading-relaxed font-semibold">
+                      <p>
+                        Based on your accumulated records of <span className="text-[#D4AF37] font-bold">{totalExams} evaluations</span>, current performance charts indicate a highly functional standing.
+                      </p>
+
+                      <div className="h-px bg-[#D4AF37]/20 my-2" />
+
+                      {/* Best Subject insight */}
+                      {subjectAnalytics.length > 0 && (
+                        <div className="flex items-start gap-3 mt-3">
+                          <ThumbsUp className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Strongest Focus Area</p>
+                            <p className="text-[#D4AF37] font-black text-base">{subjectAnalytics[0].name}</p>
+                            <p className="text-slate-400 text-xs mt-0.5 font-medium">Yielding an exceptional {subjectAnalytics[0].avgScore}% average score over {subjectAnalytics[0].count} assessment(s).</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Weaker Subject insight */}
+                      {subjectAnalytics.length > 1 && (
+                        <div className="flex items-start gap-3 mt-4">
+                          <Flame className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Target Improvement Area</p>
+                            <p className="text-rose-400 font-bold text-sm">
+                              {subjectAnalytics[subjectAnalytics.length - 1].name} ({subjectAnalytics[subjectAnalytics.length - 1].avgScore}%)
+                            </p>
+                            <p className="text-slate-400 text-xs mt-0.5 font-medium">Dedicate extra topic practices to bridge performance deficits in this module.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Summary performance cards inside Analytics panel */}
+                  <div className="p-6 bg-slate-950/40 border border-slate-800 rounded-3xl space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Consistency Benchmarks</p>
+                    
+                    <div className="flex justify-between items-center bg-slate-950/60 p-3.5 rounded-2xl border border-slate-900">
+                      <div>
+                        <p className="text-xs text-white font-bold">Total Practice Sessions</p>
+                        <p className="text-[10px] text-slate-500 font-bold">Ongoing Subject Drills</p>
+                      </div>
+                      <span className="text-purple-400 font-black text-xl">{practiceCount}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-slate-950/60 p-3.5 rounded-2xl border border-slate-900">
+                      <div>
+                        <p className="text-xs text-white font-bold">Competitive Assesses</p>
+                        <p className="text-[10px] text-slate-500 font-bold">Official Rated Contests</p>
+                      </div>
+                      <span className="text-blue-400 font-black text-xl">{liveEventsCount}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-slate-950/60 p-3.5 rounded-2xl border border-slate-900">
+                      <div>
+                        <p className="text-xs text-white font-bold">Average Yield Ratio</p>
+                        <p className="text-[10px] text-slate-500 font-bold">Performance Mean</p>
+                      </div>
+                      <span className="text-[#D4AF37] font-black text-xl">{avgScore}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         ) : filteredResults.length > 0 ? (
+          // History Results List
           <div className="overflow-x-auto -mx-6 sm:mx-0">
             <table className="w-full text-left border-collapse min-w-[600px] px-6 sm:px-0">
               <thead>
@@ -325,7 +615,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                   <th className="pb-4">Score</th>
                   <th className="pb-4">Correct Responses</th>
                   <th className="pb-4">Evaluated Date</th>
-                  <th className="pb-4 text-right pr-6">Solutions</th>
+                  <th className="pb-4 text-right pr-6">Solutions & Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/40 text-slate-300">
@@ -336,7 +626,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                     : `${result.subject || 'General'} Practice`;
                   
                   return (
-                    <tr key={result.id} className="group hover:bg-white/[0.015] transition-colors">
+                    <tr key={result.id} className="group hover:bg-white/[0.012] transition-colors">
                       <td className="py-5 pl-6">
                         <div className="flex items-center space-x-3.5">
                           <span className={`w-2.5 h-2.5 rounded-full ${isEvent ? 'bg-blue-400' : 'bg-[#D4AF37]'}`} />
@@ -374,14 +664,51 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                           day: 'numeric'
                         })}
                       </td>
-                      <td className="py-5 text-right pr-6">
+                      <td className="py-5 text-right pr-6 space-x-2">
+                        {/* Copy Summary Action */}
+                        <button
+                          onClick={() => handleCopyClipboard(result)}
+                          title="Copy summary report to clipboard"
+                          className="inline-flex items-center justify-center w-9 h-9 bg-slate-900 border border-slate-800 hover:border-[#D4AF37]/50 text-slate-400 hover:text-[#D4AF37] transition-all rounded-xl"
+                        >
+                          {copiedId === result.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        </button>
+
+                        {/* Retry Practice (Only for Practice Runs) */}
+                        {!isEvent && (
+                          <button
+                            onClick={() => handleRetakePractice(result)}
+                            title="Retake this practice session with same configuration"
+                            className="inline-flex items-center justify-center w-9 h-9 bg-slate-900 border border-slate-800 hover:border-purple-500/50 text-slate-400 hover:text-purple-400 transition-all rounded-xl"
+                          >
+                            <RotateCw className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {/* Detailed Review trigger */}
                         <button
                           onClick={() => handleReview(result)}
-                          className="inline-flex items-center space-x-1 px-4 py-2 bg-slate-900 border border-slate-800 hover:border-[#D4AF37]/50 text-[#D4AF37] hover:text-white transition-all text-xs font-bold rounded-xl"
+                          className="inline-flex items-center space-x-1 px-3.5 py-2 bg-slate-900 border border-slate-800 hover:border-[#D4AF37]/50 text-[#D4AF37] hover:text-white transition-all text-xs font-bold rounded-xl"
                         >
-                          <span>Detailed Review</span>
-                          <ChevronRight className="w-4.5 h-4.5" />
+                          <span>Review</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
                         </button>
+
+                        {/* Delete practice result (Only for Practice Runs) */}
+                        {!isEvent && (
+                          <button
+                            onClick={() => handleDeleteResult(result.id)}
+                            disabled={deletingId === result.id}
+                            title="Remove from history log"
+                            className="inline-flex items-center justify-center w-9 h-9 bg-slate-950/40 border border-slate-900 hover:bg-rose-950/20 hover:border-rose-500/40 text-slate-650 hover:text-rose-400 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none"
+                          >
+                            {deletingId === result.id ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -400,7 +727,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
         )}
       </section>
 
-      {/* Answer Review Modal Box (Pristine Visuals mirroring Admin review view) */}
+      {/* Answer Review Modal Box (Pristine Visuals with logical filter tabs) */}
       <AnimatePresence>
         {reviewingResult && (
           <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/92 backdrop-blur-md">
@@ -411,7 +738,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
               className="bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-5xl w-full max-h-[88vh] flex flex-col border border-slate-800 overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="p-6 sm:p-8 border-b border-slate-805 flex justify-between items-center bg-slate-950/20">
+              <div className="p-6 sm:p-8 border-b border-slate-800 flex justify-between items-center bg-slate-950/20">
                 <div>
                   <div className="flex items-center gap-3 mb-1.5">
                     <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-lg ${
@@ -436,6 +763,58 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                 </button>
               </div>
 
+              {/* Modal Filter Sub-tabs for Question Selection */}
+              {!reviewLoading && !reviewError && (
+                <div className="px-6 sm:px-8 py-3 bg-slate-950/40 border-b border-slate-850 flex items-center gap-2 overflow-x-auto">
+                  <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider mr-2 shrink-0">Filter Questions:</span>
+                  <div className="flex items-center space-x-1.5 shrink-0">
+                    <button
+                      onClick={() => setModalFilter('all')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        modalFilter === 'all'
+                          ? 'bg-slate-800 text-white border border-slate-700'
+                          : 'text-slate-450 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      All ({reviewQuestions.length})
+                    </button>
+                    <button
+                      onClick={() => setModalFilter('correct')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                        modalFilter === 'correct'
+                          ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 font-extrabold'
+                          : 'text-slate-400 hover:text-emerald-400'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Correct
+                    </button>
+                    <button
+                      onClick={() => setModalFilter('incorrect')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                        modalFilter === 'incorrect'
+                          ? 'bg-[#ef4444]/13 text-rose-450 text-rose-400 border border-rose-500/20 font-extrabold'
+                          : 'text-slate-400 hover:text-rose-450'
+                      }`}
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                      Incorrect
+                    </button>
+                    <button
+                      onClick={() => setModalFilter('unanswered')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                        modalFilter === 'unanswered'
+                          ? 'bg-slate-950 text-slate-400 border border-slate-800'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <FileQuestion className="w-3.5 h-3.5" />
+                      Unanswered
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Modal Body Scroll Container */}
               <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 no-scrollbar">
                 
@@ -453,16 +832,25 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                     <Award className="w-16 h-16 text-[#D4AF37]/40 mx-auto" />
                     <div className="space-y-2">
                       <p className="font-bold text-white uppercase tracking-wider text-base">Verified Result</p>
-                      <p className="text-slate-405 text-sm leading-relaxed font-semibold text-slate-400">
+                      <p className="text-slate-450 text-sm leading-relaxed font-semibold text-slate-400">
                         {reviewError}
                       </p>
                     </div>
-                    <div className="pt-2">
+                    <div className="pt-2 flex justify-center gap-3">
+                      <button 
+                        onClick={() => {
+                          setReviewingResult(null);
+                          handleRetakePractice(reviewingResult);
+                        }}
+                        className="px-5 py-2.5 bg-purple-500 text-xs font-extrabold uppercase tracking-wide text-white rounded-xl hover:bg-purple-600 transition-all font-sans shadow-lg shadow-purple-500/10"
+                      >
+                        Retake Practice
+                      </button>
                       <button 
                         onClick={() => setReviewingResult(null)}
-                        className="px-6 py-2.5 bg-slate-950 text-xs font-extrabold uppercase tracking-wide text-slate-300 rounded-xl hover:text-white border border-slate-800 transition-colors"
+                        className="px-5 py-2.5 bg-slate-950 text-xs font-extrabold uppercase tracking-wide text-slate-300 rounded-xl hover:text-white border border-slate-800 transition-colors"
                       >
-                        Acknowledge and Close
+                        Back to List
                       </button>
                     </div>
                   </div>
@@ -474,23 +862,23 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                     {/* Performance Banner Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850 shadow-inner">
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Score Achieved</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Score Achieved</p>
                         <p className="text-3xl font-black text-[#D4AF37] tracking-tight">{reviewingResult.score}%</p>
-                        <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">Verified standing</p>
+                        <p className="text-[10px] text-slate-600 font-bold uppercase mt-1">Verified standing</p>
                       </div>
                       <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850 shadow-inner">
-                        <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest mb-1.5">Accuracy Yield</p>
+                        <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest mb-1.5">Accuracy Yield</p>
                         <p className="text-2xl font-bold text-white tracking-tight">
                           {reviewingResult.correctCount} / {reviewingResult.totalQuestions}
                         </p>
-                        <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">No. of correct responses</p>
+                        <p className="text-[10px] text-slate-600 font-bold uppercase mt-1">No. of correct responses</p>
                       </div>
                       <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-850 shadow-inner">
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Date Submitted</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Date Submitted</p>
                         <p className="text-base font-bold text-slate-350 tracking-tight mt-1">
                           {new Date(reviewingResult.createdAt).toLocaleDateString()}
                         </p>
-                        <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">Local Timestamp proof</p>
+                        <p className="text-[10px] text-slate-600 font-bold uppercase mt-1">Local Timestamp proof</p>
                       </div>
                     </div>
 
@@ -499,137 +887,160 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                       <div className="flex items-center justify-between">
                         <h3 className="font-extrabold text-white uppercase tracking-widest text-xs">Question Dissection</h3>
                         <div className="h-px flex-1 bg-slate-800/50 mx-4" />
+                        <span className="text-xs text-slate-450 text-slate-400 font-bold">Showing {filteredModalQuestions.length} of {reviewQuestions.length}</span>
                       </div>
 
-                      {reviewQuestions.map((q: Question, idx: number) => {
-                        const userAnswer = reviewAnswers[q.id];
-                        const isCorrect = userAnswer === q.correctAnswer;
-                        const hasSelected = userAnswer !== undefined;
+                      {filteredModalQuestions.length === 0 ? (
+                        <div className="py-12 text-center text-slate-500">
+                          <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-slate-750 opacity-40" />
+                          <p className="font-bold uppercase tracking-wider text-sm">No matching questions</p>
+                          <p className="text-xs text-slate-400 mt-1">No items conform with the absolute tab requirements.</p>
+                        </div>
+                      ) : (
+                        filteredModalQuestions.map((q: Question, idx: number) => {
+                          const userAnswer = reviewAnswers[q.id];
+                          const isCorrect = userAnswer === q.correctAnswer;
+                          const hasSelected = userAnswer !== undefined;
 
-                        return (
-                          <div 
-                            key={q.id || idx} 
-                            className={`p-6 sm:p-8 rounded-[2.5rem] border bg-slate-954 bg-slate-950/20 transition-all ${
-                              isCorrect 
-                                ? 'border-emerald-500/15 hover:border-emerald-500/25' 
-                                : hasSelected 
-                                  ? 'border-rose-500/15 hover:border-rose-500/25' 
-                                  : 'border-slate-800 hover:border-slate-700'
-                            }`}
-                          >
-                            {/* Question Title Bar */}
-                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 pb-4 border-b border-slate-900/50">
-                              <div className="flex items-center space-x-3">
-                                <span className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-center font-bold text-[#D4AF37] text-xs">
-                                  {idx + 1}
-                                </span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                  {q.category} • {q.subject || reviewingResult.subject || 'Assessment'}
-                                </span>
-                              </div>
-                              
-                              {/* Accuracy Tag */}
-                              <div className={`self-start sm:self-auto flex items-center px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${
+                          return (
+                            <div 
+                              key={q.id || idx} 
+                              className={`p-6 sm:p-8 rounded-[2.5rem] border bg-slate-950/20 transition-all ${
                                 isCorrect 
-                                  ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
+                                  ? 'border-emerald-500/15 hover:border-emerald-500/25' 
                                   : hasSelected 
-                                    ? 'text-rose-500 bg-rose-500/10 border border-rose-500/20' 
-                                    : 'text-slate-500 bg-slate-950 border border-slate-800'
-                              }`}>
-                                {isCorrect ? (
-                                  <>
-                                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                                    <span>Match Approved</span>
-                                  </>
-                                ) : hasSelected ? (
-                                  <>
-                                    <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                                    <span>System Deficit</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <FileQuestion className="w-3.5 h-3.5 mr-1.5" />
-                                    <span>Unanswered</span>
-                                  </>
-                                )}
+                                    ? 'border-rose-500/15 hover:border-rose-500/25' 
+                                    : 'border-slate-800 hover:border-slate-700'
+                              }`}
+                            >
+                              {/* Question Title Bar */}
+                              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 pb-4 border-b border-slate-900/50">
+                                <div className="flex items-center space-x-3">
+                                  <span className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-center font-bold text-[#D4AF37] text-xs">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    {q.category} • {q.subject || reviewingResult.subject || 'Assessment'}
+                                  </span>
+                                </div>
+                                
+                                {/* Accuracy Tag */}
+                                <div className={`self-start sm:self-auto flex items-center px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${
+                                  isCorrect 
+                                    ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
+                                    : hasSelected 
+                                      ? 'text-rose-500 bg-rose-500/10 border border-rose-500/20' 
+                                      : 'text-slate-500 bg-slate-950 border border-slate-800'
+                                }`}>
+                                  {isCorrect ? (
+                                    <>
+                                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                                      <span>Match Approved</span>
+                                    </>
+                                  ) : hasSelected ? (
+                                    <>
+                                      <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                                      <span>System Deficit</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FileQuestion className="w-3.5 h-3.5 mr-1.5" />
+                                      <span>Unanswered</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Question Text */}
-                            <div className="text-base sm:text-lg font-bold text-white mb-6 leading-relaxed text-left">
-                              <MathRenderer content={q.text} engine={profile?.mathEngine} />
-                            </div>
-                            {q.imageUrl && (
-                              <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-800 bg-slate-950/40 p-2">
-                                <img 
-                                  src={q.imageUrl} 
-                                  alt="Question representation" 
-                                  className="w-full h-auto object-contain max-h-52 rounded-lg" 
-                                  referrerPolicy="no-referrer"
-                                />
+                              {/* Question Text */}
+                              <div className="text-base sm:text-lg font-bold text-white mb-6 leading-relaxed text-left">
+                                <MathRenderer content={q.text} engine={profile?.mathEngine} />
                               </div>
-                            )}
+                              {q.imageUrl && (
+                                <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-800 bg-slate-950/40 p-2">
+                                  <img 
+                                    src={q.imageUrl} 
+                                    alt="Question representation" 
+                                    className="w-full h-auto object-contain max-h-52 rounded-lg" 
+                                    referrerPolicy="no-referrer"
+                                  />
+                                </div>
+                              )}
 
-                            {/* Option selections */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {q.options.map((opt, i) => {
-                                const isCorrectOpt = i === q.correctAnswer;
-                                const isUserSelectedOpt = i === userAnswer;
+                              {/* Option selections */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {q.options.map((opt, i) => {
+                                  const isCorrectOpt = i === q.correctAnswer;
+                                  const isUserSelectedOpt = i === userAnswer;
 
-                                return (
-                                  <div 
-                                    key={i} 
-                                    className={`p-4 sm:p-5 rounded-2xl border transition-all text-xs sm:text-sm flex items-center space-x-4 relative overflow-hidden ${
-                                      isCorrectOpt 
-                                        ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400 font-bold' 
-                                        : isUserSelectedOpt 
-                                          ? 'bg-rose-500/5 border-rose-500/30 text-rose-400 font-medium' 
-                                          : 'bg-slate-950/60 border-slate-850 hover:bg-slate-900/50 text-slate-400'
-                                    }`}
-                                  >
-                                    {/* String Code Label Tile */}
-                                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 shadow-sm ${
-                                      isCorrectOpt 
-                                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-950/25' 
-                                        : isUserSelectedOpt 
-                                          ? 'bg-rose-500 text-white shadow-md shadow-rose-950/25' 
-                                          : 'bg-slate-900 text-slate-500 border border-slate-800'
-                                    }`}>
-                                      {String.fromCharCode(65 + i)}
-                                    </span>
+                                  return (
+                                    <div 
+                                      key={i} 
+                                      className={`p-4 sm:p-5 rounded-2xl border transition-all text-xs sm:text-sm flex items-center space-x-4 relative overflow-hidden ${
+                                        isCorrectOpt 
+                                          ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400 font-bold' 
+                                          : isUserSelectedOpt 
+                                            ? 'bg-rose-500/5 border-rose-500/30 text-rose-450 text-rose-400 font-medium' 
+                                            : 'bg-slate-950/60 border-slate-800 hover:bg-slate-900/50 text-slate-400'
+                                      }`}
+                                    >
+                                      {/* String Code Label Tile */}
+                                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 shadow-sm ${
+                                        isCorrectOpt 
+                                          ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-950/25' 
+                                          : isUserSelectedOpt 
+                                            ? 'bg-rose-500 text-white shadow-md shadow-rose-950/25' 
+                                            : 'bg-slate-900 text-slate-500 border border-slate-850'
+                                      }`}>
+                                        {String.fromCharCode(65 + i)}
+                                      </span>
 
-                                    {/* Text Content */}
-                                    <div className="min-w-0 flex-1">
-                                      <MathRenderer content={opt} engine={profile?.mathEngine} />
+                                      {/* Text Content */}
+                                      <div className="min-w-0 flex-1">
+                                        <MathRenderer content={opt} engine={profile?.mathEngine} />
+                                      </div>
+
+                                      {/* Accolades */}
+                                      {isCorrectOpt && (
+                                        <span className="ml-auto text-[7px] sm:text-[8px] font-black uppercase tracking-[0.2em] text-emerald-500/60">Correct</span>
+                                      )}
+                                      {isUserSelectedOpt && !isCorrectOpt && (
+                                        <span className="ml-auto text-[7px] sm:text-[8px] font-black uppercase tracking-[0.2em] text-rose-450 text-rose-500/60">Your Choice</span>
+                                      )}
                                     </div>
-
-                                    {/* Accolades */}
-                                    {isCorrectOpt && (
-                                      <span className="ml-auto text-[7px] sm:text-[8px] font-black uppercase tracking-[0.2em] text-emerald-500/60">Correct</span>
-                                    )}
-                                    {isUserSelectedOpt && !isCorrectOpt && (
-                                      <span className="ml-auto text-[7px] sm:text-[8px] font-black uppercase tracking-[0.2em] text-rose-500/60">Your Choice</span>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </>
                 )}
               </div>
 
               {/* Modal Footer */}
-              <div className="p-6 bg-slate-950/40 border-t border-slate-805 flex justify-end">
-                <button
-                  onClick={() => setReviewingResult(null)}
-                  className="px-8 py-3.5 bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white rounded-xl transition-all font-bold text-xs uppercase tracking-wider"
-                >
-                  Close Dissection
-                </button>
+              <div className="p-6 bg-slate-950/40 border-t border-slate-800 flex justify-between items-center">
+                {reviewingResult && reviewingResult.type === 'Practice' && (
+                  <button
+                    onClick={() => {
+                      setReviewingResult(null);
+                      handleRetakePractice(reviewingResult);
+                    }}
+                    className="px-6 py-3.5 bg-purple-500 hover:bg-purple-600 text-white rounded-xl transition-all font-bold text-xs uppercase tracking-wider flex items-center gap-1.5"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                    Retake Practice
+                  </button>
+                )}
+                <div className="ml-auto">
+                  <button
+                    onClick={() => setReviewingResult(null)}
+                    className="px-8 py-3.5 bg-slate-805 bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white rounded-xl transition-all font-bold text-xs uppercase tracking-wider shadow"
+                  >
+                    Close Dissection
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
