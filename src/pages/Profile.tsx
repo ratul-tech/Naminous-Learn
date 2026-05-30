@@ -122,8 +122,8 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
           const best = Math.max(...results.map(r => r.score || 0));
           setStats({
             totalExams: total,
-            avgScore: Math.round(sum / total),
-            bestScore: best,
+            avgScore: Number((sum / total).toFixed(2)),
+            bestScore: Number(best.toFixed(2)),
             loading: false
           });
         } else {
