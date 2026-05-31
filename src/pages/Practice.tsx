@@ -398,7 +398,9 @@ export default function Practice({ profile }: PracticeProps) {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/60 border-b border-[#D4AF37]/20 pb-0.5">{q.board}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/60 border-b border-[#D4AF37]/20 pb-0.5">
+                          {q.category === 'Board' ? q.board : q.college}
+                        </span>
                       </div>
                       <div className="font-semibold text-slate-200 text-sm">
                         <MathRenderer content={q.text} engine={profile?.mathEngine} />

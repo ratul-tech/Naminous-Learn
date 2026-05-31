@@ -4,10 +4,31 @@ import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteD
 import { db } from '../firebase';
 import { Question, UserProfile, Category, OperationType } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
-import { Plus, Trash2, Edit, Search, Filter, BookOpen, AlertCircle, Save, X, Eye, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Edit, Search, Filter, BookOpen, AlertCircle, Save, X, Eye, ArrowLeft, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
 import { ALL_SUBJECTS } from '../constants';
+
+const PRESET_BOARDS = [
+  'Dhaka', 'Sylhet', 'Rajshahi', 'Chattogram', 'Jashore', 'Barishal', 'Cumilla', 'Dinajpur', 'Mymensingh', 'Madrasah', 'Technical'
+];
+
+const PRESET_COLLEGES = [
+  'Notre Dame College',
+  'Holy Cross College',
+  'Viqarunnisa Noon College',
+  'Rajuk Uttara Model College',
+  'St. Joseph Higher Secondary School',
+  'Dhaka College',
+  'Adamjee Cantonment College',
+  'Dhaka Residential Model College',
+  'Mymensingh Girls Cadet College',
+  'Cantonment Public School and College'
+];
+
+const PRESET_YEARS = [
+  '2024', '2023', '2022', '2021', '2020', '2019', '2018'
+];
 
 interface QuestionsProps {
   profile: UserProfile | null;
@@ -21,7 +42,7 @@ export default function Questions({ profile }: QuestionsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterClass, setFilterClass] = useState<string>('All');
   const [filterSubject, setFilterSubject] = useState<string>('All');
-  const [filterCategory, setFilterCategory] = useState<Category | 'All'>('All');
+  const [filterCategory, setFilterCategory] = useState<string>('All');
   
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -40,6 +61,23 @@ export default function Questions({ profile }: QuestionsProps) {
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
+  const [showBoardSuggestions, setShowBoardSuggestions] = useState(false);
+  const [showCollegeSuggestions, setShowCollegeSuggestions] = useState(false);
+
+  const handleSelectBoardPreset = (boardName: string) => {
+    const yearMatch = newQ.board.match(/\d{4}/);
+    if (yearMatch) {
+      setNewQ({ ...newQ, board: `${boardName} ${yearMatch[0]}` });
+    } else {
+      setNewQ({ ...newQ, board: boardName });
+    }
+  };
+
+  const handleSelectYearPreset = (year: string) => {
+    const cleanBoard = newQ.board.replace(/\s*\d{4}/g, '').trim();
+    setNewQ({ ...newQ, board: cleanBoard ? `${cleanBoard} ${year}` : year });
+  };
+
   useEffect(() => {
     const unsubQuestions = onSnapshot(query(collection(db, 'questions'), orderBy('createdAt', 'desc')), (snapshot) => {
       setQuestions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question)));
@@ -52,13 +90,25 @@ export default function Questions({ profile }: QuestionsProps) {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const questionData = {
+        text: newQ.text.trim(),
+        options: newQ.options.map(o => o.trim()),
+        correctAnswer: newQ.correctAnswer,
+        category: newQ.category,
+        class: newQ.class,
+        subject: newQ.subject,
+        imageUrl: newQ.imageUrl.trim(),
+        board: newQ.category === 'Board' ? newQ.board.trim() : '',
+        college: newQ.category === 'College Admission' ? newQ.college.trim() : '',
+      };
+
       if (editingId) {
         await updateDoc(doc(db, 'questions', editingId), {
-          ...newQ,
+          ...questionData,
         });
       } else {
         await addDoc(collection(db, 'questions'), {
-          ...newQ,
+          ...questionData,
           createdAt: new Date().toISOString(),
         });
         // Increment global question count
@@ -118,11 +168,33 @@ export default function Questions({ profile }: QuestionsProps) {
     });
   };
 
+  const uniqueBoards = Array.from(new Set(questions.map(q => q.board).filter(Boolean))).sort() as string[];
+  const uniqueColleges = Array.from(new Set(questions.map(q => q.college).filter(Boolean))).sort() as string[];
+
   const filteredQuestions = questions.filter(q => {
-    const matchesSearch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      q.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (q.board && q.board.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (q.college && q.college.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (q.category && q.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (q.subject && q.subject.toLowerCase().includes(searchTerm.toLowerCase()));
+      
     const matchesClass = filterClass === 'All' || q.class === filterClass;
     const matchesSubject = filterSubject === 'All' || q.subject === filterSubject;
-    const matchesCategory = filterCategory === 'All' || q.category === filterCategory;
+    
+    let matchesCategory = true;
+    if (filterCategory !== 'All') {
+      if (filterCategory.startsWith('board:')) {
+        const boardVal = filterCategory.replace('board:', '');
+        matchesCategory = q.category === 'Board' && q.board === boardVal;
+      } else if (filterCategory.startsWith('college:')) {
+        const collegeVal = filterCategory.replace('college:', '');
+        matchesCategory = q.category === 'College Admission' && q.college === collegeVal;
+      } else {
+        matchesCategory = q.category === filterCategory;
+      }
+    }
+    
     return matchesSearch && matchesClass && matchesSubject && matchesCategory;
   });
 
@@ -151,7 +223,7 @@ export default function Questions({ profile }: QuestionsProps) {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <input
                 type="text"
-                placeholder="Search questions..."
+                placeholder="Search questions by text, board (Sylhet, Dhaka etc.), or college name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all text-sm text-white placeholder:text-slate-600 shadow-inner"
@@ -177,12 +249,26 @@ export default function Questions({ profile }: QuestionsProps) {
               </select>
               <select
                 value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value as any)}
+                onChange={(e) => setFilterCategory(e.target.value)}
                 className="w-full lg:w-48 px-4 py-3 rounded-xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-xs sm:text-sm appearance-none cursor-pointer hover:bg-slate-800 text-slate-300 shadow-inner"
               >
                 <option value="All">All Categories</option>
-                <option value="Board">Board</option>
-                <option value="College Admission">College Admission</option>
+                <option value="Board">All Boards Only</option>
+                <option value="College Admission">All Colleges Only</option>
+                {uniqueBoards.length > 0 && (
+                  <optgroup label="Syllabus Boards">
+                    {uniqueBoards.map(b => (
+                      <option key={`board:${b}`} value={`board:${b}`}>{b}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {uniqueColleges.length > 0 && (
+                  <optgroup label="Specific Colleges">
+                    {uniqueColleges.map(c => (
+                      <option key={`college:${c}`} value={`college:${c}`}>{c}</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
           </div>
@@ -300,16 +386,34 @@ export default function Questions({ profile }: QuestionsProps) {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Category</label>
-                <select
-                  value={newQ.category}
-                  onChange={(e) => setNewQ({ ...newQ, category: e.target.value as Category })}
-                  className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold text-slate-300 shadow-inner"
-                >
-                  <option value="Board">Board</option>
-                  <option value="College Admission">College Admission</option>
-                </select>
+              <div className="col-span-2 space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Category Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNewQ({ ...newQ, category: 'Board' })}
+                    className={`px-4 py-3.5 rounded-2xl border transition-all font-bold text-xs sm:text-sm text-center flex items-center justify-center gap-2 leading-tight shadow-md ${
+                      newQ.category === 'Board' 
+                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] ring-1 ring-[#D4AF37]/30' 
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-[#D4AF37]/80'
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4 shrink-0 text-[#D4AF37]" />
+                    <span>Board Exam</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewQ({ ...newQ, category: 'College Admission' })}
+                    className={`px-4 py-3.5 rounded-2xl border transition-all font-bold text-xs sm:text-sm text-center flex items-center justify-center gap-2 leading-tight shadow-md ${
+                      newQ.category === 'College Admission' 
+                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37] ring-1 ring-[#D4AF37]/30' 
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-[#D4AF37]/80'
+                    }`}
+                  >
+                    <Trophy className="w-4 h-4 shrink-0 text-[#D4AF37]" />
+                    <span>College Admission</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -323,7 +427,9 @@ export default function Questions({ profile }: QuestionsProps) {
                   <option value="College Admission">College Admission</option>
                 </select>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Subject</label>
                 <select
@@ -334,32 +440,138 @@ export default function Questions({ profile }: QuestionsProps) {
                   {ALL_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {newQ.category === 'Board' ? (
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Board / Year</label>
-                  <input
-                    type="text"
-                    value={newQ.board}
-                    onChange={(e) => setNewQ({ ...newQ, board: e.target.value })}
-                    placeholder="e.g. Dhaka 2023"
-                    className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-medium text-white shadow-inner"
-                    required
-                  />
+                <div className="space-y-2 relative">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-bold text-slate-405 uppercase tracking-widest">Board & Year</label>
+                    <span className="text-[9px] text-[#D4AF37] font-bold uppercase tracking-wider">Tap quick presets below</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={newQ.board}
+                      onChange={(e) => setNewQ({ ...newQ, board: e.target.value })}
+                      placeholder="e.g. Dhaka 2023"
+                      onFocus={() => setShowBoardSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowBoardSuggestions(false), 250)}
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] hover:border-slate-800 outline-none transition-all font-medium text-white shadow-inner font-semibold"
+                      required
+                    />
+                    {showBoardSuggestions && (
+                      <div className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl z-50 divide-y divide-slate-800/80 max-h-56 overflow-y-auto">
+                        {Array.from(new Set([...PRESET_BOARDS, ...uniqueBoards]))
+                          .filter(b => b.toLowerCase().includes(newQ.board.toLowerCase()) && b.toLowerCase() !== newQ.board.toLowerCase())
+                          .map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              onMouseDown={() => {
+                                handleSelectBoardPreset(s);
+                              }}
+                              className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white font-medium transition-colors"
+                            >
+                              {s}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Quick Select Grid for Board Questions */}
+                  <div className="space-y-2 mt-2 bg-slate-950/40 p-3 rounded-2xl border border-slate-850">
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                      {PRESET_BOARDS.map(b => (
+                        <button
+                          key={b}
+                          type="button"
+                          onMouseDown={() => handleSelectBoardPreset(b)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                            newQ.board.toLowerCase().startsWith(b.toLowerCase()) 
+                              ? 'bg-[#D4AF37]/10 border-[#D4AF37]/35 text-[#D4AF37]' 
+                              : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                          }`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="border-t border-slate-800/50 pt-2 flex flex-wrap gap-1.5">
+                      <span className="text-[9px] text-slate-500 font-bold self-center mr-1 uppercase font-serif">Year:</span>
+                      {PRESET_YEARS.map(y => (
+                        <button
+                          key={y}
+                          type="button"
+                          onMouseDown={() => handleSelectYearPreset(y)}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-mono border transition-all ${
+                            newQ.board.includes(y) 
+                              ? 'bg-blue-500/10 border-blue-500/35 text-blue-400 font-bold' 
+                              : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          {y}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">College Name</label>
-                  <input
-                    type="text"
-                    value={newQ.college}
-                    onChange={(e) => setNewQ({ ...newQ, college: e.target.value })}
-                    placeholder="e.g. Notre Dame College"
-                    className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-medium text-white shadow-inner"
-                    required
-                  />
+                <div className="space-y-2 relative">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-bold text-slate-403 uppercase tracking-widest">College Name</label>
+                    <span className="text-[9px] text-[#D4AF37] font-bold uppercase tracking-wider">Tap quick presets below</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={newQ.college}
+                      onChange={(e) => setNewQ({ ...newQ, college: e.target.value })}
+                      placeholder="e.g. Notre Dame College"
+                      onFocus={() => setShowCollegeSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowCollegeSuggestions(false), 250)}
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] hover:border-slate-800 outline-none transition-all font-medium text-white shadow-inner font-semibold"
+                      required
+                    />
+                    {showCollegeSuggestions && (
+                      <div className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl z-50 divide-y divide-slate-800/80 max-h-56 overflow-y-auto">
+                        {Array.from(new Set([...PRESET_COLLEGES, ...uniqueColleges]))
+                          .filter(c => c.toLowerCase().includes(newQ.college.toLowerCase()) && c.toLowerCase() !== newQ.college.toLowerCase())
+                          .map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              onMouseDown={() => {
+                                setNewQ({ ...newQ, college: s });
+                              }}
+                              className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white font-medium transition-colors"
+                            >
+                              {s}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Quick Select Colleges Grid for Admission Questions */}
+                  <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850 mt-2">
+                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+                      {PRESET_COLLEGES.map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onMouseDown={() => setNewQ({ ...newQ, college: c })}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all truncate max-w-[150px] ${
+                            newQ.college.toLowerCase() === c.toLowerCase()
+                              ? 'bg-[#D4AF37]/10 border-[#D4AF37]/35 text-[#D4AF37]' 
+                              : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                          title={c}
+                        >
+                          {c === 'Notre Dame College' ? 'Notre Dame (NDC)' : c === 'Holy Cross College' ? 'Holy Cross (HCC)' : c.replace(' School and College', '').replace(' Higher Secondary School', '')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -410,7 +622,9 @@ export default function Questions({ profile }: QuestionsProps) {
                 <div className="flex-grow space-y-4 w-full">
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-slate-800 rounded-full text-slate-500 border border-slate-700">{q.category}</span>
-                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-[#D4AF37]/10 rounded-full text-[#D4AF37] truncate max-w-[120px] border border-[#D4AF37]/20 font-mono">{q.board || q.college}</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-[#D4AF37]/10 rounded-full text-[#D4AF37] border border-[#D4AF37]/20 font-mono">
+                      {q.category === 'Board' ? q.board : q.college}
+                    </span>
                     <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-blue-500/10 rounded-full text-blue-400 border border-blue-500/20">{q.class}</span>
                     <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-purple-500/10 rounded-full text-purple-400 border border-purple-500/20">{q.subject}</span>
                   </div>
