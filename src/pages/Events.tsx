@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, addDoc, where, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { ExamEvent, UserProfile, Payment, Submission, Question, OperationType } from '../types';
-import { Calendar, Clock, Trophy, Users, CreditCard, CheckCircle2, AlertCircle, Play, Edit, Trash2, Plus, X } from 'lucide-react';
+import { Calendar, Clock, Trophy, Users, CreditCard, CheckCircle2, AlertCircle, Play, Edit, Trash2, Plus, X, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { handleFirestoreError } from '../lib/error-handler';
@@ -20,9 +20,10 @@ export default function Events({ profile }: EventsProps) {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<ExamEvent | null>(null);
   const [paymentData, setPaymentData] = useState({
-    method: 'Bkash',
+    method: 'bKash',
     trxId: '',
   });
+  const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -500,7 +501,7 @@ export default function Events({ profile }: EventsProps) {
                     onClick={() => {
                       setSuccess(false);
                       setSelectedEvent(null);
-                      setPaymentData({ method: 'Bkash', trxId: '' });
+                      setPaymentData({ method: 'bKash', trxId: '' });
                     }}
                     className="mt-8 px-8 py-3 bg-[#D4AF37] text-slate-900 rounded-xl font-bold hover:bg-amber-400 transition-all shadow-lg"
                   >
@@ -512,33 +513,77 @@ export default function Events({ profile }: EventsProps) {
                   <h2 className="text-2xl font-bold text-white mb-2 font-serif">Event Registration</h2>
                   <p className="text-slate-400 mb-8">{selectedEvent.title}</p>
 
-                  <div className="bg-amber-500/5 p-6 rounded-2xl mb-8 border border-amber-500/10 shadow-inner">
-                    <div className="flex items-center space-x-2 text-[#D4AF37] font-bold mb-2">
-                      <AlertCircle className="w-5 h-5" />
-                      <span className="text-xs uppercase tracking-widest">Payment Instructions</span>
-                    </div>
-                    <p className="text-sm text-slate-400 leading-relaxed">
-                      Please send <strong>Tk {selectedEvent.entryFee}</strong> to our merchant number: <strong>017XXXXXXXX</strong> using {paymentData.method} "Send Money" or "Payment" option. Enter the Transaction ID below.
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleRegister} className="space-y-6">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest">Payment Method</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {['Bkash', 'Nagad', 'Rocket', 'Upay'].map((m) => (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => setPaymentData({ ...paymentData, method: m })}
-                            className={`px-4 py-2 rounded-lg border-2 transition-all font-bold ${paymentData.method === m ? 'border-[#D4AF37] bg-[#D4AF37]/10 text-[#D4AF37]' : 'border-slate-800 text-slate-500 hover:border-slate-700'}`}
-                          >
-                            {m}
-                          </button>
-                        ))}
+                  <div className="bg-gradient-to-r from-pink-500/10 to-pink-500/5 p-5 sm:p-6 rounded-2xl mb-6 border border-pink-500/20 shadow-[0_4px_20px_rgba(236,72,153,0.05)]">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-pink-500/10">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 shadow-md">
+                          <span className="font-sans font-black text-xs text-pink-500 tracking-tighter">bKash</span>
+                        </div>
+                        <div>
+                          <span className="text-sm font-black text-pink-400 tracking-wide uppercase">bKash Personal</span>
+                          <p className="text-[9px] text-slate-500 font-bold tracking-wider">ONLY ACCEPTED METHOD</p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-pink-500/15 border border-pink-500/30 text-pink-300 font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider">
+                        Send Money
                       </div>
                     </div>
 
+                    <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-850 flex items-center justify-between mb-5 shadow-inner">
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Personal Account Number</p>
+                        <p className="text-xl sm:text-2xl font-mono font-black text-pink-200 tracking-wider">01925779217</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText('01925779217');
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="px-4 py-2 bg-pink-500/10 text-pink-400 border border-pink-500/20 rounded-xl hover:bg-pink-500 hover:text-white transition-all duration-300 flex items-center space-x-2 shrink-0 active:scale-95"
+                        title="Copy Number"
+                      >
+                        {copied ? (
+                          <span className="text-xs font-black uppercase tracking-wider">Copied!</span>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="space-y-4 pt-1 text-xs sm:text-sm">
+                      <div className="flex items-center space-x-2 text-pink-400 font-black uppercase tracking-wider text-xs">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>Crucial Instructions / জরুরি শর্তাবলী</span>
+                      </div>
+                      
+                      <div className="space-y-3.5 text-slate-350 leading-relaxed font-semibold text-xs sm:text-[13px]">
+                        <p className="pl-4 border-l-2 border-pink-500/30">
+                          Please transfer exactly <span className="text-white font-extrabold">Tk {selectedEvent.entryFee}</span> to our personal number <span className="text-pink-300 font-mono font-bold select-all bg-pink-500/5 px-1.5 py-0.5 rounded border border-pink-500/10">01925779217</span> using the <strong className="text-white font-extrabold underline decoration-pink-500/50 decoration-2 underline-offset-2">"Send Money"</strong> option inside your bKash app or dial *247#.
+                        </p>
+                        
+                        <div className="p-4 bg-rose-500/5 border border-rose-500/15 rounded-xl space-y-2.5 text-rose-300 font-bold">
+                          <p className="font-extrabold uppercase tracking-wide text-xs text-rose-400 flex items-center space-x-1.5">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                            <span>Strict Terms / সতর্কবার্তা:</span>
+                          </p>
+                          <p className="text-xs sm:text-xs text-slate-300 leading-normal font-medium">
+                            The verification will <strong className="text-rose-400 font-extrabold uppercase">not be confirmed</strong> if you cash out, recharge, or make a payment. Under any such circumstances, our authorities cannot assume any liability or responsibility.
+                          </p>
+                          <p className="text-xs sm:text-xs text-slate-300 leading-normal font-medium border-t border-rose-500/10 pt-2 text-right">
+                            (ক্যাশ আউট, মোবাইল রিচার্জ বা পেমেন্ট করলে ভেরিফিকেশন নিশ্চিত করা হবে না এবং এর জন্য কর্তৃপক্ষ কোনোভাবেই দায়বদ্ধ থাকবে না।)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleRegister} className="space-y-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest">Transaction ID (Trx ID)</label>
                       <div className="relative">
@@ -547,8 +592,8 @@ export default function Events({ profile }: EventsProps) {
                           type="text"
                           value={paymentData.trxId}
                           onChange={(e) => setPaymentData({ ...paymentData, trxId: e.target.value })}
-                          placeholder="Enter Trx ID"
-                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-800 bg-slate-950 text-white focus:ring-2 focus:ring-[#D4AF37]/30 outline-none"
+                          placeholder="Enter Trx ID from bKash confirmation message"
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-800 bg-slate-950 text-white focus:ring-2 focus:ring-pink-500/30 outline-none placeholder:text-slate-600 text-sm font-semibold font-mono"
                           required
                         />
                       </div>
