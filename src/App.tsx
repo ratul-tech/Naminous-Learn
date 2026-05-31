@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, Instagram, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -724,6 +724,55 @@ function Landing() {
           ))}
         </div>
       </section>
+
+      {/* Social Links Section */}
+      <section className="px-4 pb-12 flex flex-col items-center justify-center text-center space-y-4">
+        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-slate-800 to-transparent mb-4" />
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#D4AF37]">Join Our Community</h3>
+        <p className="text-xs text-slate-400 max-w-xs ring-offset-slate-950">
+          Stay updated with practice schedules, announcements, and key learning resources across our official channels.
+        </p>
+        <div className="flex items-center justify-center gap-4 pt-2">
+          <a
+            href="https://www.facebook.com/share/1BKC1tyrFE/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-12 h-12 rounded-2xl bg-[#1877F2]/10 text-[#1877F2] border border-[#1877F2]/20 hover:bg-[#1877F2] hover:text-white transition-all shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 duration-300"
+            title="Facebook Page"
+          >
+            <Facebook className="w-5 h-5" />
+          </a>
+          <a
+            href="https://www.youtube.com/@NuminousLearn"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-12 h-12 rounded-2xl bg-[#FF0000]/10 text-[#FF0000] border border-[#FF0000]/20 hover:bg-[#FF0000] hover:text-white transition-all shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 duration-300"
+            title="YouTube Channel"
+          >
+            <Youtube className="w-5 h-5" />
+          </a>
+          <a
+            href="https://www.instagram.com/numinouslearn26?igsh=MWRlNnFrdWc2ODg2MQ=="
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-12 h-12 rounded-2xl bg-[#E1306C]/10 text-[#E1306C] border border-[#E1306C]/20 hover:bg-[#E1306C] hover:text-white transition-all shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 duration-300"
+            title="Instagram"
+          >
+            <Instagram className="w-5 h-5" />
+          </a>
+          <a
+            href="https://chat.whatsapp.com/E2JeZg2Dfd97Aw30BgnQjr?s=cl&p=a&ilr=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-12 h-12 rounded-2xl bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 hover:bg-[#25D366] hover:text-white transition-all shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 duration-300"
+            title="WhatsApp Community"
+          >
+            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+          </a>
+        </div>
+      </section>
     </div>
   );
 }
@@ -742,22 +791,44 @@ function Footer({ user }: { user: User | null }) {
               <p className="text-slate-400 leading-relaxed max-w-sm">
                 Empowering students to achieve excellence through structured practice and real-time evaluation. Join thousands of students on their journey to success.
               </p>
-              <div className="flex items-center space-x-4 mt-6">
+              <div className="flex items-center space-x-3.5 mt-6">
+                <a 
+                  href="https://www.facebook.com/share/1BKC1tyrFE/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all shadow-lg border border-blue-500/15 hover:scale-105 active:scale-95 duration-250"
+                  title="Facebook Page"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
                 <a 
                   href="https://www.youtube.com/@NuminousLearn" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-lg border border-red-500/20"
+                  className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-[#FF0000] hover:text-white transition-all shadow-lg border border-red-500/15 hover:scale-105 active:scale-95 duration-250"
+                  title="YouTube Channel"
                 >
                   <Youtube className="w-5 h-5" />
                 </a>
                 <a 
-                  href="https://www.facebook.com/share/18hQRvHAc5/" 
+                  href="https://www.instagram.com/numinouslearn26?igsh=MWRlNnFrdWc2ODg2MQ==" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all shadow-lg border border-blue-500/20"
+                  className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center hover:bg-[#E1306C] hover:text-white transition-all shadow-lg border border-pink-500/15 hover:scale-105 active:scale-95 duration-250"
+                  title="Instagram"
                 >
-                  <Facebook className="w-5 h-5" />
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://chat.whatsapp.com/E2JeZg2Dfd97Aw30BgnQjr?s=cl&p=a&ilr=1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all shadow-lg border border-emerald-500/15 hover:scale-105 active:scale-95 duration-250"
+                  title="WhatsApp Community"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
                 </a>
               </div>
             </div>
