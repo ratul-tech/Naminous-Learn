@@ -65,7 +65,7 @@ export default function LiveResults({ profile }: LiveResultsProps) {
   };
 
   // Get completed events
-  const completedEvents = events.filter(isEventCompleted);
+  const completedEvents = events.filter(e => !e.isDraft && isEventCompleted(e));
 
   // Stats computation for an event
   const getEventStats = (eventId: string) => {

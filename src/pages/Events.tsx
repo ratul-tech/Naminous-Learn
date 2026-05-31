@@ -185,6 +185,7 @@ export default function Events({ profile }: EventsProps) {
   };
 
   const filteredEvents = events.filter(e => {
+    if (e.isDraft) return false;
     const isCategoryMatch = getCategory(e) === activeCategory;
     const isClassMatch = activeClass === 'All' || e.class === activeClass;
     return isCategoryMatch && isClassMatch;

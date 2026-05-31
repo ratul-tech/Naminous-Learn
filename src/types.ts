@@ -98,6 +98,7 @@ export interface ExamEvent {
   questions: Question[];
   class?: string;
   createdAt: string;
+  isDraft?: boolean;
 }
 
 export interface Submission {
