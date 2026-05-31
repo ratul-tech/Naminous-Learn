@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, Instagram, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, Instagram, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -21,6 +21,7 @@ import FeedbackForm from './pages/Feedback';
 import VerifyEmail from './pages/VerifyEmail';
 import Resources from './pages/Resources';
 import ExamHistory from './pages/ExamHistory';
+import LiveResults from './pages/LiveResults';
 
 // Shells
 import StudentShell from './components/StudentShell';
@@ -89,6 +90,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
           <Route path="/exam/:id" element={<Exam profile={profile} />} />
           <Route path="/history" element={<ExamHistory profile={profile} />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/live-results" element={<LiveResults profile={profile} />} />
           <Route path="/events" element={<Events profile={profile} />} />
           <Route path="/resources" element={<Resources profile={profile} />} />
           <Route path="/feedback" element={<FeedbackForm profile={profile} />} />
@@ -272,6 +274,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
           { name: 'Library', path: '/resources', icon: FileText },
           { name: 'History', path: '/history', icon: Clock },
           { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+          { name: 'Live Results', path: '/live-results', icon: Award },
           { name: 'Feedback', path: '/feedback', icon: MessageSquare },
         ];
       }
@@ -289,6 +292,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
       { name: 'Library', path: '/resources', icon: FileText },
       { name: 'History', path: '/history', icon: Clock },
       { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+      { name: 'Live Results', path: '/live-results', icon: Award },
       { name: 'Feedback', path: '/feedback', icon: MessageSquare },
     ];
   };

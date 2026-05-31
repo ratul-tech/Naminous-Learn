@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserProfile, ExamResult } from '../types';
-import { Trophy, BookOpen, Calendar, ArrowRight, TrendingUp, Clock, Shield, User as UserIcon, MessageSquare } from 'lucide-react';
+import { Trophy, BookOpen, Calendar, ArrowRight, TrendingUp, Clock, Shield, User as UserIcon, MessageSquare, Award } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -166,9 +166,10 @@ export default function Dashboard({ profile }: DashboardProps) {
       </header>
 
       {/* Shortcuts without box layouts */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 py-6 border-y border-dashed border-slate-900">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 py-6 border-y border-dashed border-[#1e293b]/50">
         <StudentAppShortcut icon={BookOpen} label="Practice" color="" path="/practice" />
         <StudentAppShortcut icon={Calendar} label="Live Exams" color="" path="/events" />
+        <StudentAppShortcut icon={Award} label="Live Results" color="" path="/live-results" />
         <StudentAppShortcut icon={Trophy} label="Hall of Fame" color="" path="/leaderboard" />
         <StudentAppShortcut icon={MessageSquare} label="Your Voice" color="" path="/feedback" />
       </div>
