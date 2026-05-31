@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, orderBy, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { UserProfile, ExamResult, Question, OperationType } from '../types';
+import { UserProfile, ExamResult, Question, OperationType, ExamEvent } from '../types';
 import { 
   Trophy, 
   BookOpen, 
@@ -53,6 +53,7 @@ interface ExamHistoryProps {
 export default function ExamHistory({ profile }: ExamHistoryProps) {
   const navigate = useNavigate();
   const [results, setResults] = useState<ExamResult[]>([]);
+  const [eventsMap, setEventsMap] = useState<Record<string, ExamEvent>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,7 +97,16 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
         return timeB - timeA;
       });
       
+      // Fetch events map to check scheduled end times
+      const eventsRef = collection(db, 'events');
+      const eventsSnapshot = await getDocs(eventsRef);
+      const evMap: Record<string, ExamEvent> = {};
+      eventsSnapshot.docs.forEach(doc => {
+        evMap[doc.id] = { id: doc.id, ...doc.data() } as ExamEvent;
+      });
+
       setResults(fetchedResults);
+      setEventsMap(evMap);
     } catch (err: any) {
       console.error("Error fetching exam history:", err);
       setError("Unable to retrieve exam history. Please try again.");
@@ -117,24 +127,45 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
     );
   }
 
+  // Filter out any results of Live Exams that are still currently ongoing or haven't ended yet
+  const visibleResults = useMemo(() => {
+    const now = new Date();
+    return results.filter(r => {
+      if (r.type !== 'Event') return true; // Practice is shown immediately
+      if (!r.eventId) return false;
+      const event = eventsMap[r.eventId];
+      if (!event) {
+        // If event is missing, only show if 24 hours have passed for privacy
+        if (r.createdAt) {
+          const resultTime = new Date(r.createdAt).getTime();
+          return (now.getTime() - resultTime) > 24 * 60 * 60 * 1000;
+        }
+        return false;
+      }
+      const startTime = new Date(event.startTime);
+      const endTime = event.endTime ? new Date(event.endTime) : new Date(startTime.getTime() + event.duration * 60000);
+      return now > endTime;
+    });
+  }, [results, eventsMap]);
+
   // Calculate high-level stats
-  const totalExams = results.length;
+  const totalExams = visibleResults.length;
   const avgScore = totalExams > 0 
-    ? (results.reduce((acc, curr) => acc + curr.score, 0) / totalExams) 
+    ? (visibleResults.reduce((acc, curr) => acc + curr.score, 0) / totalExams) 
     : 0;
   const bestScore = totalExams > 0 
-    ? Math.max(...results.map(r => r.score)) 
+    ? Math.max(...visibleResults.map(r => r.score)) 
     : 0;
   
-  const totalCorrect = results.reduce((acc, curr) => acc + (curr.correctCount || 0), 0);
-  const totalQuestions = results.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
+  const totalCorrect = visibleResults.reduce((acc, curr) => acc + (curr.correctCount || 0), 0);
+  const totalQuestions = visibleResults.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
   const accuracyRate = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
   
-  const liveEventsCount = results.filter(r => r.type === 'Event').length;
-  const practiceCount = results.filter(r => r.type === 'Practice').length;
+  const liveEventsCount = visibleResults.filter(r => r.type === 'Event').length;
+  const practiceCount = visibleResults.filter(r => r.type === 'Practice').length;
 
   // Filter and search results
-  const filteredResults = results.filter(r => {
+  const filteredResults = visibleResults.filter(r => {
     // If activeTab is 'analytics', it has its own dashboard view, but we list matching runs if they switch back
     const isMatchedType = activeTab === 'all' || activeTab === 'analytics' || r.type.toLowerCase() === activeTab;
     
@@ -154,7 +185,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
   const subjectAnalytics = useMemo(() => {
     const stats: Record<string, { totalScore: number; count: number; correct: number; totalQ: number }> = {};
     
-    results.forEach(r => {
+    visibleResults.forEach(r => {
       const subjectName = r.subject || (r.type === 'Event' ? 'Live Events' : 'General');
       if (!stats[subjectName]) {
         stats[subjectName] = { totalScore: 0, count: 0, correct: 0, totalQ: 0 };
@@ -171,11 +202,11 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
       count: data.count,
       accuracy: data.totalQ > 0 ? Math.round((data.correct / data.totalQ) * 100) : 0,
     })).sort((a, b) => b.avgScore - a.avgScore);
-  }, [results]);
+  }, [visibleResults]);
 
   // Timeline analysis Data for Recharts
   const timelineData = useMemo(() => {
-    return [...results]
+    return [...visibleResults]
       .reverse() // Oldest first for chronological order
       .map((r, idx) => ({
         index: idx + 1,
@@ -183,7 +214,7 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
         score: r.score,
         name: r.type === 'Event' ? 'Live Exam' : `${r.subject || 'Practice'}`
       }));
-  }, [results]);
+  }, [visibleResults]);
 
   // Handle Review Answer trigger
   const handleReview = async (result: ExamResult) => {

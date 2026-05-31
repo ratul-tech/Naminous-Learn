@@ -153,94 +153,69 @@ export default function Leaderboard() {
            <p className="text-slate-500 font-medium text-xs">Try adjusting your filters or participate in an exam to appear here.</p>
         </div>
       ) : (
-        <div className="space-y-16">
-          {/* Podium */}
-          <div className="flex flex-col md:flex-row items-end justify-center gap-6 md:gap-4 px-4">
-            {/* 2nd Place */}
-            {top3[1] && (
-              <PodiumItem
-                result={top3[1]}
-                rank={2}
-                height="h-32 md:h-48"
-                color="bg-slate-800"
-                medalColor="text-slate-400"
-                delay={0.2}
-              />
-            )}
-            {/* 1st Place */}
-            {top3[0] && (
-              <PodiumItem
-                result={top3[0]}
-                rank={1}
-                height="h-44 md:h-64"
-                color="bg-[#D4AF37]"
-                medalColor="text-[#D4AF37]"
-                delay={0}
-              />
-            )}
-            {/* 3rd Place */}
-            {top3[2] && (
-              <PodiumItem
-                result={top3[2]}
-                rank={3}
-                height="h-24 md:h-36"
-                color="bg-orange-900/40"
-                medalColor="text-orange-400"
-                delay={0.4}
-              />
-            )}
-          </div>
-
+        <div className="space-y-8">
           {/* List View */}
           <div className="overflow-hidden">
-            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-4 font-black text-[#D4AF37] uppercase text-[9px] tracking-widest border-b border-slate-900">
-              <div className="col-span-2 sm:col-span-1 text-center">Rank</div>
-              <div className="col-span-6 sm:col-span-7">Student Profile</div>
-              <div className="col-span-4 sm:col-span-2 text-center sm:text-left">Points</div>
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-4 font-black text-[#D4AF37] uppercase text-[9px] tracking-widest border-b border-slate-900 balance-sans">
+              <div className="col-span-3 sm:col-span-2 text-left pl-2">Rank</div>
+              <div className="col-span-6 sm:col-span-6">Student Profile</div>
+              <div className="col-span-3 sm:col-span-2 text-right sm:text-left">Points</div>
               <div className="hidden sm:block col-span-2 text-right">Details</div>
             </div>
             
             <div className="divide-y divide-slate-910">
               <AnimatePresence>
-                {others.map((result, index) => (
-                  <motion.div
-                    key={result.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="grid grid-cols-12 gap-2 sm:gap-4 py-6 sm:px-8 items-center border-b border-dashed border-slate-905 transition-all group"
-                  >
-                    <div className="col-span-2 sm:col-span-1 text-center font-extrabold text-xl sm:text-2xl text-slate-700 group-hover:text-[#D4AF37] transition-colors">
-                      {index + 4}
-                    </div>
-                    <div className="col-span-6 sm:col-span-7 flex items-center space-x-2 sm:space-x-4 min-w-0">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-950 rounded-xl flex items-center justify-center text-slate-600 transition-all border border-slate-900 shrink-0">
-                        <User className="w-5 h-5" />
+                {topResults.map((result, index) => {
+                  const rankNum = index + 1;
+                  const rankWord = getRankWord(rankNum);
+                  
+                  return (
+                    <motion.div
+                      key={result.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(index * 0.03, 0.4) }}
+                      className="grid grid-cols-12 gap-2 sm:gap-4 py-6 items-center border-b border-dashed border-slate-905 transition-all group"
+                    >
+                      {/* Rank text directly - e.g., First, Second, Third, etc. */}
+                      <div className="col-span-3 sm:col-span-2 text-left pl-2 font-black text-xs uppercase tracking-wider font-mono">
+                        <span className={`${
+                          rankNum === 1 ? 'text-[#D4AF37]' :
+                          rankNum === 2 ? 'text-slate-450 text-slate-400' :
+                          rankNum === 3 ? 'text-orange-500' : 'text-slate-600'
+                        }`}>
+                          {rankWord}
+                        </span>
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="font-extrabold text-white text-sm sm:text-base tracking-tight uppercase">{result.displayName}</h4>
-                        <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wide truncate">
-                          <School className="w-2.5 h-2.5 shrink-0" />
-                          <span className="truncate">{result.school}</span>
+                      
+                      <div className="col-span-6 sm:col-span-6 flex items-center space-x-2 sm:space-x-4 min-w-0">
+                        <div className="min-w-0">
+                          <h4 className="font-extrabold text-white text-sm sm:text-base tracking-tight uppercase group-hover:text-[#D4AF37] transition-colors">{result.displayName}</h4>
+                          <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wide truncate mt-0.5">
+                            <School className="w-2.5 h-2.5 shrink-0" />
+                            <span className="truncate">{result.school}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="col-span-4 sm:col-span-2">
-                      <div className="text-base sm:text-xl font-black text-white">{Number(result.score).toFixed(2)}</div>
-                      <p className="text-[8px] uppercase font-black tracking-widest text-[#D4AF37]/80">{result.correctCount} Correct</p>
-                      {(result as any).accuracyRate !== undefined && (
-                        <p className="text-[9px] uppercase font-bold text-emerald-400 mt-1">
-                          {(result as any).accuracyRate.toFixed(2)}% Accuracy
-                        </p>
-                      )}
-                    </div>
-                    <div className="hidden sm:block col-span-2 text-right">
-                      <div className="inline-block px-3 py-1 bg-slate-950 text-[9px] font-black uppercase tracking-widest text-slate-500 rounded-full group-hover:bg-[#D4AF37]/10 group-hover:text-[#D4AF37] transition-colors whitespace-nowrap border border-slate-900">
-                        {result.type}
+                      
+                      <div className="col-span-3 sm:col-span-2 text-right sm:text-left">
+                        <div className="text-base sm:text-xl font-black text-white">{Number(result.score).toFixed(2)}</div>
+                        <p className="text-[8px] uppercase font-black tracking-widest text-[#D4AF37]/80">{result.correctCount} Correct</p>
+                        {(result as any).accuracyRate !== undefined && (
+                          <p className="text-[9px] uppercase font-bold text-emerald-400 mt-1 sm:mt-0.5">
+                            {(result as any).accuracyRate.toFixed(2)}% Accuracy
+                          </p>
+                        )}
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                      
+                      <div className="hidden sm:block col-span-2 text-right">
+                        <div className="inline-block px-3 py-1 bg-slate-950 text-[9px] font-black uppercase tracking-widest text-slate-500 rounded-full group-hover:bg-[#D4AF37]/10 group-hover:text-[#D4AF37] transition-colors whitespace-nowrap border border-slate-900">
+                          {result.type}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
           </div>
@@ -250,64 +225,29 @@ export default function Leaderboard() {
   );
 }
 
-function PodiumItem({ result, rank, height, color, medalColor, delay }: { result: ExamResult, rank: number, height: string, color: string, medalColor: string, delay: number }) {
-  const isFirst = rank === 1;
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.6, type: 'spring' }}
-      className={`flex flex-col items-center w-full md:w-56 ${isFirst ? 'z-10' : ''}`}
-    >
-      <div className="mb-6 text-center relative w-full">
-        {isFirst && (
-          <motion.div
-            initial={{ y: 5, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: delay + 0.5, repeat: Infinity, repeatType: 'reverse', duration: 2 }}
-            className="absolute -top-8 left-1/2 -translate-x-1/2 text-[#D4AF37]"
-          >
-            <Trophy className="w-8 h-8 fill-current" />
-          </motion.div>
-        )}
-        <div className="relative inline-block">
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            className={`w-20 h-20 md:w-24 md:h-24 rounded-full bg-slate-950 flex items-center justify-center border-2 ${isFirst ? 'border-[#D4AF37]' : 'border-slate-850'} overflow-hidden shadow-inner`}
-          >
-             <User className="w-10 h-10 text-slate-600" />
-          </motion.div>
-          <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-slate-950 flex items-center justify-center ${medalColor} border border-slate-800`}>
-            <Medal className="w-5 h-5" />
-          </div>
-        </div>
-        <div className="mt-4">
-          <h3 className="font-extrabold text-white truncate w-40 mx-auto text-base uppercase tracking-tight">{result.displayName}</h3>
-          <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wide truncate w-40 mx-auto opacity-70">{result.school}</p>
-        </div>
-      </div>
-      
-      <motion.div 
-        whileHover={{ scale: 1.02 }}
-        className={`${height} w-full rounded-t-[1.5rem] flex flex-col items-center justify-center relative overflow-hidden`}
-        style={{
-          borderBottom: '2px solid #D4AF37',
-          background: rank === 1 ? 'linear-gradient(to top, rgba(212, 175, 55, 0.15), transparent)' :
-                     rank === 2 ? 'linear-gradient(to top, rgba(148, 163, 184, 0.08), transparent)' :
-                     'linear-gradient(to top, rgba(251, 146, 60, 0.05), transparent)'
-        }}
-      >
-        <span className={`text-6xl font-black mb-2 ${isFirst ? 'text-[#D4AF37]/25' : 'text-slate-700/20'}`}>{rank}</span>
-        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${isFirst ? 'bg-slate-950 text-[#D4AF37] border border-[#D4AF37]/35' : 'bg-slate-950 text-slate-400 border border-slate-850'}`}>
-          {Number(result.score).toFixed(2)}
-        </div>
-        {(result as any).accuracyRate !== undefined && (
-          <div className="text-[10px] font-black uppercase tracking-wider text-emerald-400 mt-3 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-900 shadow-sm">
-            {(result as any).accuracyRate.toFixed(2)}% Accuracy
-          </div>
-        )}
-      </motion.div>
-    </motion.div>
-  );
+// Translate ranks to text sequences as requested (First, Second, Third, etc.)
+function getRankWord(rankNum: number): string {
+  const dictionary: Record<number, string> = {
+    1: 'First',
+    2: 'Second',
+    3: 'Third',
+    4: 'Fourth',
+    5: 'Fifth',
+    6: 'Sixth',
+    7: 'Seventh',
+    8: 'Eighth',
+    9: 'Ninth',
+    10: 'Tenth',
+    11: 'Eleventh',
+    12: 'Twelfth',
+    13: 'Thirteenth',
+    14: 'Fourteenth',
+    15: 'Fifteenth',
+    16: 'Sixteenth',
+    17: 'Seventeenth',
+    18: 'Eighteenth',
+    19: 'Nineteenth',
+    20: 'Twentieth'
+  };
+  return dictionary[rankNum] || `${rankNum}th`;
 }
