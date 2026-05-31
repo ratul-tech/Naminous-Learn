@@ -378,33 +378,33 @@ export default function Exam({ profile }: ExamProps) {
       </div>
 
       {/* Main Questions List Layout - Normal sequential serial numbers, NO box pagination format */}
-      <div className="space-y-6 sm:space-y-10">
+      <div className="space-y-2">
         {questions.map((currentQuestion, qIndex) => (
           <div
             key={currentQuestion.id}
-            className="p-6 sm:p-10 border border-slate-805/80 bg-slate-900/40 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl space-y-6 text-left transition-all hover:bg-slate-900/60"
+            className="py-10 border-b border-dashed border-slate-900 last:border-0 space-y-6 text-left"
           >
-            <div className="flex items-center justify-between">
-              <span className="inline-block px-3 py-1 bg-slate-950 text-[#D4AF37] rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider border border-slate-800">
-                Question {qIndex + 1}
+            <div className="flex items-center space-x-3 text-xs font-black uppercase tracking-widest text-slate-500">
+              <span className="w-7 h-7 rounded-full bg-slate-950 border border-slate-900 flex items-center justify-center font-extrabold text-xs text-[#D4AF37] shadow-inner">
+                {qIndex + 1}
               </span>
               {answers[currentQuestion.id] !== undefined ? (
-                <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/25">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span className="w-1 h-1 rounded-full bg-emerald-400" />
                   Answered
                 </span>
               ) : (
-                <span className="text-xs text-slate-500 font-medium bg-slate-950/40 px-3 py-1 rounded-full border border-slate-800/40">
+                <span className="text-[10px] text-slate-550 font-medium bg-slate-950/40 px-2.5 py-0.5 rounded-full border border-slate-800/40">
                   Unanswered
                 </span>
               )}
             </div>
 
-            <div className="text-base sm:text-lg md:text-xl font-semibold text-white leading-relaxed">
+            <div className="text-xl sm:text-2xl font-black text-white leading-relaxed tracking-tight font-serif">
               <MathRenderer content={currentQuestion?.text || ''} engine={profile?.mathEngine} />
             </div>
             {currentQuestion?.imageUrl && (
-              <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-700/60 bg-slate-950/40 p-2">
+              <div className="my-4 max-w-full sm:max-w-md rounded-xl overflow-hidden border border-slate-850 bg-slate-950/40 p-2">
                 <img 
                   src={currentQuestion.imageUrl} 
                   alt="Question visual" 
@@ -434,7 +434,7 @@ export default function Exam({ profile }: ExamProps) {
                       {String.fromCharCode(65 + i)}
                     </div>
                     <div className="min-w-0 flex-1 text-left">
-                      <MathRenderer content={option} className={`font-semibold text-sm ${isSelected ? 'text-[#D4AF37]' : 'text-slate-300'}`} engine={profile?.mathEngine} />
+                      <MathRenderer content={option} className={`font-semibold text-sm ${isSelected ? 'text-[#D4AF37]' : 'text-slate-350'}`} engine={profile?.mathEngine} />
                     </div>
                   </button>
                 );
