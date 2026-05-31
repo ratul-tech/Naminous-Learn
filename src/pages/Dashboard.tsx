@@ -263,12 +263,12 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any, label: strin
   return (
     <motion.div
       whileHover={{ y: -5, borderColor: "rgba(99, 102, 241, 0.4)" }}
-      className="bg-slate-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-800 flex items-center space-x-3 sm:space-x-5 transition-all"
+      className="bg-slate-900 p-5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-800 flex flex-col items-center text-center space-y-3 sm:flex-row sm:items-center sm:text-left sm:space-x-5 sm:space-y-0 transition-all"
     >
       <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl ${color} shrink-0 border border-current opacity-90 shadow-lg`}>
         <Icon className="w-5 h-5 sm:w-7 sm:h-7" />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 w-full sm:w-auto">
         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 mb-1 truncate">{label}</p>
         <p className="text-xl sm:text-3xl font-bold text-white font-serif truncate">{value}</p>
       </div>

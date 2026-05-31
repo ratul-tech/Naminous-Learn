@@ -15,7 +15,7 @@ export default function Leaderboard() {
     type: 'All'
   });
 
-  const subjects = ['All', ...ALL_SUBJECTS];
+  const subjects = ['All', ...ALL_SUBJECTS, 'Mixed'];
   const classes = ['All', 'SSC Candidate', 'College Admission'];
   const types = ['All', 'Practice', 'Event'];
 

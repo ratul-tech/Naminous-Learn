@@ -5,7 +5,15 @@ import { UserProfile, Question, OperationType } from '../types';
 import { BookOpen, Clock, CheckCircle2, ChevronRight, ChevronLeft, Send, AlertCircle, List, Play, RotateCcw, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError } from '../lib/error-handler';
-import { getSubjectsForGroup } from '../constants';
+import { getSubjectsForGroup, SUBJECTS_BY_GROUP } from '../constants';
+
+function getTimerForQuestionCount(count: number): number {
+  if (count <= 20) return 16;
+  if (count <= 30) return 25;
+  if (count <= 50) return 40;
+  if (count <= 75) return 60;
+  return 80;
+}
 import { MathRenderer } from '../components/MathRenderer';
 import { useLocation } from 'react-router-dom';
 import { calculateQuizScoreBengali, toBengaliNumber } from '../lib/scoreCalculator';
@@ -31,8 +39,8 @@ export default function Practice({ profile }: PracticeProps) {
       subject: locState?.subject || 'Physics',
       class: locState?.class || profile?.class || 'SSC Candidate',
       mode: locState?.mode || ('Complete Board' as Mode),
-      time: locState?.time || 20, // minutes
-      count: locState?.count || 10,
+      time: locState?.time || 16, // minutes
+      count: locState?.count || 20,
     };
   });
 
@@ -45,7 +53,8 @@ export default function Practice({ profile }: PracticeProps) {
     results: null as any,
   });
 
-  const subjects = getSubjectsForGroup(profile?.group);
+  const rawSubjects = getSubjectsForGroup(profile?.group);
+  const subjects = rawSubjects.includes('Mixed') ? rawSubjects : [...rawSubjects, 'Mixed'];
   const times = [5, 10, 15, 20, 30, 45, 60];
 
   useEffect(() => {
@@ -61,21 +70,22 @@ export default function Practice({ profile }: PracticeProps) {
       
       let examQuestions = [];
       if (locState.mode === 'Complete Board') {
-        const size = locState.count || 10;
+        const size = locState.count || 20;
         examQuestions = [...filteredQuestions].sort(() => 0.5 - Math.random()).slice(0, size);
       } else if (locState.mode === 'Selected Board' && locState.selectedQuestionIds) {
         examQuestions = filteredQuestions.filter(q => locState.selectedQuestionIds.includes(q.id));
       } else {
-        const size = locState.count || 10;
+        const size = locState.count || 20;
         examQuestions = [...filteredQuestions].sort(() => 0.5 - Math.random()).slice(0, size);
       }
 
       if (examQuestions.length > 0) {
         setFilteredQuestions(examQuestions);
+        const calculatedTime = getTimerForQuestionCount(examQuestions.length);
         setExamState({
           currentQuestionIndex: 0,
           answers: {},
-          timeLeft: (locState.time || 20) * 60,
+          timeLeft: calculatedTime * 60,
           examStarted: true,
           submitting: false,
           results: null,
@@ -106,9 +116,16 @@ export default function Practice({ profile }: PracticeProps) {
   }, [config.class]);
 
   useEffect(() => {
-    const filtered = questions.filter(q => q.subject === config.subject);
-    setFilteredQuestions(filtered);
-  }, [questions, config.subject]);
+    if (config.subject === 'Mixed') {
+      const activeGroup = profile?.group || 'Science';
+      const allowedSubjects = SUBJECTS_BY_GROUP[activeGroup] || [];
+      const filtered = questions.filter(q => q.subject && allowedSubjects.includes(q.subject));
+      setFilteredQuestions(filtered);
+    } else {
+      const filtered = questions.filter(q => q.subject === config.subject);
+      setFilteredQuestions(filtered);
+    }
+  }, [questions, config.subject, profile?.group]);
 
   const handleStartExam = () => {
     let examQuestions = [];
@@ -123,12 +140,15 @@ export default function Practice({ profile }: PracticeProps) {
       return;
     }
 
+    const finalCount = examQuestions.length;
+    const finalTime = getTimerForQuestionCount(finalCount);
+
     setFilteredQuestions(examQuestions);
     setExamState({
       ...examState,
       currentQuestionIndex: 0,
       answers: {},
-      timeLeft: config.time * 60,
+      timeLeft: finalTime * 60,
       examStarted: true,
       results: null,
     });
@@ -361,21 +381,30 @@ export default function Practice({ profile }: PracticeProps) {
               {/* Time Selection */}
               <div className="space-y-4">
                 <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em]">Duration (Minutes)</label>
-                <div className="flex flex-wrap gap-2">
-                  {times.map(t => (
-                    <button
-                      key={t}
-                      onClick={() => setConfig({ ...config, time: t })}
-                      className={`px-4 py-2 rounded-full border transition-all font-bold text-xs ${
-                        config.time === t 
-                          ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
-                          : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805'
-                      }`}
-                    >
-                      {t}m
-                    </button>
-                  ))}
-                </div>
+                {config.mode === 'Complete Board' ? (
+                  <div className="px-5 py-3.5 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 flex items-center space-x-3 shadow-[0_0_15px_rgba(212,175,55,0.05)]">
+                    <Clock className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                    <span className="text-white text-xs font-black uppercase tracking-wider">
+                      {getTimerForQuestionCount(config.count)} minutes (allocated automatically)
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {times.map(t => (
+                      <button
+                        key={t}
+                        onClick={() => setConfig({ ...config, time: t })}
+                        className={`px-4 py-2 rounded-full border transition-all font-bold text-xs ${
+                          config.time === t 
+                            ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
+                            : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805'
+                        }`}
+                      >
+                        {t}m
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Question Count */}
@@ -383,10 +412,10 @@ export default function Practice({ profile }: PracticeProps) {
                 <div className="space-y-4">
                   <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em]">Quantity</label>
                   <div className="flex flex-wrap gap-2">
-                    {[10, 20, 30, 50].map(c => (
+                    {[20, 30, 50, 75, 100].map(c => (
                       <button
                         key={c}
-                        onClick={() => setConfig({ ...config, count: c })}
+                        onClick={() => setConfig({ ...config, count: c, time: getTimerForQuestionCount(c) })}
                         className={`px-4 py-2 rounded-full border transition-all font-bold text-xs ${
                           config.count === c 
                             ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
