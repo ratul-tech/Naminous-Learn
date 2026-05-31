@@ -29,6 +29,16 @@ const LOGO_URL = "https://i.postimg.cc/0241N65R/received-982626700958526.jpg";
 
 function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: User | null, profile: UserProfile | null, setProfile: (p: UserProfile | null) => void, onLogout: () => void, refreshUser: () => Promise<void> }) {
   const location = useLocation();
+  const [isExamActive, setIsExamActive] = useState(false);
+
+  useEffect(() => {
+    (window as any).setExamActiveState = (active: boolean) => {
+      setIsExamActive(active);
+    };
+    return () => {
+      delete (window as any).setExamActiveState;
+    };
+  }, []);
 
   const renderContent = () => {
     if (!user) {
@@ -71,7 +81,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
     const Shell = StudentShell;
 
     return (
-      <Shell profile={profile}>
+      <Shell profile={profile} isExamActive={isExamActive}>
         <Routes>
           <Route path="/dashboard" element={<Dashboard profile={profile} />} />
           <Route path="/profile" element={<Profile profile={profile} setProfile={setProfile} />} />
@@ -91,7 +101,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-300 font-sans flex flex-col transition-colors duration-500">
-      <Navbar user={user} profile={profile} onLogout={onLogout} />
+      {!isExamActive && <Navbar user={user} profile={profile} onLogout={onLogout} />}
       
       <main className="container mx-auto px-4 flex-grow py-4">
         {renderContent()}

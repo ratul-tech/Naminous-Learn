@@ -14,16 +14,10 @@ const PRESET_BOARDS = [
 ];
 
 const PRESET_COLLEGES = [
-  'Notre Dame College',
-  'Holy Cross College',
-  'Viqarunnisa Noon College',
-  'Rajuk Uttara Model College',
-  'St. Joseph Higher Secondary School',
-  'Dhaka College',
-  'Adamjee Cantonment College',
-  'Dhaka Residential Model College',
-  'Mymensingh Girls Cadet College',
-  'Cantonment Public School and College'
+  'NDC',
+  'STJC',
+  'HCC',
+  'St. Greg'
 ];
 
 const PRESET_YEARS = [
@@ -526,7 +520,7 @@ export default function Questions({ profile }: QuestionsProps) {
                       type="text"
                       value={newQ.college}
                       onChange={(e) => setNewQ({ ...newQ, college: e.target.value })}
-                      placeholder="e.g. Notre Dame College"
+                      placeholder="e.g. NDC"
                       onFocus={() => setShowCollegeSuggestions(true)}
                       onBlur={() => setTimeout(() => setShowCollegeSuggestions(false), 250)}
                       className="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-transparent focus:border-[#D4AF37] hover:border-slate-800 outline-none transition-all font-medium text-white shadow-inner font-semibold"
@@ -567,7 +561,7 @@ export default function Questions({ profile }: QuestionsProps) {
                           }`}
                           title={c}
                         >
-                          {c === 'Notre Dame College' ? 'Notre Dame (NDC)' : c === 'Holy Cross College' ? 'Holy Cross (HCC)' : c.replace(' School and College', '').replace(' Higher Secondary School', '')}
+                          {c}
                         </button>
                       ))}
                     </div>

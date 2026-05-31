@@ -28,6 +28,18 @@ type Mode = 'Complete Board' | 'Selected Board';
 export default function Practice({ profile }: PracticeProps) {
   const location = useLocation();
   const [step, setStep] = useState<Step>('config');
+
+  useEffect(() => {
+    if (typeof (window as any).setExamActiveState === 'function') {
+      (window as any).setExamActiveState(step === 'exam');
+    }
+    return () => {
+      if (typeof (window as any).setExamActiveState === 'function') {
+        (window as any).setExamActiveState(false);
+      }
+    };
+  }, [step]);
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);

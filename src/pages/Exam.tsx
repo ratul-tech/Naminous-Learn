@@ -41,6 +41,18 @@ export default function Exam({ profile }: ExamProps) {
   useEffect(() => { questionsRef.current = questions; }, [questions]);
   useEffect(() => { eventRef.current = event; }, [event]);
 
+  const isExamInProgress = examStarted && !hasSubmitted;
+  useEffect(() => {
+    if (typeof (window as any).setExamActiveState === 'function') {
+      (window as any).setExamActiveState(isExamInProgress);
+    }
+    return () => {
+      if (typeof (window as any).setExamActiveState === 'function') {
+        (window as any).setExamActiveState(false);
+      }
+    };
+  }, [isExamInProgress]);
+
   // Integrated proctoring security suite
   const {
     tabLossCount,
