@@ -320,134 +320,47 @@ export default function Practice({ profile }: PracticeProps) {
               </div>
             </div>
 
-            {/* Mode Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div
-                onClick={() => setConfig({ ...config, mode: 'Complete Board' })}
-                className={`group cursor-pointer py-8 border-b border-dashed transition-all relative ${
-                  config.mode === 'Complete Board' 
-                    ? 'border-[#D4AF37]/50' 
-                    : 'border-slate-900/60'
-                }`}
-              >
-                <div className="relative z-10 flex items-start space-x-6">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    config.mode === 'Complete Board' ? 'text-[#D4AF37]' : 'text-slate-600'
-                  }`}>
-                    <List className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className={`text-lg font-black uppercase tracking-tight mb-1 transition-colors ${
-                      config.mode === 'Complete Board' ? 'text-white' : 'text-slate-500'
-                    }`}>
-                      Comprehensive Pool
-                    </h3>
-                    <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                      A balanced mix of random questions from the entire board database.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => setConfig({ ...config, mode: 'Selected Board' })}
-                className={`group cursor-pointer py-8 border-b border-dashed transition-all relative ${
-                  config.mode === 'Selected Board' 
-                    ? 'border-[#D4AF37]/50' 
-                    : 'border-slate-900/60'
-                }`}
-              >
-                <div className="relative z-10 flex items-start space-x-6">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    config.mode === 'Selected Board' ? 'text-[#D4AF37]' : 'text-slate-600'
-                  }`}>
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className={`text-lg font-black uppercase tracking-tight mb-1 transition-colors ${
-                      config.mode === 'Selected Board' ? 'text-white' : 'text-slate-500'
-                    }`}>
-                      Master Selection
-                    </h3>
-                    <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                      Hand-pick specific questions to target your weak points and refine mastery.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {/* Time Selection */}
               <div className="space-y-4">
                 <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em]">Duration (Minutes)</label>
-                {config.mode === 'Complete Board' ? (
-                  <div className="px-5 py-3.5 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 flex items-center space-x-3 shadow-[0_0_15px_rgba(212,175,55,0.05)]">
-                    <Clock className="w-4 h-4 text-[#D4AF37] animate-pulse" />
-                    <span className="text-white text-xs font-black uppercase tracking-wider">
-                      {getTimerForQuestionCount(config.count)} minutes (allocated automatically)
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {times.map(t => (
-                      <button
-                        key={t}
-                        onClick={() => setConfig({ ...config, time: t })}
-                        className={`px-4 py-2 rounded-full border transition-all font-bold text-xs ${
-                          config.time === t 
-                            ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
-                            : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805'
-                        }`}
-                      >
-                        {t}m
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div className="px-5 py-3.5 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 flex items-center space-x-3 shadow-[0_0_15px_rgba(212,175,55,0.05)]">
+                  <Clock className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                  <span className="text-white text-xs font-black uppercase tracking-wider">
+                    {getTimerForQuestionCount(config.count)} minutes (allocated automatically)
+                  </span>
+                </div>
               </div>
 
               {/* Question Count */}
-              {config.mode === 'Complete Board' && (
-                <div className="space-y-4">
-                  <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em]">Quantity</label>
-                  <div className="flex flex-wrap gap-2">
-                    {[20, 30, 50, 75, 100].map(c => (
-                      <button
-                        key={c}
-                        onClick={() => setConfig({ ...config, count: c, time: getTimerForQuestionCount(c) })}
-                        className={`px-4 py-2 rounded-full border transition-all font-bold text-xs ${
-                          config.count === c 
-                            ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
-                            : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805'
-                        }`}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
+              <div className="space-y-4">
+                <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em]">Quantity</label>
+                <div className="flex flex-wrap gap-2">
+                  {[20, 30, 50, 75, 100].map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setConfig({ ...config, count: c, time: getTimerForQuestionCount(c) })}
+                      className={`px-4 py-2 rounded-full border transition-all font-bold text-xs ${
+                        config.count === c 
+                          ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
+                          : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
 
             <div className="pt-8 border-t border-slate-900 flex justify-center">
-              {config.mode === 'Selected Board' ? (
-                <button
-                  onClick={() => setStep('selection')}
-                  className="w-full md:w-auto min-w-[300px] border border-[#D4AF37]/35 text-[#D4AF37] py-4 px-10 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center space-x-2"
-                >
-                  <span>Customize Question Selection</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleStartExam}
-                  className="w-full md:w-auto min-w-[300px] border border-[#D4AF37] text-[#D4AF37] py-4 px-10 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center space-x-2 animate-pulse"
-                >
-                  <Play className="w-4 h-4" />
-                  <span>Begin Training Session</span>
-                </button>
-              )}
+              <button
+                onClick={handleStartExam}
+                className="w-full md:w-auto min-w-[300px] border border-[#D4AF37] text-[#D4AF37] py-4 px-10 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center space-x-2 animate-pulse"
+              >
+                <Play className="w-4 h-4" />
+                <span>Begin Training Session</span>
+              </button>
             </div>
           </motion.div>
         )}
