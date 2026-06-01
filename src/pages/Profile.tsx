@@ -12,22 +12,12 @@ import { signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvide
 import { useNavigate } from 'react-router-dom';
 import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType } from '../types';
+import { AVATAR_PRESETS, getAvatar } from '../utils/avatars';
 
 interface ProfileProps {
   profile: UserProfile | null;
   setProfile: (profile: UserProfile) => void;
 }
-
-const AVATAR_PRESETS = [
-  { name: 'Scholar Felix', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix' },
-  { name: 'Scholar Aneka', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka' },
-  { name: 'Scholar Caleb', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Caleb' },
-  { name: 'Creative Lilou', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Lilou' },
-  { name: 'Science Buster', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Buster' },
-  { name: 'Tech Jack', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Jack' },
-  { name: 'Explorer Sophia', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia' },
-  { name: 'Classic Gizmo', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Gizmo' }
-];
 
 type ProfileTab = 'edit' | 'security' | 'admins';
 
@@ -411,18 +401,12 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
               <div className="relative mb-5 group/avatar">
                 <div className="p-1.5 bg-gradient-to-tr from-amber-500 via-[#D4AF37] to-indigo-500 rounded-full shadow-2xl transition-transform duration-500 group-hover:rotate-6">
                   <div className="bg-slate-905 rounded-full p-1">
-                    {formData.photoURL ? (
-                      <img 
-                        src={formData.photoURL} 
-                        alt="Profile" 
-                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-2 ring-slate-950" 
-                        referrerPolicy="no-referrer" 
-                      />
-                    ) : (
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-800 flex items-center justify-center ring-2 ring-slate-950">
-                        <User className="w-12 h-12 text-slate-600" />
-                      </div>
-                    )}
+                    <img 
+                      src={getAvatar(formData.photoURL, profile?.displayName)} 
+                      alt="Profile" 
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-2 ring-slate-950" 
+                      referrerPolicy="no-referrer" 
+                    />
                   </div>
                 </div>
                 {/* Enabled Status Pulse Indicator */}
@@ -851,7 +835,7 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
                       <div key={admin.id} className={`flex flex-col space-y-4 p-6 transition-all group ${isStudentLayout ? 'border-b border-dashed border-slate-905 py-6 px-1' : 'bg-slate-950 rounded-2xl border border-slate-800/80 hover:border-purple-500/20'}`}>
                         <div className="flex items-center space-x-4">
                           <img 
-                            src={admin.photoURL || `https://ui-avatars.com/api/?name=${admin.displayName}`} 
+                            src={getAvatar(admin.photoURL, admin.displayName)} 
                             className="w-12 h-12 rounded-xl object-cover ring-2 ring-slate-800 group-hover:ring-purple-500/35 transition-all animate-none" 
                             alt="" 
                             referrerPolicy="no-referrer"

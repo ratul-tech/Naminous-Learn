@@ -9,6 +9,7 @@ import { motion } from 'motion/react';
 
 import { handleFirestoreError, getAuthErrorMessage } from '../lib/error-handler';
 import { OperationType } from '../types';
+import { getAvatar } from '../utils/avatars';
 
 export default function Login() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -60,7 +61,7 @@ export default function Login() {
           uid: user.uid,
           email: user.email || email,
           displayName: displayName || user.displayName || user.email?.split('@')[0] || 'User',
-          photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
+          photoURL: getAvatar(user.photoURL, displayName || user.displayName || user.email?.split('@')[0] || 'User'),
           role: 'student',
           status: 'pending',
           createdAt: new Date().toISOString(),
@@ -93,7 +94,7 @@ export default function Login() {
               uid: user.uid,
               email: user.email || email,
               displayName: displayName || user.displayName || user.email?.split('@')[0] || 'User',
-              photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${displayName || 'User'}&background=random`,
+              photoURL: getAvatar(user.photoURL, displayName || user.displayName || user.email?.split('@')[0] || 'User'),
               role: 'student',
               createdAt: new Date().toISOString(),
             };
@@ -167,7 +168,7 @@ export default function Login() {
             uid: user.uid,
             email: user.email || 'shahriarislam275@gmail.com',
             displayName: user.displayName || 'Initial Admin',
-            photoURL: user.photoURL || `https://ui-avatars.com/api/?name=Initial+Admin&background=random`,
+            photoURL: getAvatar(user.photoURL, user.displayName || 'Initial Admin'),
             role: 'admin',
             status: 'active',
             adminType: 'full',
@@ -193,7 +194,7 @@ export default function Login() {
             uid: user.uid,
             email: user.email || '',
             displayName: user.displayName || user.email?.split('@')[0] || 'Google User',
-            photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random`,
+            photoURL: getAvatar(user.photoURL, user.displayName || user.email?.split('@')[0] || 'Google User'),
             role: 'student',
             status: user.emailVerified ? 'active' : 'pending',
             createdAt: new Date().toISOString(),

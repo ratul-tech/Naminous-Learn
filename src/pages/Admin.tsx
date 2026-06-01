@@ -13,6 +13,7 @@ import { handleFirestoreError } from '../lib/error-handler';
 import { OperationType, Resource } from '../types';
 import { MathRenderer } from '../components/MathRenderer';
 import { ALL_SUBJECTS } from '../constants';
+import { getAvatar } from '../utils/avatars';
 
 interface AdminProps {
   profile: UserProfile | null;
@@ -422,13 +423,7 @@ export default function Admin({ profile }: AdminProps) {
           <div className="p-6 bg-slate-900/40 rounded-2xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-6 shadow-md shadow-slate-950/10">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                {profile?.photoURL ? (
-                  <img src={profile.photoURL} alt="" className="w-10 h-10 rounded-xl border border-slate-800 shadow-sm animate-none" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center border border-slate-700">
-                    <User className="w-5 h-5 text-slate-500" />
-                  </div>
-                )}
+                <img src={getAvatar(profile?.photoURL, profile?.displayName)} alt="" className="w-10 h-10 rounded-xl border border-slate-800 shadow-sm animate-none" referrerPolicy="no-referrer" />
                 <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border border-slate-950 rounded-full animate-none" />
               </div>
               <div>
@@ -1045,7 +1040,7 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
                     <tr key={a.uid} className="hover:bg-rose-500/5 transition-colors">
                       <td className="px-8 py-5">
                         <div className="flex items-center space-x-4">
-                          <img src={a.photoURL} alt="" className="w-10 h-10 rounded-xl border border-slate-700" />
+                          <img src={getAvatar(a.photoURL, a.displayName)} alt="" className="w-10 h-10 rounded-xl border border-slate-700" />
                           <div>
                             <p className="font-bold text-slate-200">{a.displayName}</p>
                             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tighter">{a.email}</p>
@@ -1108,7 +1103,7 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
                   <tr key={a.uid} className="hover:bg-slate-800/20 transition-colors group">
                     <td className="px-8 py-6">
                       <div className="flex items-center space-x-4">
-                        <img src={a.photoURL || undefined} alt="" className="w-12 h-12 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/40 transition-colors shadow-sm" referrerPolicy="no-referrer" />
+                        <img src={getAvatar(a.photoURL, a.displayName)} alt="" className="w-12 h-12 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/40 transition-colors shadow-sm" referrerPolicy="no-referrer" />
                         <div>
                           <p className="font-bold text-slate-100">{a.displayName}</p>
                           <p className="text-xs text-slate-500 font-medium">{a.email}</p>
@@ -1375,16 +1370,10 @@ function UserManager({ users, onDelete, deletingUserId }: { users: UserProfile[]
                 <tr key={u.uid} className="hover:bg-slate-800/30 transition-colors group">
                   <td className="px-8 py-5">
                     <div className="flex items-center space-x-4">
-                      {u.photoURL ? (
-                        <div className="relative">
-                          <img src={u.photoURL} alt="" className="w-10 h-10 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/50 transition-colors shrink-0" referrerPolicy="no-referrer" />
-                          <div className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-slate-900 rounded-full ${(!u.status || u.status === 'active') ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
-                          <User className="w-5 h-5 text-slate-600" />
-                        </div>
-                      )}
+                      <div className="relative">
+                        <img src={getAvatar(u.photoURL, u.displayName)} alt="" className="w-10 h-10 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/50 transition-colors shrink-0" referrerPolicy="no-referrer" />
+                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-slate-900 rounded-full ${(!u.status || u.status === 'active') ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      </div>
                       <div className="min-w-0">
                         <p className="font-bold text-slate-200 truncate">{u.displayName}</p>
                         <p className="text-[10px] text-slate-500 font-medium truncate">{u.email}</p>

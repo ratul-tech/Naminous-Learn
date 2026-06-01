@@ -25,6 +25,7 @@ import LiveResults from './pages/LiveResults';
 
 // Shells
 import StudentShell from './components/StudentShell';
+import { getAvatar } from './utils/avatars';
 
 const LOGO_URL = "https://i.postimg.cc/0241N65R/received-982626700958526.jpg";
 
@@ -200,7 +201,7 @@ export default function App() {
               uid: firebaseUser.uid,
               email: firebaseUser.email || 'shahriarislam275@gmail.com',
               displayName: firebaseUser.displayName || 'Initial Admin',
-              photoURL: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=Initial+Admin&background=random`,
+              photoURL: firebaseUser.photoURL || getAvatar(firebaseUser.photoURL, firebaseUser.displayName || 'Initial Admin'),
               role: 'admin',
               status: 'active',
               adminType: 'full',
@@ -360,7 +361,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                 <Link to="/profile" className="flex items-center space-x-2 lg:space-x-2.5 group">
                   <div className="relative">
                     <img 
-                      src={profile?.photoURL || `https://ui-avatars.com/api/?name=${profile?.displayName || 'User'}`} 
+                      src={getAvatar(profile?.photoURL, profile?.displayName || 'User')} 
                       alt="Profile" 
                       className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ring-2 ring-indigo-500/10 group-hover:scale-105 transition-transform object-cover" 
                       referrerPolicy="no-referrer" 
@@ -455,7 +456,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                     <Link to="/profile" onClick={() => setIsOpen(false)} className="block mb-6 group">
                       <div className="p-4 bg-slate-900 rounded-2xl flex items-center space-x-3.5 border border-slate-800 hover:border-[#D4AF37]/35 shadow-inner transition-all">
                         <img 
-                          src={profile?.photoURL || `https://ui-avatars.com/api/?name=${profile?.displayName || 'User'}`} 
+                          src={getAvatar(profile?.photoURL, profile?.displayName || 'User')} 
                           alt="Profile" 
                           className="h-11 w-11 rounded-xl border border-slate-700 object-cover" 
                           referrerPolicy="no-referrer" 

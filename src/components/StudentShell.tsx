@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Calendar, User as UserIcon, MessageSquare, FileText, Shield, LogOut, ArrowLeft } from 'lucide-react';
 import { UserProfile } from '../types';
 import { motion } from 'motion/react';
+import { getAvatar } from '../utils/avatars';
 
 interface StudentShellProps {
   children: React.ReactNode;
@@ -71,7 +72,7 @@ export default function StudentShell({ children, profile, isExamActive = false }
             </div>
             <Link to="/dashboard" className="relative group">
               <img 
-                src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.displayName}`} 
+                src={getAvatar(profile.photoURL, profile.displayName)} 
                 alt="" 
                 className="w-12 h-12 rounded-2xl border-2 border-slate-800 shadow-xl object-cover transition-transform group-hover:scale-105"
                 referrerPolicy="no-referrer"
