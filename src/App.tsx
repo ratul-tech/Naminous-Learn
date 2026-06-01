@@ -651,13 +651,6 @@ function Landing() {
               <LogIn className="w-5 h-5" />
               <span>Get Started</span>
             </Link>
-            <Link
-              to="/admin/login"
-              className="w-full bg-slate-800 text-white border border-slate-700 py-4 rounded-2xl font-bold text-lg hover:bg-slate-700 transition-all flex items-center justify-center space-x-2"
-            >
-              <Shield className="w-5 h-5" />
-              <span>Admin Login</span>
-            </Link>
           </div>
         </motion.div>
       </section>
@@ -853,6 +846,7 @@ function Footer({ user }: { user: User | null }) {
                 <li><Link to="/leaderboard" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Leaderboard</span></Link></li>
                 <li><Link to="/events" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Upcoming Events</span></Link></li>
                 <li><Link to="/feedback" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Submit Feedback</span></Link></li>
+                <li><Link to="/admin/login" className="text-slate-400 hover:text-[#D4AF37] transition-all flex items-center space-x-2"><ArrowRight className="w-3 h-3" /><span>Admin</span></Link></li>
               </ul>
             </div>
             <div>
