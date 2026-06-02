@@ -2065,8 +2065,11 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Actual Exam Time (Mins)</label>
                   <input
                     type="number"
-                    value={eventData.duration || 60}
-                    onChange={(e) => setEventData({ ...eventData, duration: parseInt(e.target.value) || 0 })}
+                    value={eventData.duration === 0 ? '' : (eventData.duration || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEventData({ ...eventData, duration: val === '' ? 0 : parseInt(val) });
+                    }}
                     placeholder="60"
                     className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-[#D4AF37] font-bold text-base py-2 px-0 rounded-none transition-colors"
                     required

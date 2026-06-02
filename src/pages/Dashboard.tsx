@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { UserProfile, ExamResult } from '../types';
+import { UserProfile, ExamResult, ExamEvent } from '../types';
 import { Trophy, BookOpen, Calendar, ArrowRight, TrendingUp, Clock, Shield, User as UserIcon, MessageSquare, Award } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -29,8 +29,34 @@ export default function Dashboard({ profile }: DashboardProps) {
       const allSnapshot = await getDocs(allQ);
       const allResults = allSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamResult));
       
+      // Fetch events to check scheduled end times
+      const eventsRef = collection(db, 'events');
+      const eventsSnapshot = await getDocs(eventsRef);
+      const evMap: Record<string, ExamEvent> = {};
+      eventsSnapshot.docs.forEach(doc => {
+        evMap[doc.id] = { id: doc.id, ...doc.data() } as ExamEvent;
+      });
+
+      // Filter out results for Live Exams that have not ended yet
+      const now = new Date();
+      const visibleResults = allResults.filter(r => {
+        if (r.type !== 'Event') return true; // Practice is shown immediately
+        if (!r.eventId) return false;
+        const event = evMap[r.eventId];
+        if (!event) {
+          if (r.createdAt) {
+            const resultTime = new Date(r.createdAt).getTime();
+            return (now.getTime() - resultTime) > 24 * 60 * 60 * 1000;
+          }
+          return false;
+        }
+        const startTime = new Date(event.startTime);
+        const endTime = event.endTime ? new Date(event.endTime) : new Date(startTime.getTime() + event.duration * 60000);
+        return now > endTime;
+      });
+
       // Sort client-side by createdAt desc
-      const sortedResults = [...allResults].sort((a, b) => {
+      const sortedResults = [...visibleResults].sort((a, b) => {
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return timeB - timeA;
@@ -38,13 +64,13 @@ export default function Dashboard({ profile }: DashboardProps) {
 
       setRecentResults(sortedResults.slice(0, 5));
       
-      if (allResults.length > 0) {
-        const total = allResults.length;
-        const sum = allResults.reduce((acc, curr) => acc + curr.score, 0);
-        const best = Math.max(...allResults.map(r => r.score));
+      if (visibleResults.length > 0) {
+        const total = visibleResults.length;
+        const sum = visibleResults.reduce((acc, curr) => acc + curr.score, 0);
+        const best = Math.max(...visibleResults.map(r => r.score));
         
-        const totalCorrect = allResults.reduce((acc, curr) => acc + (curr.correctCount || 0), 0);
-        const totalQs = allResults.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
+        const totalCorrect = visibleResults.reduce((acc, curr) => acc + (curr.correctCount || 0), 0);
+        const totalQs = visibleResults.reduce((acc, curr) => acc + (curr.totalQuestions || 0), 0);
         const accuracyRate = totalQs > 0 ? (totalCorrect / totalQs) * 100 : 0;
 
         setStats({
@@ -52,6 +78,13 @@ export default function Dashboard({ profile }: DashboardProps) {
           avgScore: Number((sum / total).toFixed(2)),
           bestScore: Number(best.toFixed(2)),
           accuracyRate: Number(accuracyRate.toFixed(2)),
+        });
+      } else {
+        setStats({
+          totalExams: 0,
+          avgScore: 0,
+          bestScore: 0,
+          accuracyRate: 0,
         });
       }
     };

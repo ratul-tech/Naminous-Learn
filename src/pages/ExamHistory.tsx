@@ -356,17 +356,16 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
               </p>
             </div>
             
-            {/* Academy Standing Stats Summary */}
-            <div className="flex items-center space-x-4 shrink-0 bg-slate-900/40 border border-slate-800/80 px-6 py-4 rounded-3xl backdrop-blur-md">
+            {/* Academy Standing Stats Summary - Typographic Layout */}
+            <div className="flex items-center space-x-8 shrink-0 font-sans">
               <div className="text-right">
-                <span className="text-4xl sm:text-5xl font-black text-[#D4AF37] font-sans tracking-tight">
+                <span className="text-4xl sm:text-5xl font-black text-[#D4AF37] tracking-tight">
                   {avgScore.toFixed(2)}
                 </span>
                 <p className="text-[9px] uppercase font-black tracking-widest text-slate-500 mt-1">Average Score</p>
               </div>
-              <div className="h-10 w-px bg-slate-800 mx-2" />
               <div className="text-right">
-                <span className="text-4xl sm:text-5xl font-black text-emerald-400 font-sans tracking-tight">
+                <span className="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight">
                   {bestScore.toFixed(2)}
                 </span>
                 <p className="text-[9px] uppercase font-black tracking-widest text-slate-500 mt-1">Best Yield</p>
@@ -383,82 +382,78 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
                initial={{ width: 0 }}
                animate={{ width: `${accuracyRate}%` }}
                transition={{ duration: 1.5, ease: "easeOut" }}
-               className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-300 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
+               className="h-full bg-gradient-to-r from-amber-600 via-[#D4AF37] to-amber-300 rounded-full" 
              />
           </div>
         </div>
       </header>
 
-      {/* Stats Bento Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-slate-900/30 p-5 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-all duration-350"><Trophy className="w-12 h-12 text-[#D4AF37]" /></div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Undertook</p>
+      {/* Stats Display - Clean Typographic Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-y border-dashed border-slate-900">
+        <div className="space-y-1">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Undertook</p>
           <p className="text-3xl font-black text-white tracking-tight">{totalExams}</p>
-          <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">Evaluations Logged</p>
+          <p className="text-[9px] text-slate-600 font-bold uppercase">Evaluations Logged</p>
         </div>
-        <div className="bg-slate-900/30 p-5 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-all duration-350"><Calendar className="w-12 h-12 text-blue-400" /></div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Live Events</p>
+        <div className="space-y-1">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Live Events</p>
           <p className="text-3xl font-black text-blue-400 tracking-tight">{liveEventsCount}</p>
-          <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">Competitive Audits</p>
+          <p className="text-[9px] text-slate-600 font-bold uppercase">Competitive Audits</p>
         </div>
-        <div className="bg-slate-900/30 p-5 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-all duration-350"><BookOpen className="w-12 h-12 text-purple-400" /></div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Practice runs</p>
+        <div className="space-y-1">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Practice runs</p>
           <p className="text-3xl font-black text-purple-400 tracking-tight">{practiceCount}</p>
-          <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">Subject Mastery</p>
+          <p className="text-[9px] text-slate-600 font-bold uppercase">Subject Mastery</p>
         </div>
-        <div className="bg-slate-900/30 p-5 rounded-3xl border border-slate-800/50 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-all duration-350"><Activity className="w-12 h-12 text-[#D4AF37]" /></div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Efficiency Rating</p>
+        <div className="space-y-1">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Efficiency Rating</p>
           <p className="text-3xl font-black text-emerald-400 tracking-tight">{avgScore >= 80 ? 'Master' : avgScore >= 60 ? 'Scholar' : 'Initiate'}</p>
-          <p className="text-[9px] text-slate-600 font-bold uppercase mt-1">Derived standing</p>
+          <p className="text-[9px] text-slate-600 font-bold uppercase">Derived standing</p>
         </div>
       </div>
 
       {/* Main Control Panel and History table / Analytics */}
-      <section className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6">
+      <section className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           
-          {/* Custom Tabs including Analytics */}
-          <div className="flex flex-wrap items-center gap-1 bg-slate-950 p-1 rounded-2xl border border-slate-800 w-full sm:w-auto">
+          {/* Custom Tabs including Analytics - Typographic Underlines */}
+          <div className="flex flex-wrap items-center gap-4 py-1 border-b border-slate-900 w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${
                 activeTab === 'all' 
-                  ? 'bg-[#D4AF37] text-slate-950 shadow-lg shadow-amber-500/10' 
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'border-[#D4AF37] text-[#D4AF37]' 
+                  : 'border-transparent text-slate-500 hover:text-slate-350'
               }`}
             >
               All Runs
             </button>
             <button
               onClick={() => setActiveTab('event')}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${
                 activeTab === 'event' 
-                  ? 'bg-blue-500 text-white shadow-lg' 
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'border-blue-400 text-blue-400' 
+                  : 'border-transparent text-slate-500 hover:text-slate-350'
               }`}
             >
               Event Exams
             </button>
             <button
               onClick={() => setActiveTab('practice')}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${
                 activeTab === 'practice' 
-                  ? 'bg-purple-500 text-white shadow-lg' 
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'border-purple-400 text-purple-400' 
+                  : 'border-transparent text-slate-500 hover:text-slate-350'
               }`}
             >
               Practice
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-1 ${
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-1 border-b-2 ${
                 activeTab === 'analytics' 
-                  ? 'bg-emerald-500 text-slate-950 shadow-lg font-black' 
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'border-emerald-400 text-emerald-400 font-black' 
+                  : 'border-transparent text-slate-500 hover:text-slate-350'
               }`}
             >
               <BarChart2 className="w-3.5 h-3.5" />
@@ -469,13 +464,13 @@ export default function ExamHistory({ profile }: ExamHistoryProps) {
           {/* Search Box */}
           {activeTab !== 'analytics' && (
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-1 top-3.5 w-4 h-4 text-slate-600" />
               <input
                 type="text"
                 placeholder="Search by subject or class..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-950/60 border border-slate-800 text-xs text-white py-2.5 pl-10 pr-4 rounded-xl focus:outline-none focus:border-[#D4AF37]/50"
+                className="w-full bg-transparent border-b border-slate-900 hover:border-slate-800 focus:border-[#D4AF37] text-xs text-white py-3 pl-8 pr-4 focus:outline-none transition-all rounded-none"
               />
             </div>
           )}
