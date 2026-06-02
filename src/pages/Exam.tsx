@@ -132,31 +132,53 @@ export default function Exam({ profile }: ExamProps) {
 
   // Countdown and Timer logic
   useEffect(() => {
-    if (!event || hasSubmitted) return;
+    if (!event || !profile || hasSubmitted) return;
+
+    const eventStartTime = new Date(event.startTime).getTime();
+    const eventEndTime = new Date(event.endTime).getTime();
+    const localStorageKey = `exam_start_${profile.uid}_${event.id}`;
 
     const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const startTime = new Date(event.startTime).getTime();
-      const endTime = event.endTime ? new Date(event.endTime).getTime() : startTime + event.duration * 60 * 1000;
+      const nowTime = new Date().getTime();
 
-      if (now < startTime) {
-        setCountdown(Math.floor((startTime - now) / 1000));
+      if (nowTime < eventStartTime) {
+        // Event has not started yet
+        setCountdown(Math.floor((eventStartTime - nowTime) / 1000));
         setExamStarted(false);
-      } else if (now >= startTime && now < endTime) {
-        setExamStarted(true);
-        setTimeLeft(Math.floor((endTime - now) / 1000));
       } else {
-        setExamStarted(false);
-        setTimeLeft(0);
-        // Auto-submit if exam was ongoing
-        if (examStarted && !submittingRef.current) {
-          handleSubmit();
+        // Event is currently running or user has previously started within range
+        let savedStart = localStorage.getItem(localStorageKey);
+        const isWithinEventPeriod = nowTime >= eventStartTime && nowTime <= eventEndTime;
+
+        if (isWithinEventPeriod || savedStart) {
+          if (!savedStart) {
+            savedStart = new Date().toISOString();
+            localStorage.setItem(localStorageKey, savedStart);
+          }
+
+          const candidateStart = new Date(savedStart).getTime();
+          const candidateEnd = candidateStart + event.duration * 60 * 1000;
+
+          if (nowTime < candidateEnd) {
+            setExamStarted(true);
+            setTimeLeft(Math.floor((candidateEnd - nowTime) / 1000));
+          } else {
+            setExamStarted(false);
+            setTimeLeft(0);
+            if (!submittingRef.current && !hasSubmittedRef.current) {
+              handleSubmit();
+            }
+          }
+        } else {
+          // Beyond end timing window and no session captured
+          setExamStarted(false);
+          setTimeLeft(0);
         }
       }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [event, examStarted, hasSubmitted]);
+  }, [event, profile, examStarted, hasSubmitted]);
 
   const handleSubmit = async (isAutoViolation = false) => {
     const currentEvent = eventRef.current;
@@ -333,7 +355,7 @@ export default function Exam({ profile }: ExamProps) {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-10">
       {/* Official Header */}
-      <div className="bg-slate-900/95 p-4 sm:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 sticky top-2 sm:top-4 z-50 backdrop-blur-md">
+      <div className="p-4 sm:p-6 border-b border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 sticky top-2 sm:top-1 z-50 bg-[#020617]/90 backdrop-blur-md">
         <div className="flex items-center space-x-4 sm:space-x-6 w-full md:w-auto">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#D4AF37] rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-950 shadow-lg shrink-0">
             <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -414,7 +436,7 @@ export default function Exam({ profile }: ExamProps) {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {currentQuestion?.options.map((option, i) => {
                 const isSelected = answers[currentQuestion.id] === i;
                 return (
@@ -422,19 +444,21 @@ export default function Exam({ profile }: ExamProps) {
                     key={i}
                     type="button"
                     onClick={() => setAnswers({ ...answers, [currentQuestion.id]: i })}
-                    className={`w-full p-5 rounded-xl border transition-all flex items-center space-x-4 ${
+                    className={`w-full p-5 flex items-center space-x-4 text-left transition-all border-b duration-200 active:scale-[0.99] group ${
                       isSelected
-                        ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
-                        : 'border-slate-850 bg-transparent hover:border-slate-650 hover:bg-slate-900/40 text-slate-400'
+                        ? 'text-[#D4AF37] bg-[#D4AF37]/5 border-b-2 border-[#D4AF37]'
+                        : 'bg-transparent hover:bg-slate-900/30 text-slate-300 hover:text-white border-slate-900/60'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs shrink-0 transition-colors ${
-                      isSelected ? 'bg-[#D4AF37] text-slate-950' : 'bg-slate-900 text-slate-500'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                      isSelected
+                        ? 'bg-[#D4AF37] text-slate-950 scale-105'
+                        : 'bg-slate-900 text-slate-500 group-hover:text-slate-300 group-hover:bg-slate-800'
                     }`}>
                       {String.fromCharCode(65 + i)}
                     </div>
-                    <div className="min-w-0 flex-1 text-left">
-                      <MathRenderer content={option} className={`font-semibold text-sm ${isSelected ? 'text-[#D4AF37]' : 'text-slate-350'}`} engine={profile?.mathEngine} />
+                    <div className="min-w-0 flex-1">
+                      <MathRenderer content={option} className={`font-semibold text-sm leading-relaxed ${isSelected ? 'text-[#D4AF37]' : 'text-slate-310'}`} engine={profile?.mathEngine} />
                     </div>
                   </button>
                 );

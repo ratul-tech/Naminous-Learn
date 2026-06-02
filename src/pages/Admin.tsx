@@ -1665,7 +1665,21 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ExamEvent | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [subTab, setSubTab] = useState<'published' | 'drafts'>('published');
+  const [subTab, setSubTab] = useState<'ongoing' | 'upcoming' | 'final' | 'drafts'>('ongoing');
+
+  const getEventStatus = (e: ExamEvent): 'Upcoming' | 'In Progress' | 'Finished' => {
+    const now = new Date().getTime();
+    const startTime = new Date(e.startTime).getTime();
+    const endTime = e.endTime ? new Date(e.endTime).getTime() : startTime + (e.duration || 60) * 60 * 1000;
+    
+    if (now < startTime) {
+      return 'Upcoming';
+    } else if (now >= startTime && now <= endTime) {
+      return 'In Progress';
+    } else {
+      return 'Finished';
+    }
+  };
   
   // Question configuration tabs & states
   const [questionTab, setQuestionTab] = useState<'db' | 'manual'>('db');
@@ -1731,7 +1745,20 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
     if (subTab === 'drafts') {
       return matchesSearch && e.isDraft === true;
     } else {
-      return matchesSearch && e.isDraft !== true;
+      if (e.isDraft === true) return false;
+      if (!matchesSearch) return false;
+      
+      const status = getEventStatus(e);
+      if (subTab === 'ongoing') {
+        return status === 'In Progress';
+      }
+      if (subTab === 'upcoming') {
+        return status === 'Upcoming';
+      }
+      if (subTab === 'final') {
+        return status === 'Finished';
+      }
+      return false;
     }
   });
 
@@ -1901,6 +1928,464 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
     }));
   };
 
+  if (showForm) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -15 }}
+        className="space-y-16 w-full text-left font-sans text-slate-300"
+      >
+        {/* Workspace Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-900/40 w-full">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37]">
+              {editingEvent ? 'Synchronize Protocol Parameters' : 'Deploy Configuration Node'}
+            </span>
+            <h2 className="text-3xl font-black text-white uppercase tracking-tight leading-none mt-1">
+              {editingEvent ? 'Edit Event Setting' : 'Initialize Event'}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="flex items-center space-x-2 text-slate-500 hover:text-white transition-colors text-xs font-black uppercase tracking-widest cursor-pointer bg-transparent border-0 outline-none"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Abort Configuration</span>
+          </button>
+        </div>
+
+        {/* The 3 Separate Sections (No core containers/boxes) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-16 w-full">
+          
+          {/* Section 1: Details and Dates */}
+          <div className="space-y-10 flex flex-col justify-between h-full">
+            <div className="space-y-8">
+              <div className="flex items-center space-x-3 pb-2 border-b border-slate-900/60">
+                <span className="font-mono text-sm font-black text-[#D4AF37]">01.</span>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Event Identification & Lifecycle</h3>
+              </div>
+
+              {/* Event Name */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Event Name</label>
+                <input
+                  type="text"
+                  value={eventData.title || ''}
+                  onChange={(e) => setEventData({ ...eventData, title: e.target.value })}
+                  placeholder="e.g. SSC Final Exam Boost"
+                  className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-white text-base font-bold py-2.5 px-0 rounded-none focus:ring-0 transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Event Details */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Event Details</label>
+                <textarea
+                  value={eventData.description || ''}
+                  onChange={(e) => setEventData({ ...eventData, description: e.target.value })}
+                  placeholder="Define operational boundaries, awards details, and curriculum guides..."
+                  className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-slate-300 text-xs py-2 px-0 h-24 resize-none rounded-none focus:ring-0 transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Pricing model and Fee */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Entry Pricing Node</label>
+                  <div className="flex space-x-3 py-1">
+                    <button
+                      type="button"
+                      onClick={() => setEventData(prev => ({ ...prev, entryFee: 0 }))}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
+                        eventData.entryFee === 0 
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-extrabold'
+                          : 'bg-transparent border-slate-900 text-slate-500 hover:text-slate-350 hover:border-slate-800'
+                      }`}
+                    >
+                      Free Option
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEventData(prev => ({ ...prev, entryFee: 100 }))}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
+                        eventData.entryFee !== 0 
+                          ? 'bg-[#D4AF37]/10 border-[#D4AF37]/35 text-[#D4AF37] font-extrabold'
+                          : 'bg-transparent border-slate-900 text-slate-500 hover:text-slate-350 hover:border-slate-800'
+                      }`}
+                    >
+                      Paid Entry
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Entry Fee (BDT)</label>
+                  <input
+                    type="number"
+                    value={eventData.entryFee === 0 ? '' : (eventData.entryFee || '')}
+                    onChange={(e) => setEventData({ ...eventData, entryFee: Math.max(0, parseInt(e.target.value) || 0) })}
+                    disabled={eventData.entryFee === 0}
+                    placeholder="Free Assessment"
+                    className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-sm font-bold py-2.5 px-0 text-white rounded-none disabled:border-slate-900 disabled:text-slate-600 disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              {/* Timeline duration and dates */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Event Start Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={eventData.startTime || ''}
+                    onChange={(e) => setEventData({ ...eventData, startTime: e.target.value })}
+                    className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-white font-mono text-xs py-2 px-0 rounded-none transition-colors"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Event End Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={eventData.endTime || ''}
+                    onChange={(e) => setEventData({ ...eventData, endTime: e.target.value })}
+                    className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-white font-mono text-xs py-2 px-0 rounded-none transition-colors"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Exam Duration and Grade level */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Actual Exam Time (Mins)</label>
+                  <input
+                    type="number"
+                    value={eventData.duration || 60}
+                    onChange={(e) => setEventData({ ...eventData, duration: parseInt(e.target.value) || 0 })}
+                    placeholder="60"
+                    className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-[#D4AF37] font-bold text-base py-2 px-0 rounded-none transition-colors"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Grade level</label>
+                  <select
+                    value={eventData.class || 'SSC Candidate'}
+                    onChange={(e) => setEventData({ ...eventData, class: e.target.value })}
+                    className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-white font-bold text-xs py-2 px-0 rounded-none transition-colors select-all"
+                  >
+                    <option value="SSC Candidate" className="bg-slate-950 text-white font-sans font-bold">SSC Candidate</option>
+                    <option value="College Admission" className="bg-slate-950 text-white font-sans font-bold">College Admission</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Explanatory notice about timing */}
+              <div className="text-[10px] text-slate-500 leading-relaxed pt-2">
+                <span className="font-bold text-slate-400">Chronology Paradigm:</span> Anyone who has purchased or enrolled inside this timeline will be able to participate during these periods. Once they enter, the timer will start count on the separate exam time window.
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Adding and Editing Questions */}
+          <div className="space-y-10 flex flex-col justify-between h-full border-t lg:border-t-0 border-slate-900/40 pt-10 lg:pt-0">
+            <div className="space-y-8">
+              <div className="flex items-center space-x-3 pb-2 border-b border-slate-900/60 w-full">
+                <span className="font-mono text-sm font-black text-[#D4AF37]">02.</span>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Add Questions Panel</h3>
+              </div>
+
+              {/* Slash Separated Tabs selector for Database vs Manual Addition */}
+              <div className="flex space-x-6 text-[10px] font-black uppercase tracking-[0.25em] pb-3 border-b border-slate-900/40">
+                <button
+                  type="button"
+                  onClick={() => setQuestionTab('db')}
+                  className={`transition-all ${questionTab === 'db' ? 'text-[#D4AF37]' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  From Databank
+                </button>
+                <span className="text-slate-800">/</span>
+                <button
+                  type="button"
+                  onClick={() => setQuestionTab('manual')}
+                  className={`transition-all ${questionTab === 'manual' ? 'text-[#D4AF37]' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  {editingQuestionIndex !== null ? 'Modify Question' : 'Manually'}
+                </button>
+              </div>
+
+              {questionTab === 'db' ? (
+                /* Retrieve questions from Database */
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <select
+                      value={dbSubjectFilter}
+                      onChange={(e) => setDbSubjectFilter(e.target.value)}
+                      className="bg-transparent border-b border-slate-800 text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-2 px-0 outline-none focus:border-[#D4AF37] focus:ring-0 rounded-none transition"
+                    >
+                      <option value="All" className="bg-slate-950 text-white font-bold">All Subjects</option>
+                      {uniqueSubjects.map(sub => (
+                        <option key={sub} value={sub} className="bg-slate-950 text-white font-bold">{sub}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={dbClassFilter}
+                      onChange={(e) => setDbClassFilter(e.target.value)}
+                      className="bg-transparent border-b border-slate-800 text-[10px] font-semibold text-slate-400 uppercase tracking-wider py-2 px-0 outline-none focus:border-[#D4AF37] focus:ring-0 rounded-none transition"
+                    >
+                      <option value="All" className="bg-slate-950 text-white font-bold">All Grades</option>
+                      {uniqueClasses.map(cl => (
+                        <option key={cl} value={cl} className="bg-slate-950 text-white font-bold">{cl}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={dbSearchQuery}
+                    onChange={(e) => setDbSearchQuery(e.target.value)}
+                    placeholder="Search database index..."
+                    className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-slate-300 py-2 px-0 text-xs placeholder:text-slate-600 focus:ring-0 rounded-none transition-colors"
+                  />
+
+                  {/* Scrollable list of DB Questions */}
+                  <div className="max-h-[300px] overflow-y-auto pr-1 divide-y divide-slate-900/40 no-scrollbar">
+                    {filteredDbQuestions.length === 0 ? (
+                      <p className="py-8 text-center text-xs text-slate-600 font-bold uppercase tracking-widest leading-relaxed">No matching databank questions</p>
+                    ) : (
+                      filteredDbQuestions.map((q) => {
+                        const added = isQuestionInEvent(q);
+                        return (
+                          <div key={q.id} className="py-3 flex items-start justify-between gap-4 group">
+                            <div className="flex-1 min-w-0 pr-2">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-[#D4AF37]/80">{q.subject}</span>
+                                <span className="text-[8px] font-medium text-slate-600 uppercase">{q.class}</span>
+                              </div>
+                              <div className="text-xs text-slate-400 font-medium leading-relaxed group-hover:text-slate-350 transition-colors">
+                                <MathRenderer content={q.text} engine={mathEngine} />
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleDbQuestion(q)}
+                              className={`text-[10px] font-black uppercase tracking-widest transition-colors shrink-0 ${
+                                added ? 'text-rose-500 hover:text-rose-400' : 'text-indigo-400 hover:text-indigo-300'
+                              }`}
+                            >
+                              {added ? 'Remove' : 'Add to Event'}
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Manual Custom Question Compose interface */
+                <div className="space-y-6">
+                  {/* Question Text */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Question Text</label>
+                    <textarea
+                      value={currentQuestion.text || ''}
+                      onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })}
+                      placeholder="Input question or LaTeX math formulas here..."
+                      className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-slate-300 text-xs py-2 px-0 h-16 resize-y rounded-none focus:ring-0 transition-colors"
+                    />
+                  </div>
+
+                  {/* Question Options */}
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Configure Options (Select corrected letter option)</label>
+                    <div className="space-y-3">
+                      {currentQuestion.options?.map((opt, i) => (
+                        <div key={i} className="flex items-center space-x-3 group/opt">
+                          <div className="relative shrink-0">
+                            <input
+                              type="radio"
+                              name="manualSelectionRadio"
+                              checked={currentQuestion.correctAnswer === i}
+                              onChange={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: i })}
+                              className="peer absolute opacity-0 w-full h-full cursor-pointer z-10"
+                            />
+                            <div className="w-5 h-5 rounded-full border border-slate-800 peer-checked:border-[#D4AF37] peer-checked:bg-[#D4AF37]/10 flex items-center justify-center transition-all">
+                              <span className="text-[10px] font-black font-mono text-slate-500 peer-checked:text-[#D4AF37]">
+                                {String.fromCharCode(65 + i)}
+                              </span>
+                            </div>
+                          </div>
+                          <input
+                            type="text"
+                            value={opt}
+                            onChange={(e) => {
+                              const newOpts = [...(currentQuestion.options || [])];
+                              newOpts[i] = e.target.value;
+                              setCurrentQuestion({ ...currentQuestion, options: newOpts });
+                            }}
+                            placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                            className="flex-1 bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-xs py-1.5 px-0 text-slate-300 rounded-none transition-colors"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Optional Payload Image Url */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Payload Image URL (Optional)</label>
+                    <input
+                      type="url"
+                      value={currentQuestion.imageUrl || ''}
+                      onChange={(e) => setCurrentQuestion({ ...currentQuestion, imageUrl: e.target.value })}
+                      placeholder="https://example.com/question-figure.png"
+                      className="w-full bg-transparent border-b border-slate-800 focus:border-[#D4AF37] outline-none text-xs py-1.5 px-0 text-slate-350 rounded-none focus:ring-0 transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex space-x-4 pt-2">
+                    <button
+                      type="button"
+                      onClick={addOrUpdateQuestion}
+                      className="flex-1 py-1.5 text-xs font-black uppercase tracking-widest border-b-2 border-indigo-500 hover:bg-indigo-500/5 text-indigo-400 transition-all rounded-none bg-transparent text-center"
+                    >
+                      {editingQuestionIndex !== null ? 'Sync Changes' : 'Merge to Bundle'}
+                    </button>
+                    {editingQuestionIndex !== null && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingQuestionIndex(null);
+                          setCurrentQuestion({ text: '', options: ['', '', '', ''], correctAnswer: 0, imageUrl: '' });
+                        }}
+                        className="text-slate-550 hover:text-slate-300 text-[10px] font-black uppercase tracking-wider transition-colors"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 3: Live Preview */}
+          <div className="space-y-10 flex flex-col justify-between h-full border-t lg:border-t-0 border-slate-900/40 pt-10 lg:pt-0">
+            <div className="space-y-8">
+              <div className="flex items-center space-x-3 pb-2 border-b border-slate-900/60 w-full">
+                <span className="font-mono text-sm font-black text-[#D4AF37]">03.</span>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Live Preview</h3>
+              </div>
+
+              {/* Core Info Specs Preview */}
+              <div className="space-y-5 pb-6 border-b border-dashed border-slate-900/60 w-full">
+                <div className="flex justify-between items-baseline gap-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">{eventData.class}</span>
+                  <span className="text-xl font-black text-white">{eventData.title || 'Untitled Assessment'}</span>
+                </div>
+                <p className="text-slate-500 text-xs italic leading-relaxed max-w-sm">
+                  {eventData.description || 'No supplementary details supplied.'}
+                </p>
+                <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[10px] uppercase font-black tracking-widest text-slate-550 font-mono">
+                  <div>Price: <span className="text-white font-sans">{eventData.entryFee ? `Tk ${eventData.entryFee}` : 'Free'}</span></div>
+                  <div>Timer: <span className="text-white font-sans">{eventData.duration} Mins</span></div>
+                  <div>Start: <span className="text-slate-400 font-sans">{eventData.startTime ? new Date(eventData.startTime).toLocaleDateString() : 'N/A'}</span></div>
+                  <div>End: <span className="text-slate-400 font-sans">{eventData.endTime ? new Date(eventData.endTime).toLocaleDateString() : 'N/A'}</span></div>
+                </div>
+              </div>
+
+              {/* Live Questions List Bundle display preview */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Exam Questions ({eventData.questions?.length || 0})</h4>
+                <div className="max-h-[280px] overflow-y-auto pr-1 divide-y divide-slate-950 no-scrollbar">
+                  {(!eventData.questions || eventData.questions.length === 0) ? (
+                    <p className="text-center py-10 text-xs text-slate-600 font-bold uppercase tracking-wider">Empty questions bundle</p>
+                  ) : (
+                    eventData.questions.map((q, idx) => (
+                      <div key={idx} className="py-4 space-y-3 group/preview">
+                        <div className="flex justify-between items-start gap-3">
+                          <p className="text-xs text-white font-bold leading-relaxed flex-1">
+                            <span className="text-[#D4AF37] mr-1">{idx + 1}.</span> <MathRenderer content={q.text} engine={mathEngine} className="inline" />
+                          </p>
+                          <div className="flex space-x-3 text-[10px] shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleEditQuestion(idx)}
+                              className="text-indigo-400 font-black uppercase hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeQuestion(idx)}
+                              className="text-rose-500 font-black uppercase hover:underline"
+                            >
+                              Purge
+                            </button>
+                          </div>
+                        </div>
+
+                        {q.imageUrl && (
+                          <div className="max-w-[120px] rounded-lg border border-slate-900 overflow-hidden">
+                            <img src={q.imageUrl} alt="" className="w-full h-auto object-contain max-h-16" referrerPolicy="no-referrer" />
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-medium">
+                          {q.options.map((opt, oIdx) => (
+                            <div key={oIdx} className={`flex items-center space-x-1.5 font-bold ${oIdx === q.correctAnswer ? 'text-emerald-400' : 'text-slate-500'}`}>
+                              <span className="font-mono">({String.fromCharCode(65 + oIdx)})</span>
+                              <span className="truncate max-w-[100px]">{opt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        {/* Global form submit actions toolbar (bottom layer, completely box-free) */}
+        <div className="pt-8 border-t border-slate-900/40 flex flex-col sm:flex-row justify-between items-center gap-6 w-full font-sans">
+          <button
+            type="button"
+            onClick={resetForm}
+            className="text-slate-550 hover:text-white text-xs font-black uppercase tracking-widest transition-colors cursor-pointer bg-transparent border-0 outline-none"
+          >
+            Cancel
+          </button>
+          
+          <div className="flex space-x-10 items-center">
+            <button
+              type="button"
+              onClick={() => handleSaveData(true)}
+              className="text-amber-500 hover:text-amber-400 text-xs font-black uppercase tracking-widest transition-all cursor-pointer bg-transparent border-0 outline-none active:scale-95 animate-pulse"
+            >
+              Draft
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSaveData(false)}
+              className="text-emerald-400 hover:text-emerald-300 text-xs font-black uppercase tracking-widest transition-all cursor-pointer bg-transparent border-0 outline-none active:scale-95"
+            >
+              Publish
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
       {/* Category Tabs: Published vs Drafts */}
@@ -1908,23 +2393,43 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
         <div className="space-y-2">
           <h2 className="text-xl font-bold text-white tracking-tight">Timeline Management</h2>
           
-          <div className="flex space-x-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800/80 max-w-sm">
+          <div className="flex flex-wrap gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800/80 w-full sm:w-auto">
             <button
-              onClick={() => setSubTab('published')}
+              onClick={() => setSubTab('ongoing')}
               className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
-                subTab === 'published'
+                subTab === 'ongoing'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Ongoing ({events.filter(e => e.isDraft !== true && getEventStatus(e) === 'In Progress').length})
+            </button>
+            <button
+              onClick={() => setSubTab('upcoming')}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                subTab === 'upcoming'
                   ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Published ({events.filter(e => e.isDraft !== true).length})
+              Upcoming ({events.filter(e => e.isDraft !== true && getEventStatus(e) === 'Upcoming').length})
+            </button>
+            <button
+              onClick={() => setSubTab('final')}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+                subTab === 'final'
+                  ? 'bg-slate-700 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Final ({events.filter(e => e.isDraft !== true && getEventStatus(e) === 'Finished').length})
             </button>
             <button
               onClick={() => setSubTab('drafts')}
               className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${
                 subTab === 'drafts'
                   ? 'bg-amber-600/20 text-amber-400 border border-amber-500/30 font-extrabold shadow-md'
-                  : 'text-slate-500 hover:text-slate-300'
+                  : 'text-slate-500 hover:text-slate-350'
               }`}
             >
               Drafts ({events.filter(e => e.isDraft === true).length})
@@ -1968,7 +2473,7 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
       </div>
 
       <AnimatePresence>
-        {showForm && (
+        {false && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -2351,11 +2856,11 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
                 <div className="flex items-center space-x-2">
                   <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
                     e.isDraft ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                    e.status === 'upcoming' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                    e.status === 'ongoing' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 animate-pulse' :
-                    'bg-slate-800 text-slate-500 border-slate-700'
+                    getEventStatus(e) === 'Upcoming' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                    getEventStatus(e) === 'In Progress' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 animate-pulse' :
+                    'bg-rose-500/10 text-rose-400 border-rose-500/20'
                   }`}>
-                    {e.isDraft ? 'Draft' : e.status}
+                    {e.isDraft ? 'Draft' : getEventStatus(e)}
                   </span>
                   <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">{e.maxCandidates} Capacity</span>
                 </div>

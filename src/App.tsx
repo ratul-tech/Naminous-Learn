@@ -115,7 +115,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
         />
       )}
       
-      <main className="container mx-auto px-4 flex-grow py-4">
+      <main className="w-full px-4 sm:px-8 max-w-none flex-grow py-4">
         {renderContent()}
       </main>
 

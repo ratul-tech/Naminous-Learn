@@ -517,23 +517,27 @@ export default function Practice({ profile }: PracticeProps) {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {filteredQuestions[examState.currentQuestionIndex]?.options.map((option, i) => (
                   <button
                     key={i}
                     onClick={() => setExamState({ ...examState, answers: { ...examState.answers, [filteredQuestions[examState.currentQuestionIndex].id]: i } })}
-                    className={`w-full p-5 rounded-xl border transition-all flex items-center space-x-4 ${
+                    className={`w-full p-5 flex items-center space-x-4 text-left transition-all border-b duration-200 active:scale-[0.99] group ${
                       examState.answers[filteredQuestions[examState.currentQuestionIndex].id] === i
-                        ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
-                        : 'border-slate-850 bg-transparent hover:border-slate-650 hover:bg-slate-900/40 text-slate-400'
+                        ? 'text-[#D4AF37] bg-[#D4AF37]/5 border-b-2 border-[#D4AF37]'
+                        : 'bg-transparent hover:bg-slate-900/30 text-slate-300 hover:text-white border-slate-900/60'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs shrink-0 transition-colors ${
-                      examState.answers[filteredQuestions[examState.currentQuestionIndex].id] === i ? 'bg-[#D4AF37] text-slate-950' : 'bg-slate-900 text-slate-500'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                      examState.answers[filteredQuestions[examState.currentQuestionIndex].id] === i
+                        ? 'bg-[#D4AF37] text-slate-950 scale-105'
+                        : 'bg-slate-900 text-slate-500 group-hover:text-slate-300 group-hover:bg-slate-800'
                     }`}>
                       {String.fromCharCode(65 + i)}
                     </div>
-                    <MathRenderer content={option} className="font-semibold text-sm" engine={profile?.mathEngine} />
+                    <div className="min-w-0 flex-1">
+                      <MathRenderer content={option} className="font-semibold text-sm leading-relaxed" engine={profile?.mathEngine} />
+                    </div>
                   </button>
                 ))}
               </div>
@@ -586,48 +590,47 @@ export default function Practice({ profile }: PracticeProps) {
               <p className="text-slate-400 mb-10">Here is how you performed in {config.subject}</p>
 
               {/* Comprehensive Breakdown */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
-                  <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Total Questions</p>
-                  <p className="text-2xl sm:text-3xl font-black text-white">{examState.results.totalQuestions}</p>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12 border-b border-slate-900 pb-8">
+                <div className="py-4 text-center border-b md:border-b-0 md:border-r border-slate-900/40">
+                  <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-2">Total Questions</p>
+                  <p className="text-3xl sm:text-4xl font-black text-white">{examState.results.totalQuestions}</p>
                 </div>
-                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
-                  <p className="text-[9px] text-indigo-400 uppercase font-black tracking-widest mb-1">Solved (Attempted)</p>
-                  <p className="text-2xl sm:text-3xl font-black text-indigo-300">{examState.results.solvedCount ?? (examState.results.correctCount + examState.results.wrongCount)}</p>
+                <div className="py-4 text-center border-b md:border-b-0 md:border-r border-slate-900/40">
+                  <p className="text-[9px] text-indigo-400 uppercase font-black tracking-widest mb-2">Solved (Attempted)</p>
+                  <p className="text-3xl sm:text-4xl font-black text-indigo-300">{examState.results.solvedCount ?? (examState.results.correctCount + examState.results.wrongCount)}</p>
                 </div>
-                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
-                  <p className="text-[9px] text-emerald-400 uppercase font-black tracking-widest mb-1">Correct (+1.0)</p>
-                  <p className="text-2xl sm:text-3xl font-black text-emerald-400">+{examState.results.correctCount}</p>
+                <div className="py-4 text-center border-b md:border-b-0 md:border-r border-slate-900/40">
+                  <p className="text-[9px] text-emerald-400 uppercase font-black tracking-widest mb-2">Correct (+1.0)</p>
+                  <p className="text-3xl sm:text-4xl font-black text-emerald-400">+{examState.results.correctCount}</p>
                 </div>
-                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center">
-                  <p className="text-[9px] text-rose-400 uppercase font-black tracking-widest mb-1">Incorrect (-0.25)</p>
-                  <p className="text-2xl sm:text-3xl font-black text-rose-400">-{examState.results.wrongCount}</p>
+                <div className="py-4 text-center border-b md:border-b-0 md:border-r border-slate-900/40">
+                  <p className="text-[9px] text-rose-400 uppercase font-black tracking-widest mb-2">Incorrect (-0.25)</p>
+                  <p className="text-3xl sm:text-4xl font-black text-rose-400">-{examState.results.wrongCount}</p>
                 </div>
-                <div className="bg-[#0f172a]/50 border border-slate-900 rounded-xl p-4 text-center col-span-2 md:col-span-1">
-                  <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Unsolved (Skipped)</p>
-                  <p className="text-2xl sm:text-3xl font-black text-slate-400">
+                <div className="py-4 text-center col-span-2 md:col-span-1">
+                  <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-2">Unsolved (Skipped)</p>
+                  <p className="text-3xl sm:text-4xl font-black text-slate-400">
                     {examState.results.totalQuestions - (examState.results.solvedCount ?? (examState.results.correctCount + examState.results.wrongCount))}
                   </p>
                 </div>
               </div>
 
               {/* Big Score Panel */}
-              <div className="bg-gradient-to-b from-[#1e293b]/20 to-[#0f172a]/50 border border-slate-850 rounded-2xl p-6 sm:p-8 mb-8 text-center relative overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/35 to-transparent" />
-                <p className="text-xs text-[#D4AF37] uppercase font-black tracking-widest mb-2">Final Penalty-adjusted Score</p>
-                <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-4">
-                  <p className="text-5xl sm:text-7xl font-black text-[#D4AF37] tracking-tighter">
+              <div className="py-10 sm:py-16 mb-12 text-center relative border-b border-slate-900">
+                <p className="text-xs text-[#D4AF37] uppercase font-black tracking-widest mb-4">Final Penalty-adjusted Score</p>
+                <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-8">
+                  <p className="text-6xl sm:text-8xl font-black text-[#D4AF37] tracking-tighter">
                     {examState.results.score.toFixed(2)}
                   </p>
-                  <div className="text-left sm:border-l border-slate-800 sm:pl-4 mt-2 sm:mt-0">
-                    <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wide">Out of {examState.results.totalQuestions}.00 max marks</p>
-                    <p className="text-[9px] text-slate-600 font-extrabold uppercase mt-0.5">Formula: ({examState.results.correctCount} × 1) - ({examState.results.wrongCount} × 0.25)</p>
+                  <div className="text-center sm:text-left sm:border-l border-slate-900 sm:pl-8 mt-4 sm:mt-0 space-y-1">
+                    <p className="text-xs text-slate-450 font-black uppercase tracking-wider">Out of {examState.results.totalQuestions}.00 max marks</p>
+                    <p className="text-[10px] text-slate-550 font-bold uppercase">Formula: ({examState.results.correctCount} × 1) - ({examState.results.wrongCount} × 0.25)</p>
                   </div>
                 </div>
               </div>
 
               {/* Bengali Score Translation Card */}
-              <div className="bg-slate-950 border border-dashed border-slate-900/80 rounded-2xl p-5 mb-10 max-w-lg mx-auto text-center">
+              <div className="py-8 mb-12 border-b border-dashed border-slate-900/40 max-w-lg mx-auto text-center">
                 <p className="text-[10px] font-black text-[#D4AF37]/80 uppercase tracking-[0.2em] mb-3">বাংলায় ফলাফল বিবরণী</p>
                 <pre className="text-emerald-450 text-lg sm:text-xl font-black font-sans leading-relaxed whitespace-pre-wrap">
                   {calculateQuizScoreBengali({

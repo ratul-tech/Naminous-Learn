@@ -35,7 +35,7 @@ export default function StudentShell({ children, profile, isExamActive = false, 
   menuItems.push({ icon: UserIcon, path: '/profile', label: 'Profile' });
 
   return (
-    <div className={`max-w-5xl mx-auto ${isExamActive ? 'pb-4 pt-4' : 'pb-32 md:pb-12 pt-4'} relative w-full px-4 sm:px-6`}>
+    <div className={`w-full max-w-none ${isExamActive ? 'pb-4 pt-4' : 'pb-32 md:pb-12 pt-4'} relative px-4 sm:px-8`}>
       {isPreviewMode && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow-2xl border-b border-slate-800 backdrop-blur-md bg-slate-900/90">
           <div className="flex items-center space-x-3">

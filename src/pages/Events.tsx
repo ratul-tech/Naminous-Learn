@@ -201,6 +201,31 @@ export default function Events({ profile }: EventsProps) {
     return userSubmissions.some(s => s.eventId === eventId && s.completed);
   };
 
+  const handleFreeJoin = async (event: ExamEvent) => {
+    if (!profile) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const newPayment: Omit<Payment, 'id'> = {
+        uid: profile.uid,
+        eventId: event.id,
+        method: 'Free Join',
+        trxId: `FREE-${event.id.substring(0, 4)}-${profile.uid.substring(0, 4)}`.toUpperCase(),
+        status: 'approved',
+        createdAt: new Date().toISOString(),
+      };
+      
+      await addDoc(collection(db, 'payments'), newPayment);
+      alert(`Roll enrollment successful! You are now registered for the event: ${event.title}`);
+    } catch (err: any) {
+      console.error('Free enrollment error:', err);
+      setError('Failed to join for free. Please try again.');
+      handleFirestoreError(err, OperationType.CREATE, 'payments');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile || !selectedEvent) return;
@@ -295,41 +320,30 @@ export default function Events({ profile }: EventsProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 pb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16 pb-20 w-full">
         {filteredEvents.map((event, idx) => (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={event.id}
-            className="flex flex-col group relative p-6 sm:p-8 rounded-[2rem] bg-slate-950/45 border border-slate-900/80 hover:border-[#D4AF37]/25 transition-all shadow-xl hover:shadow-[0_8px_35px_rgba(0,0,0,0.5)] overflow-hidden"
+            className="flex flex-col group relative p-2 pb-10 border-b border-dashed border-slate-900/60 transition-all text-left"
           >
-            {/* Custom Abstract Background Image Overlay */}
-            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.08] group-hover:opacity-[0.15] transition-all duration-700 scale-100 group-hover:scale-105">
-              <img 
-                src="/src/assets/images/exam_event_bg_1779876991995.png" 
-                alt="Exam Event Abstract Background" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20" />
-            </div>
-
             {isAdmin && (
-              <div className="absolute top-4 right-4 flex space-x-2 z-20">
+              <div className="absolute top-2 right-2 flex space-x-2 z-20">
                 <button 
                   onClick={(e) => { e.stopPropagation(); startEdit(event); }}
-                  className="p-2 bg-slate-900/95 border border-slate-800 rounded-xl text-blue-400 hover:text-white transition-all active:scale-95"
+                  className="p-2 bg-slate-900/80 border border-slate-800 rounded-lg text-blue-400 hover:text-white transition-all active:scale-95"
                   title="Edit Event"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3.5 h-3.5" />
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }}
-                  className="p-2 bg-slate-900/95 border border-slate-800 rounded-xl text-rose-450 hover:text-white transition-all active:scale-95"
+                  className="p-2 bg-slate-900/80 border border-slate-800 rounded-lg text-rose-450 hover:text-white transition-all active:scale-95"
                   title="Delete Event"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
@@ -343,17 +357,17 @@ export default function Events({ profile }: EventsProps) {
                     'text-[#D4AF37]'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      getCategory(event) === 'upcoming' ? 'bg-blue-450 animate-pulse' :
+                      getCategory(event) === 'upcoming' ? 'bg-blue-450' :
                       getCategory(event) === 'ended' ? 'bg-slate-600' :
-                      'bg-[#D4AF37] animate-ping'
+                      'bg-[#D4AF37] animate-pulse'
                     }`} />
                     <span>{getEventTimeStatus(event)}</span>
                   </div>
-                  <div className="text-xl font-extrabold text-[#D4AF37]">{event.entryFee ? `Tk ${event.entryFee}` : 'Free'}</div>
+                  <div className="text-xl font-black text-[#D4AF37]">{event.entryFee ? `Tk ${event.entryFee}` : 'Free'}</div>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-2 tracking-tight group-hover:text-[#D4AF37] transition-all">{event.title}</h2>
-                <div className="inline-block text-[#D4AF37] text-[10px] font-black uppercase tracking-widest mb-6 border-b border-[#D4AF37]/20 pb-0.5 font-mono">
+                <h2 className="text-2xl font-black text-white mb-2 tracking-tight group-hover:text-[#D4AF37] transition-all leading-tight">{event.title}</h2>
+                <div className="inline-block text-[#D4AF37] text-[10px] font-black uppercase tracking-widest mb-6 border-b border-[#D4AF37]/25 pb-0.5 font-mono">
                   {event.class || 'All Levels'}
                 </div>
                 <p className="text-slate-400 mb-8 line-clamp-3 leading-relaxed text-xs sm:text-sm font-medium">
@@ -392,69 +406,83 @@ export default function Events({ profile }: EventsProps) {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-900/60 mt-auto">
+              <div className="pt-4 mt-auto">
               {getRegistrationStatus(event.id) === 'approved' ? (
                 hasSubmitted(event.id) ? (
-                  <div className="w-full text-slate-500 py-3 font-bold text-center flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
+                  <div className="w-full text-slate-550 py-3 font-bold text-center flex items-center justify-center space-x-2 text-xs uppercase tracking-widest border-t border-slate-900/60">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Assessment Finalized</span>
                   </div>
                 ) : getCategory(event) === 'upcoming' ? (
-                  <div className="w-full text-blue-400 py-3 font-bold text-center flex flex-col items-center justify-center space-y-1">
+                  <div className="w-full text-blue-400 py-3 font-bold text-center flex flex-col items-center justify-center space-y-1 border-t border-slate-900/60">
                     <div className="flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
                       <Clock className="w-4 h-4" />
                       <span>Synchronization Active</span>
                     </div>
                   </div>
                 ) : getCategory(event) === 'ended' ? (
-                  <div className="w-full text-slate-600 py-3 font-bold text-center flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
+                  <div className="w-full text-slate-600 py-3 font-bold text-center flex items-center justify-center space-x-2 text-xs uppercase tracking-widest border-t border-slate-900/60">
                     <AlertCircle className="w-4 h-4" />
                     <span>Timeline Elapsed</span>
                   </div>
                 ) : (
                   <button
                     onClick={() => navigate(`/exam/${event.id}`)}
-                    className="w-full border border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-500/5 text-emerald-400 py-3 rounded-xl font-bold transition-all flex items-center justify-center space-x-2 text-xs uppercase tracking-widest"
+                    className="w-full py-3 border-b-2 border-emerald-500 hover:bg-emerald-500/5 text-emerald-400 font-bold transition-all flex items-center justify-center space-x-2 text-xs uppercase tracking-widest rounded-none bg-transparent"
                   >
                     <Play className="w-4 h-4" />
                     <span>Enter Selection Hall</span>
                   </button>
                 )
               ) : getRegistrationStatus(event.id) === 'pending' ? (
-                <div className="w-full text-amber-500 py-3 font-bold text-center flex flex-col items-center justify-center space-y-1">
+                <div className="w-full text-amber-500 py-3 font-bold text-center flex flex-col items-center justify-center space-y-1 border-t border-slate-900/60">
                   <div className="flex items-center justify-center space-x-2 text-xs uppercase tracking-widest">
                     <Clock className="w-4 h-4 animate-pulse" />
                     <span>Verification Queue</span>
                   </div>
                 </div>
               ) : getRegistrationStatus(event.id) === 'rejected' ? (
-                <div className="space-y-3">
-                  <div className="w-full text-rose-500 py-3 font-bold text-center flex items-center justify-center space-x-2 text-[10px] uppercase tracking-widest">
+                <div className="space-y-3 pt-4 border-t border-slate-900/60">
+                  <div className="w-full text-rose-500 py-2 font-bold text-center flex items-center justify-center space-x-2 text-[10px] uppercase tracking-widest">
                     <X className="w-4 h-4" />
                     <span>Rejected Access</span>
                   </div>
                   <button
                     onClick={() => setSelectedEvent(event)}
-                    className="w-full py-3 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase tracking-widest"
+                    className="w-full py-3 text-slate-400 border-b border-slate-900/80 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest"
                   >
                     Resubmit Auth Token
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setSelectedEvent(event)}
-                  disabled={getCategory(event) === 'ended'}
-                  className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all ${
-                    getCategory(event) === 'ended' 
-                      ? 'text-slate-705 border border-slate-900 cursor-not-allowed' 
-                      : 'border border-[#D4AF37]/35 hover:bg-[#D4AF37]/5 text-[#D4AF37]'
-                  }`}
-                >
-                  {getCategory(event) === 'ended' ? 'Arena Closed' : 'Request Registry Access'}
-                </button>
+                (event.entryFee === 0 || !event.entryFee) ? (
+                  <button
+                    onClick={() => handleFreeJoin(event)}
+                    disabled={getCategory(event) === 'ended'}
+                    className={`w-full py-3 font-black text-xs uppercase tracking-[0.2em] transition-all rounded-none bg-transparent ${
+                      getCategory(event) === 'ended'
+                        ? 'text-slate-600 cursor-not-allowed border-t border-slate-905'
+                        : 'border-b-2 border-emerald-500 hover:bg-emerald-500/5 text-emerald-400 active:scale-[0.98]'
+                    }`}
+                  >
+                    {getCategory(event) === 'ended' ? 'Arena Closed' : 'Join For Free'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setSelectedEvent(event)}
+                    disabled={getCategory(event) === 'ended'}
+                    className={`w-full py-3 font-black text-xs uppercase tracking-[0.2em] transition-all rounded-none bg-transparent ${
+                      getCategory(event) === 'ended' 
+                        ? 'text-slate-600 cursor-not-allowed border-t border-slate-905' 
+                        : 'border-b-2 border-[#D4AF37] hover:bg-[#D4AF37]/5 text-[#D4AF37]'
+                    }`}
+                  >
+                    {getCategory(event) === 'ended' ? 'Arena Closed' : 'Request Registry Access'}
+                  </button>
+                )
               )}
+              </div>
             </div>
-          </div>
           </motion.div>
         ))}
       </div>  {filteredEvents.length === 0 && (
