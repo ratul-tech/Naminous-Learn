@@ -2309,9 +2309,9 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
                     eventData.questions.map((q, idx) => (
                       <div key={idx} className="py-4 space-y-3 group/preview">
                         <div className="flex justify-between items-start gap-3">
-                          <p className="text-xs text-white font-bold leading-relaxed flex-1">
-                            <span className="text-[#D4AF37] mr-1">{idx + 1}.</span> <MathRenderer content={q.text} engine={mathEngine} className="inline" />
-                          </p>
+                          <div className="text-xs text-white font-bold leading-relaxed flex-1 flex items-start gap-1">
+                            <span className="text-[#D4AF37] mr-1 shrink-0">{idx + 1}.</span> <MathRenderer content={q.text} engine={mathEngine} className="inline-block" />
+                          </div>
                           <div className="flex space-x-3 text-[10px] shrink-0">
                             <button
                               type="button"
@@ -2730,9 +2730,9 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
                        <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 no-scrollbar">
                          {eventData.questions?.map((q, idx) => (
                            <div key={idx} className="flex items-center justify-between p-3 bg-slate-950/30 rounded-xl border border-slate-800 hover:border-slate-600 transition-all group">
-                             <p className="text-xs text-slate-400 truncate flex-1 pr-4 flex items-center gap-1">
+                             <div className="text-xs text-slate-400 truncate flex-1 pr-4 flex items-center gap-1">
                                <span>{idx + 1}.</span> <MathRenderer content={q.text} engine={mathEngine} className="inline-block" />
-                             </p>
+                             </div>
                              <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                <button type="button" onClick={() => handleEditQuestion(idx)} className="p-1.5 text-indigo-400 hover:bg-slate-800 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
                                <button type="button" onClick={() => removeQuestion(idx)} className="p-1.5 text-rose-500 hover:bg-slate-800 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
