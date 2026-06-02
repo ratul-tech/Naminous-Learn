@@ -65,15 +65,21 @@ export default function Practice({ profile }: PracticeProps) {
     results: null as any,
   });
 
-  const rawSubjects = getSubjectsForGroup(profile?.group);
-  const subjects = rawSubjects.includes('Mixed') ? rawSubjects : [...rawSubjects, 'Mixed'];
+  const isCollegeCategory = config.class === 'College Admission';
+  const subjects = isCollegeCategory 
+    ? ['Notre Dame College', 'Holy Cross College', 'Saint Joseph College']
+        .concat(getSubjectsForGroup(profile?.group))
+        .concat(['Mixed'])
+    : (getSubjectsForGroup(profile?.group).includes('Mixed') 
+        ? getSubjectsForGroup(profile?.group) 
+        : getSubjectsForGroup(profile?.group).concat(['Mixed']));
   const times = [5, 10, 15, 20, 30, 45, 60];
 
   useEffect(() => {
     if (subjects.length > 0 && !subjects.includes(config.subject)) {
       setConfig(prev => ({ ...prev, subject: subjects[0] }));
     }
-  }, [subjects]);
+  }, [subjects, config.subject]);
 
   // Support retake / autoStart from location state
   useEffect(() => {
@@ -111,12 +117,20 @@ export default function Practice({ profile }: PracticeProps) {
     const fetchQuestions = async () => {
       setLoading(true);
       try {
-        const q = query(
-          collection(db, 'questions'),
-          where('class', '==', config.class)
-        );
+        let q;
+        if (config.class === 'College Admission') {
+          q = query(
+            collection(db, 'questions'),
+            where('category', '==', 'College Admission')
+          );
+        } else {
+          q = query(
+            collection(db, 'questions'),
+            where('class', '==', config.class)
+          );
+        }
         const snapshot = await getDocs(q);
-        const allQ = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
+        const allQ = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as Question));
         setQuestions(allQ);
       } catch (err) {
         handleFirestoreError(err, OperationType.LIST, 'questions');
@@ -128,16 +142,41 @@ export default function Practice({ profile }: PracticeProps) {
   }, [config.class]);
 
   useEffect(() => {
-    if (config.subject === 'Mixed') {
-      const activeGroup = profile?.group || 'Science';
-      const allowedSubjects = SUBJECTS_BY_GROUP[activeGroup] || [];
-      const filtered = questions.filter(q => q.subject && allowedSubjects.includes(q.subject));
-      setFilteredQuestions(filtered);
+    if (config.class === 'College Admission') {
+      const selectedCol = config.subject;
+      if (selectedCol === 'Notre Dame College' || selectedCol === 'Holy Cross College' || selectedCol === 'Saint Joseph College') {
+        const filtered = questions.filter(q => {
+          if (!q.college) return false;
+          const qc = q.college.trim().toLowerCase();
+          
+          if (selectedCol === 'Notre Dame College') {
+            return qc === 'ndc' || qc.includes('notre dame') || qc.includes('nd');
+          } else if (selectedCol === 'Holy Cross College') {
+            return qc === 'hcc' || qc.includes('holy cross') || qc.includes('hc');
+          } else if (selectedCol === 'Saint Joseph College') {
+            return qc === 'stjc' || qc === 'st joseph' || qc === 'saint joseph' || qc === 'sjc' || qc.includes('st. joseph') || qc.includes('joseph');
+          }
+          return false;
+        });
+        setFilteredQuestions(filtered);
+      } else if (selectedCol === 'Mixed') {
+        setFilteredQuestions(questions);
+      } else {
+        const filtered = questions.filter(q => q.subject === selectedCol);
+        setFilteredQuestions(filtered);
+      }
     } else {
-      const filtered = questions.filter(q => q.subject === config.subject);
-      setFilteredQuestions(filtered);
+      if (config.subject === 'Mixed') {
+        const activeGroup = profile?.group || 'Science';
+        const allowedSubjects = SUBJECTS_BY_GROUP[activeGroup] || [];
+        const filtered = questions.filter(q => q.subject && allowedSubjects.includes(q.subject));
+        setFilteredQuestions(filtered);
+      } else {
+        const filtered = questions.filter(q => q.subject === config.subject);
+        setFilteredQuestions(filtered);
+      }
     }
-  }, [questions, config.subject, profile?.group]);
+  }, [questions, config.subject, config.class, profile?.group]);
 
   const handleStartExam = () => {
     let examQuestions = [];

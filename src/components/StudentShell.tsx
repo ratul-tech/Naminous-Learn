@@ -9,9 +9,10 @@ interface StudentShellProps {
   children: React.ReactNode;
   profile: UserProfile | null;
   isExamActive?: boolean;
+  isSidebarOpen?: boolean;
 }
 
-export default function StudentShell({ children, profile, isExamActive = false }: StudentShellProps) {
+export default function StudentShell({ children, profile, isExamActive = false, isSidebarOpen = false }: StudentShellProps) {
   const location = useLocation();
 
   if (!profile) return <>{children}</>;
@@ -90,13 +91,15 @@ export default function StudentShell({ children, profile, isExamActive = false }
       )}
 
       {/* Main Screen Content */}
-      <main className="min-h-[75vh] px-4">
+      <main className={`min-h-[75vh] px-4 transition-all duration-300 ${isSidebarOpen ? 'blur-md pointer-events-none' : ''}`}>
         {children}
       </main>
 
       {/* Bottom Floating Navigation (Premium Mobile App Style - hidden on desktop/computers) */}
       {!isExamActive && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 sm:p-6 pointer-events-none z-50">
+        <div className={`md:hidden fixed bottom-0 left-0 right-0 p-4 sm:p-6 pointer-events-none transition-all duration-500 transform ${
+          isSidebarOpen ? 'translate-y-28 opacity-0 pointer-events-none z-10' : 'z-50'
+        }`}>
           <nav className="max-w-md mx-auto bg-slate-900/90 backdrop-blur-xl rounded-[2.5rem] p-1.5 flex items-center justify-around shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-slate-800 pointer-events-auto">
             {menuItems.map(item => {
               const isActive = location.pathname === item.path;
@@ -105,7 +108,7 @@ export default function StudentShell({ children, profile, isExamActive = false }
                   key={item.label}
                   to={item.path}
                   className={`p-3 sm:p-4 rounded-[2rem] transition-all flex flex-col items-center flex-1 relative group ${
-                    isActive ? 'bg-[#D4AF37] text-slate-900 shadow-2xl translate-y-[-4px]' : 'text-slate-500 hover:text-slate-300'
+                    isActive ? 'bg-[#D4AF37] text-slate-950 shadow-2xl translate-y-[-4px]' : 'text-slate-500 hover:text-slate-300'
                   }`}
                 >
                   <item.icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ${isActive ? 'scale-110 mb-0.5' : 'scale-100'}`} />

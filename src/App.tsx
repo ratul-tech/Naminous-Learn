@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
-import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, Instagram, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock, Award } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, Instagram, MessageCircle, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Pages
@@ -32,6 +32,7 @@ const LOGO_URL = "https://i.postimg.cc/0241N65R/received-982626700958526.jpg";
 function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: User | null, profile: UserProfile | null, setProfile: (p: UserProfile | null) => void, onLogout: () => void, refreshUser: () => Promise<void> }) {
   const location = useLocation();
   const [isExamActive, setIsExamActive] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     (window as any).setExamActiveState = (active: boolean) => {
@@ -49,7 +50,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<Navigate to="/login?role=admin" replace />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/leaderboard" element={<Leaderboard profile={profile} />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       );
@@ -83,14 +84,14 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
     const Shell = StudentShell;
 
     return (
-      <Shell profile={profile} isExamActive={isExamActive}>
+      <Shell profile={profile} isExamActive={isExamActive} isSidebarOpen={isSidebarOpen}>
         <Routes>
           <Route path="/dashboard" element={<Dashboard profile={profile} />} />
           <Route path="/profile" element={<Profile profile={profile} setProfile={setProfile} />} />
           <Route path="/practice" element={<Practice profile={profile} />} />
           <Route path="/exam/:id" element={<Exam profile={profile} />} />
           <Route path="/history" element={<ExamHistory profile={profile} />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/leaderboard" element={<Leaderboard profile={profile} />} />
           <Route path="/live-results" element={<LiveResults profile={profile} />} />
           <Route path="/events" element={<Events profile={profile} />} />
           <Route path="/resources" element={<Resources profile={profile} />} />
@@ -104,7 +105,15 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-300 font-sans flex flex-col transition-colors duration-500">
-      {!isExamActive && <Navbar user={user} profile={profile} onLogout={onLogout} />}
+      {!isExamActive && (
+        <Navbar 
+          user={user} 
+          profile={profile} 
+          onLogout={onLogout} 
+          isSidebarOpen={isSidebarOpen} 
+          setIsSidebarOpen={setIsSidebarOpen} 
+        />
+      )}
       
       <main className="container mx-auto px-4 flex-grow py-4">
         {renderContent()}
@@ -250,8 +259,7 @@ export default function App() {
   );
 }
 
-function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserProfile | null, onLogout: () => void }) {
-  const [isOpen, setIsOpen] = useState(false);
+function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { user: User | null, profile: UserProfile | null, onLogout: () => void, isSidebarOpen: boolean, setIsSidebarOpen: (o: boolean) => void }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -410,7 +418,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
 
             {/* Mobile Menu Button / Responsive indicator */}
             <button 
-              onClick={() => setIsOpen(true)} 
+              onClick={() => setIsSidebarOpen(true)} 
               className="p-2 sm:p-2.5 rounded-xl text-[#D4AF37] bg-slate-900/40 border border-slate-800 hover:bg-white/5 hover:border-indigo-500/20 lg:hidden transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95"
               aria-label="Open menu"
             >
@@ -424,13 +432,13 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
 
       {/* Responsive Drawer Overlay */}
       <AnimatePresence>
-        {isOpen && (
+        {isSidebarOpen && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
+              onClick={() => setIsSidebarOpen(false)}
               className="absolute inset-0 min-h-screen bg-black/70 backdrop-blur-md z-[100]"
             />
             <motion.div
@@ -445,7 +453,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                   <img src={LOGO_URL} alt="Logo" className="h-8 w-8 rounded-xl border border-indigo-500/20 object-cover" referrerPolicy="no-referrer" />
                   <span className="font-black text-sm uppercase tracking-widest text-[#D4AF37]">Academic Deck</span>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors border border-slate-800">
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors border border-slate-800">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -453,7 +461,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
               <div className="flex-grow overflow-y-auto p-6 space-y-2">
                 {user ? (
                   <>
-                    <Link to="/profile" onClick={() => setIsOpen(false)} className="block mb-6 group">
+                    <Link to="/profile" onClick={() => setIsSidebarOpen(false)} className="block mb-6 group">
                       <div className="p-4 bg-slate-900 rounded-2xl flex items-center space-x-3.5 border border-slate-800 hover:border-[#D4AF37]/35 shadow-inner transition-all">
                         <img 
                           src={getAvatar(profile?.photoURL, profile?.displayName || 'User')} 
@@ -474,7 +482,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                         <Link
                           key={link.path}
                           to={link.path}
-                          onClick={() => setIsOpen(false)}
+                          onClick={() => setIsSidebarOpen(false)}
                           className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
                             isActive 
                               ? 'bg-[#D4AF37] text-slate-950 shadow-lg shadow-amber-500/25' 
@@ -491,7 +499,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       <div className="pt-4 mt-4 border-t border-slate-800/80">
                         <Link
                           to="/admin"
-                          onClick={() => setIsOpen(false)}
+                          onClick={() => setIsSidebarOpen(false)}
                           className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
                             location.pathname === '/admin' 
                               ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
@@ -508,7 +516,7 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                       <button 
                         onClick={() => {
                           onLogout();
-                          setIsOpen(false);
+                          setIsSidebarOpen(false);
                           navigate('/login');
                         }} 
                         className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-black text-rose-400 hover:bg-[#f43f5e]/10 transition-all text-sm text-left"
@@ -523,14 +531,14 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                     <p className="text-xs font-semibold text-slate-500 text-center mb-6 leading-relaxed">Access full mock exams, analytics dashboards, and track scores on Numinous Learn.</p>
                     <Link
                       to="/login"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => setIsSidebarOpen(false)}
                       className="block w-full text-center bg-[#D4AF37] text-slate-950 py-3.5 rounded-xl font-bold shadow-lg hover:bg-[#ffdf64] transition-all text-sm"
                     >
                       Login / Register Account
                     </Link>
                     <Link
                       to="/login?role=admin"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => setIsSidebarOpen(false)}
                       className="block w-full text-center bg-slate-900 text-slate-300 py-3 rounded-xl font-semibold shadow-md hover:bg-slate-850 hover:text-white transition-all text-xs border border-slate-800"
                     >
                       Team Curator Login
@@ -539,7 +547,21 @@ function Navbar({ user, profile, onLogout }: { user: User | null, profile: UserP
                 )}
               </div>
 
-              <div className="p-6 border-t border-slate-800 bg-slate-950/20">
+              <div className="p-6 border-t border-slate-800 bg-slate-950/20 flex flex-col items-center space-y-4">
+                <div className="flex items-center justify-center space-x-4">
+                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-indigo-500/20 hover:text-indigo-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-indigo-500/30 active:scale-95" title="Facebook">
+                    <Facebook className="w-4 h-4" />
+                  </a>
+                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-rose-500/30 active:scale-95" title="YouTube">
+                    <Youtube className="w-4 h-4" />
+                  </a>
+                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-pink-500/20 hover:text-pink-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-pink-500/30 active:scale-95" title="Instagram">
+                    <Instagram className="w-4 h-4" />
+                  </a>
+                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-emerald-500/20 hover:text-emerald-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-emerald-500/30 active:scale-95" title="WhatsApp">
+                    <MessageCircle className="w-4 h-4" />
+                  </a>
+                </div>
                 <p className="text-[10px] text-slate-600 text-center uppercase tracking-widest font-black">
                   © {new Date().getFullYear()} Numinous Learn
                 </p>

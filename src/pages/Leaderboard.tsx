@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import { ExamResult } from '../types';
+import { ExamResult, UserProfile } from '../types';
 import { ALL_SUBJECTS } from '../constants';
-import { Trophy, Medal, School, User, Filter, ChevronDown } from 'lucide-react';
+import { Trophy, Medal, School, User, Filter, ChevronDown, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export default function Leaderboard() {
+interface LeaderboardProps {
+  profile?: UserProfile | null;
+}
+
+export default function Leaderboard({ profile }: LeaderboardProps) {
   const [topResults, setTopResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -14,6 +18,7 @@ export default function Leaderboard() {
     class: 'All',
     type: 'All'
   });
+  const [searchTerm, setSearchTerm] = useState('');
 
   const subjects = ['All', ...ALL_SUBJECTS, 'Mixed'];
   const classes = ['All', 'SSC Candidate', 'College Admission'];
@@ -92,49 +97,71 @@ export default function Leaderboard() {
     return () => unsubscribe();
   }, [filters]);
 
-  if (loading) return <div className="text-center py-20">Loading leaderboard...</div>;
-
-  const top3 = topResults.slice(0, 3);
-  const others = topResults.slice(3);
+  const filteredResults = topResults.filter(r => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (r.displayName && r.displayName.toLowerCase().includes(term)) ||
+      (r.school && r.school.toLowerCase().includes(term))
+    );
+  });
 
   return (
     <div className="space-y-12">
       <header className="px-1 py-4 text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 uppercase leading-none tracking-tight">Hall of <span className="text-[#D4AF37]">Fame</span></h1>
-        <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-none">Celebrating the top academic minds across our platform</p>
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 uppercase leading-none tracking-tight">
+          Hall of <span className="text-[#D4AF37]">Fame</span>
+        </h1>
+        <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-none">
+          Celebrating the top academic minds across our platform
+        </p>
       </header>
 
-      {/* Filters Overlay */}
-      <div className="sticky top-24 z-30 flex justify-center pb-4 border-b border-slate-905">
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="p-1 flex flex-wrap gap-2 items-center"
-        >
-          <div className="px-3 py-2 flex items-center space-x-2 text-[#D4AF37] font-black text-[10px] uppercase tracking-wider">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Filter:</span>
-          </div>
+      {/* Redesigned Search & Filters Command Center */}
+      <div className="sticky top-20 sm:top-24 z-30 pb-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 rounded-3xl">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
           
-          <div className="flex gap-2">
+          {/* Text Search Input */}
+          <div className="relative w-full md:w-1/2">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 transition-colors" />
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by student name or institution..."
+              className="w-full bg-slate-950 border border-slate-900 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/10 transition-all rounded-2xl pl-11 pr-10 py-3 text-sm font-medium text-slate-200 placeholder-slate-600 outline-none shadow-inner"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Selector Dropdowns */}
+          <div className="w-full md:w-1/2 flex flex-wrap sm:flex-nowrap gap-3 justify-end">
             {[
               { id: 'subject', options: subjects, label: 'All Subjects' },
               { id: 'class', options: classes, label: 'All Classes' },
               { id: 'type', options: types, label: 'All Types' }
             ].map((f) => (
-              <div key={f.id} className="relative group">
+              <div key={f.id} className="relative w-full sm:w-auto min-w-[125px]">
                 <select 
                   value={(filters as any)[f.id]}
                   onChange={(e) => setFilters({ ...filters, [f.id]: e.target.value })}
-                  className="appearance-none bg-slate-950 hover:bg-slate-905 border border-slate-900 rounded-xl px-4 py-2 pr-10 text-xs font-bold text-slate-300 transition-colors outline-none cursor-pointer"
+                  className="w-full appearance-none bg-slate-950 border border-slate-900 hover:border-slate-800 rounded-2xl px-4 py-3 pr-10 text-xs font-bold text-slate-300 transition-all outline-none cursor-pointer shadow-md focus:border-[#D4AF37]/50"
                 >
                   {f.options.map(o => <option key={o} value={o}>{o === 'All' ? f.label : o}</option>)}
                 </select>
-                <ChevronDown className="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <ChevronDown className="w-3.5 h-3.5 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover:text-slate-300 transition-colors" />
               </div>
             ))}
           </div>
-        </motion.div>
+
+        </div>
       </div>
 
       {loading ? (
@@ -146,14 +173,14 @@ export default function Leaderboard() {
           />
           <p className="text-[10px] font-black uppercase text-slate-550 tracking-widest">Calculating rankings...</p>
         </div>
-      ) : topResults.length === 0 ? (
+      ) : filteredResults.length === 0 ? (
         <div className="text-center py-32 border-b border-dashed border-slate-900">
            <Trophy className="w-16 h-16 text-slate-800 mx-auto mb-6 opacity-30" />
            <h3 className="text-xl font-black text-white uppercase mb-2">No Rankings Data</h3>
-           <p className="text-slate-500 font-medium text-xs">Try adjusting your filters or participate in an exam to appear here.</p>
+           <p className="text-slate-500 font-medium text-xs">Try adjusting your filters or search term to appear here.</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in">
           {/* List View */}
           <div className="overflow-hidden">
             <div className="grid grid-cols-12 gap-2 sm:gap-4 py-4 font-black text-[#D4AF37] uppercase text-[9px] tracking-widest border-b border-slate-900 balance-sans">
@@ -165,9 +192,10 @@ export default function Leaderboard() {
             
             <div className="divide-y divide-slate-910">
               <AnimatePresence>
-                {topResults.map((result, index) => {
+                {filteredResults.map((result, index) => {
                   const rankNum = index + 1;
                   const rankWord = getRankWord(rankNum);
+                  const isCurrentUser = profile && (result.uid === profile.uid || result.id === profile.uid);
                   
                   return (
                     <motion.div
@@ -175,24 +203,35 @@ export default function Leaderboard() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(index * 0.03, 0.4) }}
-                      className="grid grid-cols-12 gap-2 sm:gap-4 py-6 items-center border-b border-dashed border-slate-905 transition-all group"
+                      className={`grid grid-cols-12 gap-2 sm:gap-4 py-6 items-center border-b border-dashed border-slate-905 transition-all group px-4 rounded-3xl ${
+                        isCurrentUser 
+                          ? 'bg-gradient-to-r from-[#D4AF37]/10 via-indigo-550/5 to-transparent border-l-4 border-l-[#D4AF37] shadow-[inset_0_0_20px_rgba(212,175,55,0.03)]' 
+                          : 'hover:bg-slate-900/10'
+                      }`}
                     >
                       {/* Rank text directly - e.g., First, Second, Third, etc. */}
                       <div className="col-span-3 sm:col-span-2 text-left pl-2 font-black text-xs uppercase tracking-wider font-mono">
                         <span className={`${
                           rankNum === 1 ? 'text-[#D4AF37]' :
-                          rankNum === 2 ? 'text-slate-450 text-slate-400' :
+                          rankNum === 2 ? 'text-slate-400' :
                           rankNum === 3 ? 'text-orange-500' : 'text-slate-600'
-                        }`}>
+                        } ${isCurrentUser ? 'font-black scale-105' : ''}`}>
                           {rankWord}
                         </span>
                       </div>
                       
                       <div className="col-span-6 sm:col-span-6 flex items-center space-x-2 sm:space-x-4 min-w-0">
                         <div className="min-w-0">
-                          <h4 className="font-extrabold text-white text-sm sm:text-base tracking-tight uppercase group-hover:text-[#D4AF37] transition-colors">{result.displayName}</h4>
-                          <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wide truncate mt-0.5">
-                            <School className="w-2.5 h-2.5 shrink-0" />
+                          <h4 className="font-extrabold text-white text-sm sm:text-base tracking-tight uppercase group-hover:text-[#D4AF37] transition-colors flex flex-wrap items-center gap-2">
+                            <span>{result.displayName}</span>
+                            {isCurrentUser && (
+                              <span className="px-2 py-0.5 bg-[#D4AF37] text-slate-950 text-[9px] font-black rounded uppercase tracking-wider shadow-sm animate-pulse">
+                                YOU
+                              </span>
+                            )}
+                          </h4>
+                          <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] text-slate-550 font-semibold uppercase tracking-wide truncate mt-0.5">
+                            <School className="w-2.5 h-2.5 shrink-0 text-slate-600" />
                             <span className="truncate">{result.school}</span>
                           </div>
                         </div>
