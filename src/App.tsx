@@ -525,6 +525,53 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
                         <span>Sign Out Portal</span>
                       </button>
                     </div>
+
+                    {/* Official Channels Area for Authenticated Users */}
+                    <div className="pt-6 mt-6 border-t border-slate-800/80 space-y-3">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-4">Official Channels</p>
+                      <div className="grid grid-cols-2 gap-2 px-2">
+                        <a
+                          href="https://www.facebook.com/share/1BKC1tyrFE/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#1877F2]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="Facebook Page"
+                        >
+                          <Facebook className="w-3.5 h-3.5 text-[#1877F2] shrink-0" />
+                          <span className="truncate">FB Page</span>
+                        </a>
+                        <a
+                          href="https://www.youtube.com/@NuminousLearn"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#FF0000]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="YouTube Channel"
+                        >
+                          <Youtube className="w-3.5 h-3.5 text-[#FF0000] shrink-0" />
+                          <span className="truncate">YouTube</span>
+                        </a>
+                        <a
+                          href="https://www.instagram.com/numinouslearn26?igsh=MWRlNnFrdWc2ODg2MQ=="
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#E1306C]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="Instagram"
+                        >
+                          <Instagram className="w-3.5 h-3.5 text-[#E1306C] shrink-0" />
+                          <span className="truncate">Instagram</span>
+                        </a>
+                        <a
+                          href="https://chat.whatsapp.com/E2JeZg2Dfd97Aw30BgnQjr?s=cl&p=a&ilr=1"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#25D366]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="WhatsApp Community"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
+                          <span className="truncate">WhatsApp</span>
+                        </a>
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <div className="space-y-4 pt-4">
@@ -543,25 +590,58 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
                     >
                       Team Curator Login
                     </Link>
+
+                    {/* Official Channels Area for Guests */}
+                    <div className="pt-6 mt-6 border-t border-slate-800/80 space-y-3">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Official Channels</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <a
+                          href="https://www.facebook.com/share/1BKC1tyrFE/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#1877F2]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="Facebook Page"
+                        >
+                          <Facebook className="w-3.5 h-3.5 text-[#1877F2] shrink-0" />
+                          <span className="truncate">FB Page</span>
+                        </a>
+                        <a
+                          href="https://www.youtube.com/@NuminousLearn"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#FF0000]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="YouTube Channel"
+                        >
+                          <Youtube className="w-3.5 h-3.5 text-[#FF0000] shrink-0" />
+                          <span className="truncate">YouTube</span>
+                        </a>
+                        <a
+                          href="https://www.instagram.com/numinouslearn26?igsh=MWRlNnFrdWc2ODg2MQ=="
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#E1306C]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="Instagram"
+                        >
+                          <Instagram className="w-3.5 h-3.5 text-[#E1306C] shrink-0" />
+                          <span className="truncate">Instagram</span>
+                        </a>
+                        <a
+                          href="https://chat.whatsapp.com/E2JeZg2Dfd97Aw30BgnQjr?s=cl&p=a&ilr=1"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-[#25D366]/30 text-slate-400 hover:text-white transition-all text-[10px] font-bold"
+                          title="WhatsApp Community"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
+                          <span className="truncate">WhatsApp</span>
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="p-6 border-t border-slate-800 bg-slate-950/20 flex flex-col items-center space-y-4">
-                <div className="flex items-center justify-center space-x-4">
-                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-indigo-500/20 hover:text-indigo-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-indigo-500/30 active:scale-95" title="Facebook">
-                    <Facebook className="w-4 h-4" />
-                  </a>
-                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-rose-500/30 active:scale-95" title="YouTube">
-                    <Youtube className="w-4 h-4" />
-                  </a>
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-pink-500/20 hover:text-pink-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-pink-500/30 active:scale-95" title="Instagram">
-                    <Instagram className="w-4 h-4" />
-                  </a>
-                  <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-900 hover:bg-emerald-500/20 hover:text-emerald-400 text-slate-400 rounded-xl transition-all border border-slate-800/80 hover:border-emerald-500/30 active:scale-95" title="WhatsApp">
-                    <MessageCircle className="w-4 h-4" />
-                  </a>
-                </div>
+              <div className="p-6 border-t border-slate-800 bg-slate-950/20 flex flex-col items-center justify-center">
                 <p className="text-[10px] text-slate-600 text-center uppercase tracking-widest font-black">
                   © {new Date().getFullYear()} Numinous Learn
                 </p>
