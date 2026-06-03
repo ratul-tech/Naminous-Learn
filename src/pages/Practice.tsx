@@ -50,6 +50,7 @@ export default function Practice({ profile }: PracticeProps) {
     return {
       subject: locState?.subject || 'Physics',
       class: locState?.class || profile?.class || 'SSC Candidate',
+      college: locState?.college || 'Notre Dame',
       mode: locState?.mode || ('Complete Board' as Mode),
       time: locState?.time || 16, // minutes
       count: locState?.count || 20,
@@ -66,13 +67,9 @@ export default function Practice({ profile }: PracticeProps) {
   });
 
   const isCollegeCategory = config.class === 'College Admission';
-  const subjects = isCollegeCategory 
-    ? ['Notre Dame College', 'Holy Cross College', 'Saint Joseph College']
-        .concat(getSubjectsForGroup(profile?.group))
-        .concat(['Mixed'])
-    : (getSubjectsForGroup(profile?.group).includes('Mixed') 
-        ? getSubjectsForGroup(profile?.group) 
-        : getSubjectsForGroup(profile?.group).concat(['Mixed']));
+  const subjects = getSubjectsForGroup(profile?.group).includes('Mixed') 
+    ? getSubjectsForGroup(profile?.group) 
+    : getSubjectsForGroup(profile?.group).concat(['Mixed']);
   const times = [5, 10, 15, 20, 30, 45, 60];
 
   useEffect(() => {
@@ -143,27 +140,33 @@ export default function Practice({ profile }: PracticeProps) {
 
   useEffect(() => {
     if (config.class === 'College Admission') {
-      const selectedCol = config.subject;
-      if (selectedCol === 'Notre Dame College' || selectedCol === 'Holy Cross College' || selectedCol === 'Saint Joseph College') {
-        const filtered = questions.filter(q => {
+      const selectedCol = config.college || 'Notre Dame';
+      const selectedSub = config.subject || 'Mixed';
+      
+      // 1. Filter by College
+      let colFiltered = questions;
+      if (selectedCol !== 'Mixed') {
+        colFiltered = questions.filter(q => {
           if (!q.college) return false;
           const qc = q.college.trim().toLowerCase();
           
-          if (selectedCol === 'Notre Dame College') {
+          if (selectedCol === 'Notre Dame') {
             return qc === 'ndc' || qc.includes('notre dame') || qc.includes('nd');
-          } else if (selectedCol === 'Holy Cross College') {
+          } else if (selectedCol === 'Holy Cross') {
             return qc === 'hcc' || qc.includes('holy cross') || qc.includes('hc');
-          } else if (selectedCol === 'Saint Joseph College') {
+          } else if (selectedCol === 'Saint Joseph') {
             return qc === 'stjc' || qc === 'st joseph' || qc === 'saint joseph' || qc === 'sjc' || qc.includes('st. joseph') || qc.includes('joseph');
           }
           return false;
         });
-        setFilteredQuestions(filtered);
-      } else if (selectedCol === 'Mixed') {
-        setFilteredQuestions(questions);
+      }
+      
+      // 2. Filter by Subject
+      if (selectedSub === 'Mixed') {
+        setFilteredQuestions(colFiltered);
       } else {
-        const filtered = questions.filter(q => q.subject === selectedCol);
-        setFilteredQuestions(filtered);
+        const finalFiltered = colFiltered.filter(q => q.subject === selectedSub);
+        setFilteredQuestions(finalFiltered);
       }
     } else {
       if (config.subject === 'Mixed') {
@@ -176,7 +179,7 @@ export default function Practice({ profile }: PracticeProps) {
         setFilteredQuestions(filtered);
       }
     }
-  }, [questions, config.subject, config.class, profile?.group]);
+  }, [questions, config.subject, config.class, config.college, profile?.group]);
 
   const handleStartExam = () => {
     let examQuestions = [];
@@ -332,23 +335,71 @@ export default function Practice({ profile }: PracticeProps) {
             className="space-y-12"
           >
             {/* Academic Level Selection */}
-            <div>
-              <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select Academic Level</label>
-              <div className="grid grid-cols-2 gap-4 max-w-xl">
-                {['SSC Candidate', 'College Admission'].map(c => (
+            <div className="space-y-8">
+              <div>
+                <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select Training Program</label>
+                <div className="grid grid-cols-2 gap-4 max-w-xl">
                   <button
-                    key={c}
-                    onClick={() => setConfig({ ...config, class: c })}
+                    type="button"
+                    onClick={() => setConfig({ ...config, class: 'SSC Candidate' })}
                     className={`px-6 py-4 rounded-xl border transition-all font-black text-xs text-center uppercase tracking-widest ${
-                      config.class === c 
+                      config.class !== 'College Admission' 
                         ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
                         : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805 hover:text-slate-350'
                     }`}
                   >
-                    {c}
+                    Board Exam Prep
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setConfig({ ...config, class: 'College Admission' })}
+                    className={`px-6 py-4 rounded-xl border transition-all font-black text-xs text-center uppercase tracking-widest ${
+                      config.class === 'College Admission' 
+                        ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
+                        : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805 hover:text-slate-350'
+                    }`}
+                  >
+                    College Admission Prep
+                  </button>
+                </div>
               </div>
+
+              {config.class !== 'College Admission' ? (
+                <div>
+                  <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select Academic Level</label>
+                  <div className="grid grid-cols-2 gap-4 max-w-xl">
+                    {['SSC Candidate'].map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setConfig({ ...config, class: c })}
+                        className={`px-6 py-4 rounded-xl border transition-all font-black text-xs text-center uppercase tracking-widest border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select College</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl">
+                    {['Notre Dame', 'Holy Cross', 'Saint Joseph', 'Mixed'].map(col => (
+                      <button
+                        key={col}
+                        type="button"
+                        onClick={() => setConfig({ ...config, college: col })}
+                        className={`px-6 py-4 rounded-xl border transition-all font-black text-xs text-center uppercase tracking-widest ${
+                          config.college === col 
+                            ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5' 
+                            : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805 hover:text-slate-350'
+                        }`}
+                      >
+                        {col}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Subject Selection */}
