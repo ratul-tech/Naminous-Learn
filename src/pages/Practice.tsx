@@ -51,6 +51,7 @@ export default function Practice({ profile }: PracticeProps) {
       subject: locState?.subject || 'Physics',
       class: locState?.class || profile?.class || 'SSC Candidate',
       college: locState?.college || 'Notre Dame',
+      board: locState?.board || 'Mixed',
       mode: locState?.mode || ('Complete Board' as Mode),
       time: locState?.time || 16, // minutes
       count: locState?.count || 20,
@@ -123,7 +124,7 @@ export default function Practice({ profile }: PracticeProps) {
         } else {
           q = query(
             collection(db, 'questions'),
-            where('class', '==', config.class)
+            where('category', '==', 'Board')
           );
         }
         const snapshot = await getDocs(q);
@@ -169,17 +170,29 @@ export default function Practice({ profile }: PracticeProps) {
         setFilteredQuestions(finalFiltered);
       }
     } else {
-      if (config.subject === 'Mixed') {
-        const activeGroup = profile?.group || 'Science';
-        const allowedSubjects = SUBJECTS_BY_GROUP[activeGroup] || [];
-        const filtered = questions.filter(q => q.subject && allowedSubjects.includes(q.subject));
-        setFilteredQuestions(filtered);
+      const selectedBoard = config.board || 'Mixed';
+      const selectedSub = config.subject || 'Mixed';
+
+      // 1. Filter by Board
+      let boardFiltered = questions;
+      if (selectedBoard !== 'Mixed') {
+        boardFiltered = questions.filter(q => {
+          if (!q.board) return false;
+          const qb = q.board.trim().toLowerCase();
+          const target = selectedBoard.toLowerCase();
+          return qb === target || qb.includes(target);
+        });
+      }
+
+      // 2. Filter by Subject
+      if (selectedSub === 'Mixed') {
+        setFilteredQuestions(boardFiltered);
       } else {
-        const filtered = questions.filter(q => q.subject === config.subject);
-        setFilteredQuestions(filtered);
+        const finalFiltered = boardFiltered.filter(q => q.subject === selectedSub);
+        setFilteredQuestions(finalFiltered);
       }
     }
-  }, [questions, config.subject, config.class, config.college, profile?.group]);
+  }, [questions, config.subject, config.class, config.college, config.board, profile?.group]);
 
   const handleStartExam = () => {
     let examQuestions = [];
@@ -365,18 +378,40 @@ export default function Practice({ profile }: PracticeProps) {
               </div>
 
               {config.class !== 'College Admission' ? (
-                <div>
-                  <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select Academic Level</label>
-                  <div className="grid grid-cols-2 gap-4 max-w-xl">
-                    {['SSC Candidate'].map(c => (
-                      <button
-                        key={c}
-                        onClick={() => setConfig({ ...config, class: c })}
-                        className={`px-6 py-4 rounded-xl border transition-all font-black text-xs text-center uppercase tracking-widest border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5`}
-                      >
-                        {c}
-                      </button>
-                    ))}
+                <div className="space-y-8">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select Academic Level</label>
+                    <div className="grid grid-cols-2 gap-4 max-w-xl">
+                      {['SSC Candidate'].map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setConfig({ ...config, class: c })}
+                          className={`px-6 py-4 rounded-xl border transition-all font-black text-xs text-center uppercase tracking-widest border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-550 uppercase tracking-[0.25em] mb-6">Select Board</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl">
+                      {['Dhaka', 'Sylhet', 'Rajshahi', 'Chattogram', 'Jashore', 'Barishal', 'Cumilla', 'Dinajpur', 'Mymensingh', 'Madrasah', 'Technical', 'Mixed'].map(b => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setConfig({ ...config, board: b })}
+                          className={`px-6 py-4 rounded-xl border transition-all font-black text-xs text-center uppercase tracking-widest ${
+                            (config.board || 'Mixed') === b
+                              ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5'
+                              : 'border-slate-900 text-slate-500 bg-transparent hover:border-slate-805 hover:text-slate-350'
+                          }`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ) : (
