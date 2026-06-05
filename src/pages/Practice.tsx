@@ -48,7 +48,7 @@ export default function Practice({ profile }: PracticeProps) {
   const [config, setConfig] = useState(() => {
     const locState = location.state as any;
     return {
-      subject: locState?.subject || 'Physics',
+      subject: locState?.subject || 'Mixed',
       class: locState?.class || profile?.class || 'SSC Candidate',
       college: locState?.college || 'Notre Dame',
       board: locState?.board || 'Mixed',
@@ -68,9 +68,7 @@ export default function Practice({ profile }: PracticeProps) {
   });
 
   const isCollegeCategory = config.class === 'College Admission';
-  const subjects = getSubjectsForGroup(profile?.group).includes('Mixed') 
-    ? getSubjectsForGroup(profile?.group) 
-    : getSubjectsForGroup(profile?.group).concat(['Mixed']);
+  const subjects = ['Mixed'].concat(getSubjectsForGroup(profile?.group).filter(s => s !== 'Mixed'));
   const times = [5, 10, 15, 20, 30, 45, 60];
 
   useEffect(() => {
@@ -115,18 +113,8 @@ export default function Practice({ profile }: PracticeProps) {
     const fetchQuestions = async () => {
       setLoading(true);
       try {
-        let q;
-        if (config.class === 'College Admission') {
-          q = query(
-            collection(db, 'questions'),
-            where('category', '==', 'College Admission')
-          );
-        } else {
-          q = query(
-            collection(db, 'questions'),
-            where('category', '==', 'Board')
-          );
-        }
+        // Fetch all questions once and handle robust categorization client-side
+        const q = query(collection(db, 'questions'));
         const snapshot = await getDocs(q);
         const allQ = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as Question));
         setQuestions(allQ);
@@ -137,17 +125,36 @@ export default function Practice({ profile }: PracticeProps) {
       }
     };
     fetchQuestions();
-  }, [config.class]);
+  }, []);
 
   useEffect(() => {
+    // 1. Partition based on College or Board classification
+    let classQuestions: Question[] = [];
+    if (config.class === 'College Admission') {
+      classQuestions = questions.filter(q => {
+        const isCatCollege = q.category === 'College Admission';
+        const isClassCollege = q.class === 'College Admission';
+        const hasCollegeField = !!q.college && q.college.trim() !== '';
+        return isCatCollege || isClassCollege || hasCollegeField;
+      });
+    } else {
+      classQuestions = questions.filter(q => {
+        const isCatBoard = q.category === 'Board';
+        const isClassBoard = q.class === 'SSC Candidate';
+        const hasBoardField = !!q.board && q.board.trim() !== '';
+        const hasCollegeField = !!q.college && q.college.trim() !== '';
+        return (isCatBoard || isClassBoard || hasBoardField) && !hasCollegeField;
+      });
+    }
+
     if (config.class === 'College Admission') {
       const selectedCol = config.college || 'Notre Dame';
       const selectedSub = config.subject || 'Mixed';
       
       // 1. Filter by College
-      let colFiltered = questions;
+      let colFiltered = classQuestions;
       if (selectedCol !== 'Mixed') {
-        colFiltered = questions.filter(q => {
+        colFiltered = classQuestions.filter(q => {
           if (!q.college) return false;
           const qc = q.college.trim().toLowerCase();
           
@@ -156,7 +163,7 @@ export default function Practice({ profile }: PracticeProps) {
           } else if (selectedCol === 'Holy Cross') {
             return qc === 'hcc' || qc.includes('holy cross') || qc.includes('hc');
           } else if (selectedCol === 'Saint Joseph') {
-            return qc === 'stjc' || qc === 'st joseph' || qc === 'saint joseph' || qc === 'sjc' || qc.includes('st. joseph') || qc.includes('joseph');
+            return qc === 'stjc' || qc === 'st joseph' || qc === 'saint joseph' || qc === 'sjc' || qc.includes('joseph') || qc.includes('stjc') || qc.includes('sjc') || qc.includes('st. joseph');
           }
           return false;
         });
@@ -174,9 +181,9 @@ export default function Practice({ profile }: PracticeProps) {
       const selectedSub = config.subject || 'Mixed';
 
       // 1. Filter by Board
-      let boardFiltered = questions;
+      let boardFiltered = classQuestions;
       if (selectedBoard !== 'Mixed') {
-        boardFiltered = questions.filter(q => {
+        boardFiltered = classQuestions.filter(q => {
           if (!q.board) return false;
           const qb = q.board.trim().toLowerCase();
           const target = selectedBoard.toLowerCase();
