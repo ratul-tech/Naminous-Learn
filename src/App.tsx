@@ -314,21 +314,21 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
         <div className="flex justify-between items-center h-16 md:h-20">
           
           {/* Brand & Left Section */}
-          <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 shrink-0">
             {showNavBack && (
               <button
                 onClick={() => navigate(-1)}
-                className="p-1.5 sm:p-2 hover:bg-white/5 rounded-xl transition-all text-[#D4AF37] flex items-center space-x-1 font-bold group"
+                className="p-1.5 sm:p-2 hover:bg-white/5 rounded-xl transition-all text-[#D4AF37] flex items-center space-x-1 font-bold group shrink-0"
                 aria-label="Go back"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-0.5 transition-transform" />
                 <span className="hidden sm:inline text-[9px] uppercase tracking-wider font-extrabold">Back</span>
               </button>
             )}
-            <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-              <img src={LOGO_URL} alt="Numinous Learn" className="h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-xl shadow-xl object-cover border border-indigo-500/20" referrerPolicy="no-referrer" />
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+              <img src={LOGO_URL} alt="Numinous Learn" className="h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-xl shadow-xl object-cover border border-indigo-500/20 shrink-0" referrerPolicy="no-referrer" />
               <div className="flex flex-col">
-                <span className="text-xs sm:text-lg font-black text-white tracking-tight truncate max-w-[120px] sm:max-w-none font-sans">
+                <span className="text-xs sm:text-lg font-black text-white tracking-tight truncate max-w-[100px] xs:max-w-[120px] sm:max-w-none font-sans">
                   Numinous Learn
                 </span>
                 <span className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] hidden sm:block">
@@ -339,7 +339,7 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
           </div>
 
           {/* Tablets & Computers Adaptive Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2 px-2">
+          <div className="hidden md:flex items-center space-x-1 xl:space-x-2 px-2 min-w-0 overflow-hidden">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               return (
@@ -347,27 +347,27 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
                   key={link.path}
                   to={link.path}
                   title={link.name}
-                  className={`px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-xl text-xs lg:text-[13px] font-bold transition-all duration-200 flex items-center space-x-1.5 border group ${
+                  className={`px-2.5 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs xl:text-[13px] font-bold transition-all duration-200 flex items-center space-x-1.5 border group shrink-0 ${
                     isActive
                       ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 shadow-md shadow-amber-500/5'
                       : 'text-slate-300 hover:text-white hover:bg-white/5 border-transparent'
                   }`}
                 >
-                  <link.icon className="w-4 h-4 text-inherit transition-transform group-hover:scale-110" />
-                  <span className="hidden lg:inline">{link.name}</span>
+                  <link.icon className="w-4 h-4 text-inherit transition-transform group-hover:scale-110 shrink-0" />
+                  <span className="hidden xl:inline">{link.name}</span>
                 </Link>
               );
             })}
           </div>
 
           {/* Right Action / Profile Section */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             
             {/* Authenticated User state badge */}
             {user && (
-              <div className="flex items-center space-x-2 md:space-x-3.5 bg-slate-900/60 pl-2 lg:pl-3 pr-2 py-1 lg:py-1.5 rounded-xl md:rounded-2xl border border-slate-800/80">
+              <div className="flex items-center space-x-2 md:space-x-3.5 bg-slate-900/60 pl-2 lg:pl-3 pr-2 py-1 lg:py-1.5 rounded-xl md:rounded-2xl border border-slate-800/80 shrink-0">
                 <Link to="/profile" className="flex items-center space-x-2 lg:space-x-2.5 group">
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <img 
                       src={getAvatar(profile?.photoURL, profile?.displayName || 'User')} 
                       alt="Profile" 
@@ -386,11 +386,11 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
                   </div>
                 </Link>
                 
-                <div className="hidden md:block w-px h-6 bg-slate-800" />
+                <div className="hidden md:block w-px h-6 bg-slate-800 shrink-0" />
                 
                 <button
                   onClick={onLogout}
-                  className="hidden md:flex p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                  className="hidden md:flex p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all shrink-0"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
@@ -400,7 +400,7 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
 
             {/* Desktop Auth login buttons when not authenticated */}
             {!user && (
-              <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
+              <div className="hidden md:flex items-center space-x-2 lg:space-x-3 shrink-0">
                 <Link
                   to="/login"
                   className="px-3 py-1.5 lg:px-4 lg:py-2 text-xs lg:text-[13px] font-bold text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all border border-transparent"
@@ -419,7 +419,7 @@ function Navbar({ user, profile, onLogout, isSidebarOpen, setIsSidebarOpen }: { 
             {/* Mobile Menu Button / Responsive indicator */}
             <button 
               onClick={() => setIsSidebarOpen(true)} 
-              className="p-2 sm:p-2.5 rounded-xl text-[#D4AF37] bg-slate-900/40 border border-slate-800 hover:bg-white/5 hover:border-indigo-500/20 lg:hidden transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95"
+              className="p-2 sm:p-2.5 rounded-xl text-[#D4AF37] bg-slate-900/40 border border-slate-800 hover:bg-white/5 hover:border-indigo-500/20 lg:hidden transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95 shrink-0"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
