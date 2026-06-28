@@ -50,9 +50,13 @@ export default function Login() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Send email link verification
+        // Send email link verification with action code settings to redirect back to the app
         try {
-          await sendEmailVerification(user);
+          const actionCodeSettings = {
+            url: `${window.location.origin}/verify-email`,
+            handleCodeInApp: true,
+          };
+          await sendEmailVerification(user, actionCodeSettings);
         } catch (linkErr) {
           console.error("Failed to send initial email verification:", linkErr);
         }
