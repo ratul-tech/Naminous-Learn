@@ -57,7 +57,7 @@ function Layout({ user, profile, setProfile, onLogout, refreshUser }: { user: Us
     }
 
     const isStudent = profile?.role === 'student';
-    const isNotVerified = isStudent && !user.emailVerified;
+    const isNotVerified = isStudent && !user.emailVerified && profile?.status !== 'active';
 
     if (isNotVerified) {
       return (

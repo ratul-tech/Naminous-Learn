@@ -45,13 +45,23 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
     if (!auth.currentUser) return;
     
     try {
-      // Check Firebase Auth email verification
+      // 1. Check if the student's Firestore record has already been updated to active (e.g. by an admin)
+      const studentDocRef = doc(db, 'students', auth.currentUser.uid);
+      const studentSnap = await getDoc(studentDocRef);
+      if (studentSnap.exists()) {
+        const studentData = studentSnap.data();
+        if (studentData?.status === 'active') {
+          setEmailVerified(true);
+          return;
+        }
+      }
+
+      // 2. Otherwise, check Firebase Auth email verification
       await auth.currentUser.reload();
       const isEmailVerified = auth.currentUser.emailVerified;
       setEmailVerified(isEmailVerified);
 
       if (isEmailVerified) {
-        const studentDocRef = doc(db, 'students', auth.currentUser.uid);
         await updateDoc(studentDocRef, { status: 'active' });
       }
     } catch (err) {
@@ -117,7 +127,16 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
         url: `${window.location.origin}/verify-email`,
         handleCodeInApp: true,
       };
-      await sendEmailVerification(auth.currentUser, actionCodeSettings);
+      try {
+        await sendEmailVerification(auth.currentUser, actionCodeSettings);
+      } catch (domainErr: any) {
+        if (domainErr.code === 'auth/unauthorized-continue-uri') {
+          console.warn("Domain not allowlisted for continue-uri. Falling back to default verification email.");
+          await sendEmailVerification(auth.currentUser);
+        } else {
+          throw domainErr;
+        }
+      }
       setMessage('A secure verification link has been resent! Please check your inbox & spam folder.');
       setCooldown(60); // 60 seconds cooldown
     } catch (err: any) {
@@ -179,7 +198,16 @@ export default function VerifyEmail({ onVerified }: VerifyEmailProps) {
         url: `${window.location.origin}/verify-email`,
         handleCodeInApp: true,
       };
-      await sendEmailVerification(auth.currentUser, actionCodeSettings);
+      try {
+        await sendEmailVerification(auth.currentUser, actionCodeSettings);
+      } catch (domainErr: any) {
+        if (domainErr.code === 'auth/unauthorized-continue-uri') {
+          console.warn("Domain not allowlisted for continue-uri. Falling back to default verification email.");
+          await sendEmailVerification(auth.currentUser);
+        } else {
+          throw domainErr;
+        }
+      }
       setMessage(`Verification link sent to your updated address: ${newEmail}`);
       
       // Reset editing state
