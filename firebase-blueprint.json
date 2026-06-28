@@ -47,7 +47,10 @@
         "subCategory": { "type": "string" },
         "board": { "type": "string" },
         "college": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" },
+        "createdByEmail": { "type": "string" },
+        "createdByName": { "type": "string" }
       },
       "required": ["text", "options", "correctAnswer", "category"]
     },

@@ -66,6 +66,9 @@ export interface Question {
   subject?: string;
   imageUrl?: string;
   createdAt: string;
+  createdBy?: string;
+  createdByEmail?: string;
+  createdByName?: string;
 }
 
 export interface ExamResult {

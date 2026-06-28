@@ -485,10 +485,11 @@ export default function Admin({ profile }: AdminProps) {
                 >
                 {activeTab === 'dashboard' && (
                   <div className="space-y-10">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                       <ModernStatCard label="Total Students" value={users.length} icon={Users} trend="+12% this month" />
                       <ModernStatCard label="Live Exams" value={events.filter(e => e.status === 'ongoing').length} icon={Activity} trend="Operational" highlight />
                       <ModernStatCard label="Question Index" value={questions.length} icon={Database} trend="Verified" />
+                      <ModernStatCard label="Your Contributions" value={questions.filter(q => q.createdBy === profile?.uid).length} icon={BookOpen} trend="Added By You" />
                       <ModernStatCard label="System Security" value="Nominal" icon={Shield} trend="Active" />
                     </div>
 
@@ -568,7 +569,7 @@ export default function Admin({ profile }: AdminProps) {
                 )}
                 
                 {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} deletingUserId={deletingUserId} />}
-                {activeTab === 'admins' && <AdminManager key="admins" admins={admins} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
+                {activeTab === 'admins' && <AdminManager key="admins" admins={admins} questions={questions} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
                 {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
                 {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
                 {activeTab === 'events' && <EventManager key="events" events={events} questions={questions} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
@@ -995,7 +996,7 @@ function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
   );
 }
 
-function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins: UserProfile[], onDelete: (uid: string) => void, onActivate: (uid: string) => void, currentProfile: UserProfile | null }) {
+function AdminManager({ admins, questions, onDelete, onActivate, currentProfile }: { admins: UserProfile[], questions: Question[], onDelete: (uid: string) => void, onActivate: (uid: string) => void, currentProfile: UserProfile | null }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredAdmins = admins.filter(a => 
@@ -1094,44 +1095,53 @@ function AdminManager({ admins, onDelete, onActivate, currentProfile }: { admins
                 <tr>
                   <th className="px-8 py-5 text-slate-400">Team Member</th>
                   <th className="px-8 py-5">Privileges</th>
+                  <th className="px-8 py-5 text-indigo-400">Questions Contributed</th>
                   <th className="px-8 py-5">System ID</th>
                   <th className="px-8 py-5 text-right">Operations</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/40 text-sm">
-                {activeAdmins.map((a) => (
-                  <tr key={a.uid} className="hover:bg-slate-800/20 transition-colors group">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center space-x-4">
-                        <img src={getAvatar(a.photoURL, a.displayName)} alt="" className="w-12 h-12 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/40 transition-colors shadow-sm" referrerPolicy="no-referrer" />
-                        <div>
-                          <p className="font-bold text-slate-100">{a.displayName}</p>
-                          <p className="text-xs text-slate-500 font-medium">{a.email}</p>
+                {activeAdmins.map((a) => {
+                  const contributedCount = questions.filter(q => q.createdBy === a.uid).length;
+                  return (
+                    <tr key={a.uid} className="hover:bg-slate-800/20 transition-colors group">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center space-x-4">
+                          <img src={getAvatar(a.photoURL, a.displayName)} alt="" className="w-12 h-12 rounded-xl border-2 border-slate-800 group-hover:border-indigo-500/40 transition-colors shadow-sm" referrerPolicy="no-referrer" />
+                          <div>
+                            <p className="font-bold text-slate-100">{a.displayName}</p>
+                            <p className="text-xs text-slate-500 font-medium">{a.email}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      <select
-                        value={a.adminType}
-                        onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
-                        className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider outline-none border transition-all cursor-pointer ${
-                          a.adminType === 'full' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'
-                        }`}
-                      >
-                        <option value="full">Superintendent</option>
-                        <option value="question_holder">Custodian</option>
-                      </select>
-                    </td>
-                    <td className="px-8 py-6">
-                       <code className="text-[10px] font-mono text-[#D4AF37] bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800/50 select-all font-bold tracking-tight hover:border-indigo-500/30 transition-all" title="Double-click to select and copy complete Admin UID">{a.uid}</code>
-                    </td>
-                    <td className="px-8 py-6 text-right">
-                      <button onClick={() => onDelete(a.uid)} className="p-3 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-500/20">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-8 py-6">
+                        <select
+                          value={a.adminType}
+                          onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
+                          className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider outline-none border transition-all cursor-pointer ${
+                            a.adminType === 'full' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}
+                        >
+                          <option value="full">Superintendent</option>
+                          <option value="question_holder">Custodian</option>
+                        </select>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className="text-xs font-bold font-mono text-indigo-400 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">
+                          {contributedCount} Units
+                        </span>
+                      </td>
+                      <td className="px-8 py-6">
+                         <code className="text-[10px] font-mono text-[#D4AF37] bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800/50 select-all font-bold tracking-tight hover:border-indigo-500/30 transition-all" title="Double-click to select and copy complete Admin UID">{a.uid}</code>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <button onClick={() => onDelete(a.uid)} className="p-3 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-500/20">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1195,6 +1205,8 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
               <tr>
                 <th className="px-8 py-5">Intel Core</th>
                 <th className="hidden sm:table-cell px-8 py-5">Classification</th>
+                <th className="hidden md:table-cell px-8 py-5">Created By</th>
+                <th className="hidden lg:table-cell px-8 py-5">Date & Time</th>
                 <th className="px-8 py-5 text-right">Operations</th>
               </tr>
             </thead>
@@ -1215,6 +1227,17 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
                       <span className="text-[9px] font-bold px-2.5 py-1 bg-slate-800 rounded-lg uppercase text-slate-400 tracking-tighter">{q.category}</span>
                       <span className="text-[9px] font-bold px-2.5 py-1 bg-indigo-500/10 rounded-lg uppercase text-indigo-400 tracking-tighter">{q.subject}</span>
                     </div>
+                  </td>
+                  <td className="hidden md:table-cell px-8 py-5">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-200">{q.createdByName || 'System'}</span>
+                      {q.createdByEmail && q.createdByEmail !== 'unknown' && (
+                        <span className="text-[10px] text-slate-500">{q.createdByEmail}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="hidden lg:table-cell px-8 py-5 text-slate-400 font-mono text-xs">
+                    {q.createdAt ? new Date(q.createdAt).toLocaleString() : 'N/A'}
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end space-x-2">
@@ -1240,7 +1263,7 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
               ))}
               {questions.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="text-center py-32 text-slate-600 uppercase text-[10px] font-bold tracking-[0.2em] bg-slate-950/20">No question data floating in archive</td>
+                  <td colSpan={5} className="text-center py-32 text-slate-600 uppercase text-[10px] font-bold tracking-[0.2em] bg-slate-950/20">No question data floating in archive</td>
                 </tr>
               )}
             </tbody>

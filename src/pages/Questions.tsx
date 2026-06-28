@@ -104,6 +104,9 @@ export default function Questions({ profile }: QuestionsProps) {
         await addDoc(collection(db, 'questions'), {
           ...questionData,
           createdAt: new Date().toISOString(),
+          createdBy: profile?.uid || 'unknown',
+          createdByEmail: profile?.email || 'unknown',
+          createdByName: profile?.displayName || 'System',
         });
         // Increment global question count
         await setDoc(doc(db, 'global_stats', 'counters'), { 
@@ -614,13 +617,25 @@ export default function Questions({ profile }: QuestionsProps) {
             <div key={q.id} className="p-4 sm:p-8 hover:bg-slate-800/30 transition-colors group">
               <div className="flex flex-col md:flex-row justify-between items-start gap-4 sm:gap-6">
                 <div className="flex-grow space-y-4 w-full">
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-slate-800 rounded-full text-slate-500 border border-slate-700">{q.category}</span>
-                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-[#D4AF37]/10 rounded-full text-[#D4AF37] border border-[#D4AF37]/20 font-mono">
-                      {q.category === 'Board' ? q.board : q.college}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-blue-500/10 rounded-full text-blue-400 border border-blue-500/20">{q.class}</span>
-                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-purple-500/10 rounded-full text-purple-400 border border-purple-500/20">{q.subject}</span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-slate-800 rounded-full text-slate-500 border border-slate-700">{q.category}</span>
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-[#D4AF37]/10 rounded-full text-[#D4AF37] border border-[#D4AF37]/20 font-mono">
+                        {q.category === 'Board' ? q.board : q.college}
+                      </span>
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-blue-500/10 rounded-full text-blue-400 border border-blue-500/20">{q.class}</span>
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1 bg-purple-500/10 rounded-full text-purple-400 border border-purple-500/20">{q.subject}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-slate-500 font-medium">
+                      <span className="w-1 h-1 rounded-full bg-slate-700 hidden sm:inline" />
+                      <span>Added by:</span>
+                      <span className="text-indigo-400 font-bold">{q.createdByName || 'System'}</span>
+                      {q.createdByEmail && q.createdByEmail !== 'unknown' && (
+                        <span className="text-slate-600 font-normal">({q.createdByEmail})</span>
+                      )}
+                      <span className="w-1 h-1 rounded-full bg-slate-700" />
+                      <span className="font-mono text-slate-400">{q.createdAt ? new Date(q.createdAt).toLocaleString() : 'N/A'}</span>
+                    </div>
                   </div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-100 leading-relaxed font-serif">
                     <MathRenderer content={q.text} engine={profile?.mathEngine} />
