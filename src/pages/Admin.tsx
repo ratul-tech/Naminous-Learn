@@ -257,6 +257,17 @@ export default function Admin({ profile }: AdminProps) {
             batch.delete(doc(db, 'students', uid));
             opCount++;
             
+            // Mark user for client-side Auth deletion self-clean
+            try {
+              batch.set(doc(db, 'deleted_users', uid), {
+                uid,
+                deletedAt: new Date().toISOString()
+              });
+              opCount++;
+            } catch (delErr) {
+              console.error('Admin Client failed to queue deleted_users document:', delErr);
+            }
+            
             // Decrement global student counter
             try {
               const countersRef = doc(db, 'global_stats', 'counters');
@@ -338,6 +349,17 @@ export default function Admin({ profile }: AdminProps) {
             // Delete admin profile document
             batch.delete(doc(db, 'admins', uid));
             opCount++;
+            
+            // Mark user for client-side Auth deletion self-clean
+            try {
+              batch.set(doc(db, 'deleted_users', uid), {
+                uid,
+                deletedAt: new Date().toISOString()
+              });
+              opCount++;
+            } catch (delErr) {
+              console.error('Admin Client failed to queue deleted_users document:', delErr);
+            }
             
             if (opCount > 0) {
               await batch.commit();

@@ -490,6 +490,18 @@ async function startServer() {
         console.error('Error handling admin record deletion:', adminDocErr);
       }
 
+      // Write to deleted_users collection so client-side self-cleaning Auth can trigger
+      try {
+        const deletedProfile = {
+          uid,
+          deletedAt: new Date().toISOString(),
+        };
+        await writeFirestoreDocument(projectId, idToken, 'deleted_users', uid, deletedProfile);
+        console.log(`User ${uid} successfully logged in deleted_users collection for client-side Auth deletion`);
+      } catch (delUsersErr: any) {
+        console.error('Error writing to deleted_users collection:', delUsersErr.message);
+      }
+
       // 3. Attempt to delete from Auth using best-effort Admin SDK, and catch graceful errors if permissions are restricted
       console.log(`Starting Auth deletion for user: ${uid}`);
       try {

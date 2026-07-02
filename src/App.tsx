@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, getDocFromServer, collection, getCountFromServer, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserProfile, UserRole } from './types';
 import { LogIn, LogOut, LayoutDashboard, User as UserIcon, BookOpen, Trophy, Calendar, Settings, Menu, X, MessageSquare, Shield, Facebook, Youtube, Instagram, MessageCircle, TrendingUp, ArrowRight, ArrowLeft, FileText, Clock, Award } from 'lucide-react';
@@ -180,6 +180,36 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser ? { ...firebaseUser } : null);
       if (firebaseUser) {
+        // Self-cleaning deletion if this user is in the deleted_users registry
+        try {
+          const deletedDoc = await getDoc(doc(db, 'deleted_users', firebaseUser.uid));
+          if (deletedDoc.exists()) {
+            console.log(`User ${firebaseUser.uid} found in deleted_users. Initiating client-side self-cleaning Auth deletion...`);
+            try {
+              await firebaseUser.delete();
+              console.log(`Auth user ${firebaseUser.uid} successfully deleted from Authentication.`);
+            } catch (authDelErr: any) {
+              console.error("Auth deletion failed:", authDelErr);
+              if (authDelErr.code === 'auth/requires-recent-login') {
+                console.warn("Re-authentication required. Will attempt deletion on next login session.");
+              }
+            }
+            try {
+              await deleteDoc(doc(db, 'deleted_users', firebaseUser.uid));
+              console.log(`Cleaned up deleted_users registry for ${firebaseUser.uid}.`);
+            } catch (dbDelErr) {
+              console.error("Registry document deletion failed:", dbDelErr);
+            }
+            await signOut(auth);
+            setUser(null);
+            setProfile(null);
+            setLoading(false);
+            return;
+          }
+        } catch (checkErr) {
+          console.error("Error checking deleted_users registry:", checkErr);
+        }
+
         let userDoc;
         
         // Priority Role Resolution: fetch from admins first so multi-allocated uids resolve as admin

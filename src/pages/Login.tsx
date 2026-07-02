@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserRole, UserProfile } from '../types';
 import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -95,6 +95,30 @@ export default function Login() {
         // Login Flow
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+
+        // Check if this user is marked as deleted by an admin
+        try {
+          const deletedCheck = await getDoc(doc(db, 'deleted_users', user.uid));
+          if (deletedCheck.exists()) {
+            console.log(`Attempted login by deleted user ${user.uid}. Cleaning up Auth account...`);
+            try {
+              await user.delete();
+            } catch (delErr) {
+              console.error("Auth deletion failed:", delErr);
+            }
+            try {
+              await deleteDoc(doc(db, 'deleted_users', user.uid));
+            } catch (dbDelErr) {
+              console.error("Registry document deletion failed:", dbDelErr);
+            }
+            await signOut(auth);
+            setError("Your account has been deleted by an administrator.");
+            setLoading(false);
+            return;
+          }
+        } catch (checkErr) {
+          console.error("Error checking deleted_users registry:", checkErr);
+        }
 
         const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
         let userDoc = await getDoc(doc(db, collectionName, user.uid));

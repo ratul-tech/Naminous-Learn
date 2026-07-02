@@ -177,5 +177,12 @@ service cloud.firestore {
       allow update: if isFullAdmin();
       allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
+
+    // Deleted Users self-cleaning registry
+    match /deleted_users/{uid} {
+      allow read: if isOwner(uid) || isFullAdmin();
+      allow create, update: if isFullAdmin();
+      allow delete: if isOwner(uid) || isFullAdmin();
+    }
   }
 }
