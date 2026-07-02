@@ -163,7 +163,7 @@ export default function Admin({ profile }: AdminProps) {
       if (!response.ok) {
         const errorData = await response.json();
         console.warn('Auth deletion error:', errorData.error);
-        // We continue even if auth deletion fails (might be already deleted)
+        return false;
       }
       return true;
     } catch (error) {
