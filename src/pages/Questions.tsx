@@ -31,6 +31,7 @@ interface QuestionsProps {
 export default function Questions({ profile }: QuestionsProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const isFullAdmin = profile?.role === 'admin' && profile?.adminType !== 'question_holder';
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,6 +84,10 @@ export default function Questions({ profile }: QuestionsProps) {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (editingId && !isFullAdmin) {
+      alert("Access Denied: You do not have permission to edit questions.");
+      return;
+    }
     try {
       const questionData = {
         text: newQ.text.trim(),
@@ -122,6 +127,10 @@ export default function Questions({ profile }: QuestionsProps) {
   };
 
   const handleEdit = (q: Question) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to edit questions.");
+      return;
+    }
     setNewQ({
       text: q.text,
       options: [...q.options],
@@ -150,6 +159,10 @@ export default function Questions({ profile }: QuestionsProps) {
   }, [location.state]);
 
   const handleDeleteQuestion = async (id: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to delete questions.");
+      return;
+    }
     setConfirmModal({
       show: true,
       title: 'Delete Question',
@@ -663,15 +676,15 @@ export default function Questions({ profile }: QuestionsProps) {
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-row md:flex-col items-center space-x-2 md:space-x-0 md:space-y-2 w-full md:w-auto justify-end md:justify-start pt-2 md:pt-0">
-                  <button 
-                    onClick={() => handleEdit(q)} 
-                    className="flex-1 md:flex-none p-3 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 transition-all border border-blue-500/20 shadow-lg flex items-center justify-center sm:block"
-                    title="Edit Question"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
-                  {profile?.role === 'admin' && (
+                {isFullAdmin && (
+                  <div className="flex flex-row md:flex-col items-center space-x-2 md:space-x-0 md:space-y-2 w-full md:w-auto justify-end md:justify-start pt-2 md:pt-0">
+                    <button 
+                      onClick={() => handleEdit(q)} 
+                      className="flex-1 md:flex-none p-3 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 transition-all border border-blue-500/20 shadow-lg flex items-center justify-center sm:block"
+                      title="Edit Question"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
                     <button 
                       onClick={() => handleDeleteQuestion(q.id)} 
                       className="flex-1 md:flex-none p-3 bg-rose-500/10 text-rose-400 rounded-xl hover:bg-rose-500/20 transition-all border border-rose-500/20 shadow-lg flex items-center justify-center sm:block"
@@ -679,8 +692,8 @@ export default function Questions({ profile }: QuestionsProps) {
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}

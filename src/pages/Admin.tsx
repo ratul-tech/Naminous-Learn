@@ -38,7 +38,7 @@ export default function Admin({ profile }: AdminProps) {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const isFullAdmin = profile?.role === 'admin';
+  const isFullAdmin = profile?.role === 'admin' && profile?.adminType !== 'question_holder';
   
   useEffect(() => {
     let timer: any;
@@ -109,6 +109,10 @@ export default function Admin({ profile }: AdminProps) {
   }, []);
 
   const handleApprovePayment = async (id: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to approve payments.");
+      return;
+    }
     try {
       await updateDoc(doc(db, 'payments', id), { status: 'approved' });
     } catch (error) {
@@ -117,6 +121,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleRejectPayment = async (id: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to reject payments.");
+      return;
+    }
     try {
       await updateDoc(doc(db, 'payments', id), { status: 'rejected' });
     } catch (error) {
@@ -125,6 +133,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleActivateAdmin = async (uid: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to activate admins.");
+      return;
+    }
     try {
       await updateDoc(doc(db, 'admins', uid), { status: 'active' });
     } catch (error) {
@@ -161,6 +173,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteEvent = async (id: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to delete events.");
+      return;
+    }
     setCountdown(5);
     setConfirmModal({
       show: true,
@@ -178,6 +194,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteQuestion = async (id: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to delete questions.");
+      return;
+    }
     setCountdown(5);
     setConfirmModal({
       show: true,
@@ -195,6 +215,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteStudent = async (uid: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to delete students.");
+      return;
+    }
     setCountdown(5);
     setConfirmModal({
       show: true,
@@ -263,6 +287,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteAdmin = async (uid: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to delete admins.");
+      return;
+    }
     if (uid === auth.currentUser?.uid) {
       setCountdown(0);
       setConfirmModal({
@@ -327,6 +355,10 @@ export default function Admin({ profile }: AdminProps) {
   };
 
   const handleDeleteResource = async (id: string) => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to delete resources.");
+      return;
+    }
     setCountdown(5);
     setConfirmModal({
       show: true,
@@ -567,15 +599,14 @@ export default function Admin({ profile }: AdminProps) {
                     </div>
                   </div>
                 )}
-                
-                {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} deletingUserId={deletingUserId} />}
+                                {activeTab === 'users' && <UserManager key="users" users={users} onDelete={handleDeleteStudent} deletingUserId={deletingUserId} isFullAdmin={isFullAdmin} />}
                 {activeTab === 'admins' && <AdminManager key="admins" admins={admins} questions={questions} onDelete={handleDeleteAdmin} onActivate={handleActivateAdmin} currentProfile={profile} />}
                 {activeTab === 'questions' && <QuestionManager key="questions" questions={questions} onDelete={handleDeleteQuestion} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
-                {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} />}
+                {activeTab === 'payments' && <PaymentManager key="payments" payments={payments} onApprove={handleApprovePayment} onReject={handleRejectPayment} isFullAdmin={isFullAdmin} />}
                 {activeTab === 'events' && <EventManager key="events" events={events} questions={questions} onDelete={handleDeleteEvent} isFullAdmin={isFullAdmin} mathEngine={profile?.mathEngine} />}
                 {activeTab === 'submissions' && <SubmissionManager key="submissions" submissions={submissions} events={events} users={users} mathEngine={profile?.mathEngine} />}
                 {activeTab === 'feedback' && <FeedbackManager key="feedback" feedback={feedback} />}
-                {activeTab === 'resources' && <ResourceManager key="resources" resources={resources} onDelete={handleDeleteResource} />}
+                {activeTab === 'resources' && <ResourceManager key="resources" resources={resources} onDelete={handleDeleteResource} isFullAdmin={isFullAdmin} />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -998,6 +1029,16 @@ function FeedbackManager({ feedback }: { feedback: Feedback[] }) {
 
 function AdminManager({ admins, questions, onDelete, onActivate, currentProfile }: { admins: UserProfile[], questions: Question[], onDelete: (uid: string) => void, onActivate: (uid: string) => void, currentProfile: UserProfile | null }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminName, setNewAdminName] = useState('');
+  const [newAdminType, setNewAdminType] = useState<'full' | 'question_holder'>('question_holder');
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
+
+  const isFullAdmin = currentProfile?.role === 'admin' && currentProfile?.adminType !== 'question_holder';
 
   const filteredAdmins = admins.filter(a => 
     a.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -1008,6 +1049,10 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
   const activeAdmins = filteredAdmins.filter(a => a.status !== 'pending');
 
   const handleUpdateRole = async (uid: string, newType: 'full' | 'question_holder') => {
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to update roles.");
+      return;
+    }
     try {
       await updateDoc(doc(db, 'admins', uid), { adminType: newType });
     } catch (error) {
@@ -1015,8 +1060,144 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
     }
   };
 
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSubmitting(true);
+    setFormError(null);
+    setFormSuccess(null);
+
+    if (!newAdminEmail || !newAdminPassword || !newAdminName) {
+      setFormError('All fields are required.');
+      setFormSubmitting(false);
+      return;
+    }
+
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          email: newAdminEmail,
+          password: newAdminPassword,
+          displayName: newAdminName,
+          role: 'admin',
+          adminType: newAdminType,
+          status: 'active'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create admin.');
+      }
+
+      setFormSuccess('Admin created successfully.');
+      setNewAdminEmail('');
+      setNewAdminPassword('');
+      setNewAdminName('');
+      setNewAdminType('question_holder');
+      setShowAddForm(false);
+    } catch (err: any) {
+      setFormError(err.message || 'Something went wrong.');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
+      {/* Add New Admin Form - Only for full admins */}
+      {isFullAdmin && (
+        <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-8 shadow-xl space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-bold text-white tracking-tight">Provision New Admin Account</h3>
+              <p className="text-xs text-slate-500 font-medium">Create a new secure credentials set for the panel</p>
+            </div>
+            <button 
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+            >
+              {showAddForm ? 'Hide Form' : 'Show Form'}
+            </button>
+          </div>
+
+          {showAddForm && (
+            <form onSubmit={handleAddAdmin} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800/50">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Admin Full Name</label>
+                <input 
+                  type="text" 
+                  value={newAdminName} 
+                  onChange={e => setNewAdminName(e.target.value)} 
+                  placeholder="e.g. John Doe" 
+                  className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200 text-sm" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+                <input 
+                  type="email" 
+                  value={newAdminEmail} 
+                  onChange={e => setNewAdminEmail(e.target.value)} 
+                  placeholder="e.g. admin@exam.com" 
+                  className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200 text-sm" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Password</label>
+                <input 
+                  type="password" 
+                  value={newAdminPassword} 
+                  onChange={e => setNewAdminPassword(e.target.value)} 
+                  placeholder="Min 6 characters" 
+                  className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200 text-sm" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Role Classification</label>
+                <select 
+                  value={newAdminType} 
+                  onChange={e => setNewAdminType(e.target.value as any)} 
+                  className="w-full bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 focus:border-indigo-500 outline-none transition-all font-bold text-slate-200 text-sm appearance-none cursor-pointer"
+                >
+                  <option value="full">Admin (Full Access)</option>
+                  <option value="question_holder">Question Holder (Limited Access)</option>
+                </select>
+              </div>
+
+              {formError && (
+                <div className="md:col-span-2 text-rose-500 text-xs font-bold bg-rose-500/10 border border-rose-500/20 px-4 py-3 rounded-xl">
+                  {formError}
+                </div>
+              )}
+              {formSuccess && (
+                <div className="md:col-span-2 text-emerald-500 text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 rounded-xl">
+                  {formSuccess}
+                </div>
+              )}
+
+              <div className="md:col-span-2 flex gap-4 pt-4 border-t border-slate-800/50">
+                <button 
+                  type="submit" 
+                  disabled={formSubmitting} 
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {formSubmitting ? 'Provisioning...' : 'Provision Admin Credentials'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+
       {pendingAdmins.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center space-x-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl">
@@ -1052,10 +1233,14 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
                         <span className="bg-rose-500/20 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-bold tracking-widest uppercase">Awaiting Clear</span>
                       </td>
                       <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end space-x-3">
-                          <button onClick={() => onActivate(a.uid)} className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all"><CheckCircle2 className="w-5 h-5" /></button>
-                          <button onClick={() => onDelete(a.uid)} className="bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white p-2.5 rounded-xl transition-all border border-slate-700 hover:border-transparent"><XCircle className="w-5 h-5" /></button>
-                        </div>
+                        {isFullAdmin ? (
+                          <div className="flex items-center justify-end space-x-3">
+                            <button onClick={() => onActivate(a.uid)} className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all"><CheckCircle2 className="w-5 h-5" /></button>
+                            <button onClick={() => onDelete(a.uid)} className="bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white p-2.5 rounded-xl transition-all border border-slate-700 hover:border-transparent"><XCircle className="w-5 h-5" /></button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">View Only</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1115,16 +1300,24 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <select
-                          value={a.adminType}
-                          onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
-                          className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider outline-none border transition-all cursor-pointer ${
+                        {isFullAdmin ? (
+                          <select
+                            value={a.adminType}
+                            onChange={(e) => handleUpdateRole(a.uid, e.target.value as any)}
+                            className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider outline-none border transition-all cursor-pointer ${
+                              a.adminType === 'full' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'
+                            }`}
+                          >
+                            <option value="full">Superintendent</option>
+                            <option value="question_holder">Custodian</option>
+                          </select>
+                        ) : (
+                          <span className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider border ${
                             a.adminType === 'full' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'
-                          }`}
-                        >
-                          <option value="full">Superintendent</option>
-                          <option value="question_holder">Custodian</option>
-                        </select>
+                          }`}>
+                            {a.adminType === 'full' ? 'Superintendent' : 'Custodian'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-8 py-6">
                         <span className="text-xs font-bold font-mono text-indigo-400 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">
@@ -1135,9 +1328,11 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
                          <code className="text-[10px] font-mono text-[#D4AF37] bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800/50 select-all font-bold tracking-tight hover:border-indigo-500/30 transition-all" title="Double-click to select and copy complete Admin UID">{a.uid}</code>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <button onClick={() => onDelete(a.uid)} className="p-3 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-500/20">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                        {isFullAdmin && (
+                          <button onClick={() => onDelete(a.uid)} className="p-3 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-500/20">
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1281,7 +1476,7 @@ function QuestionManager({ questions, onDelete, isFullAdmin, mathEngine }: { que
   );
 }
 
-function UserManager({ users, onDelete, deletingUserId }: { users: UserProfile[], onDelete: (uid: string) => void, deletingUserId: string | null }) {
+function UserManager({ users, onDelete, deletingUserId, isFullAdmin }: { users: UserProfile[], onDelete: (uid: string) => void, deletingUserId: string | null, isFullAdmin: boolean }) {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
   const [saving, setSaving] = useState(false);
@@ -1420,44 +1615,50 @@ function UserManager({ users, onDelete, deletingUserId }: { users: UserProfile[]
                     ) : (
                       <div className="flex flex-col items-start space-y-2">
                         <span className="bg-amber-500/10 text-amber-500 px-3 py-1 rounded-xl text-[10px] font-bold tracking-widest uppercase border border-amber-500/10">Pending Approval</span>
-                        <button
-                          onClick={async () => {
-                            try {
-                              await updateDoc(doc(db, 'students', u.uid), { status: 'active' });
-                            } catch (err) {
-                              handleFirestoreError(err, OperationType.UPDATE, `students/${u.uid}`);
-                            }
-                          }}
-                          className="text-[9px] bg-indigo-600 hover:bg-indigo-500 hover:shadow-indigo-500/30 text-white font-extrabold px-2.5 py-1.5 rounded-lg transition-all uppercase tracking-wider flex items-center space-x-1 cursor-pointer"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Approve</span>
-                        </button>
+                        {isFullAdmin && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await updateDoc(doc(db, 'students', u.uid), { status: 'active' });
+                              } catch (err) {
+                                handleFirestoreError(err, OperationType.UPDATE, `students/${u.uid}`);
+                              }
+                            }}
+                            className="text-[9px] bg-indigo-600 hover:bg-indigo-500 hover:shadow-indigo-500/30 text-white font-extrabold px-2.5 py-1.5 rounded-lg transition-all uppercase tracking-wider flex items-center space-x-1 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Approve</span>
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>
                   <td className="px-8 py-5 text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button 
-                        onClick={() => handleEdit(u)} 
-                        className="p-2.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all border border-transparent hover:border-indigo-500/20" 
-                        title="Configure Profile"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={() => onDelete(u.uid)} 
-                        disabled={deletingUserId === u.uid}
-                        className={`p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20 ${deletingUserId === u.uid ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                        title={deletingUserId === u.uid ? "Deleting..." : "Revoke Access"}
-                      >
-                        {deletingUserId === u.uid ? (
-                          <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
-                        ) : (
-                          <Trash2 className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
+                    {isFullAdmin ? (
+                      <div className="flex items-center justify-end space-x-2">
+                        <button 
+                          onClick={() => handleEdit(u)} 
+                          className="p-2.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all border border-transparent hover:border-indigo-500/20" 
+                          title="Configure Profile"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={() => onDelete(u.uid)} 
+                          disabled={deletingUserId === u.uid}
+                          className={`p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20 ${deletingUserId === u.uid ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                          title={deletingUserId === u.uid ? "Deleting..." : "Revoke Access"}
+                        >
+                          {deletingUserId === u.uid ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
+                          ) : (
+                            <Trash2 className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">View Only</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -1575,7 +1776,7 @@ function UserManager({ users, onDelete, deletingUserId }: { users: UserProfile[]
   );
 }
 
-function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[], onApprove: (id: string) => void, onReject: (id: string) => void }) {
+function PaymentManager({ payments, onApprove, onReject, isFullAdmin }: { payments: Payment[], onApprove: (id: string) => void, onReject: (id: string) => void, isFullAdmin: boolean }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredPayments = payments.filter(p => 
@@ -1651,22 +1852,26 @@ function PaymentManager({ payments, onApprove, onReject }: { payments: Payment[]
                   </td>
                   <td className="px-8 py-6 text-right">
                     {p.status === 'pending' && (
-                      <div className="flex items-center justify-end space-x-2">
-                        <button 
-                          onClick={() => onApprove(p.id)} 
-                          className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all border border-transparent hover:border-emerald-500/20" 
-                          title="Authorize Flow"
-                        >
-                          <CheckCircle2 className="w-6 h-6" />
-                        </button>
-                        <button 
-                          onClick={() => onReject(p.id)} 
-                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20" 
-                          title="Deny Clearance"
-                        >
-                          <XCircle className="w-6 h-6" />
-                        </button>
-                      </div>
+                      isFullAdmin ? (
+                        <div className="flex items-center justify-end space-x-2">
+                          <button 
+                            onClick={() => onApprove(p.id)} 
+                            className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all border border-transparent hover:border-emerald-500/20" 
+                            title="Authorize Flow"
+                          >
+                            <CheckCircle2 className="w-6 h-6" />
+                          </button>
+                          <button 
+                            onClick={() => onReject(p.id)} 
+                            className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20" 
+                            title="Deny Clearance"
+                          >
+                            <XCircle className="w-6 h-6" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Awaiting Clearance</span>
+                      )
                     )}
                   </td>
                 </tr>
@@ -2958,7 +3163,7 @@ function EventManager({ events, questions = [], onDelete, isFullAdmin, mathEngin
   );
 }
 
-function ResourceManager({ resources, onDelete }: { resources: Resource[], onDelete: (id: string) => void }) {
+function ResourceManager({ resources, onDelete, isFullAdmin }: { resources: Resource[], onDelete: (id: string) => void, isFullAdmin: boolean }) {
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({ title: '', url: '', category: ALL_SUBJECTS[0] || 'Physics', size: '' });
   const [saving, setSaving] = useState(false);
@@ -2971,6 +3176,10 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFullAdmin) {
+      alert("Access Denied: You do not have permission to add resources.");
+      return;
+    }
     setSaving(true);
     try {
       await addDoc(collection(db, 'resources'), {
@@ -3006,10 +3215,12 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
               className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold text-xs text-slate-300 shadow-inner"
             />
           </div>
-          <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95">
-            <Plus className="w-4 h-4" />
-            <span>Ingest New Asset</span>
-          </button>
+          {isFullAdmin && (
+            <button onClick={() => setShowAdd(true)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95">
+              <Plus className="w-4 h-4" />
+              <span>Ingest New Asset</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -3076,13 +3287,15 @@ function ResourceManager({ resources, onDelete }: { resources: Resource[], onDel
               <div className={`p-4 rounded-2xl transition-all ${r.category === 'Physics' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-slate-800 text-slate-400'} group-hover:bg-indigo-600 group-hover:text-white`}>
                  <FileText className="w-6 h-6" />
               </div>
-              <button 
-                onClick={() => onDelete(r.id)} 
-                className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-slate-800 hover:border-rose-500/20 shadow-sm"
-                title="Decommission Asset"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {isFullAdmin && (
+                <button 
+                  onClick={() => onDelete(r.id)} 
+                  className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-slate-800 hover:border-rose-500/20 shadow-sm"
+                  title="Decommission Asset"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             <div className="relative z-10">

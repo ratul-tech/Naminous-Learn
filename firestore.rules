@@ -30,6 +30,12 @@ service cloud.firestore {
       return isBootstrapAdmin() || (isAdmin() && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active');
     }
 
+    function isFullAdmin() {
+      return isBootstrapAdmin() || (isActiveAdmin() && 
+        (!get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.keys().hasAll(['adminType']) || 
+         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.adminType == 'full'));
+    }
+
     // ===============================================================
     // Entity Validations - Pillar 2 (Validation Blueprints)
     // ===============================================================
@@ -105,70 +111,71 @@ service cloud.firestore {
     match /students/{uid} {
       allow read: if isSignedIn();
       allow create: if isOwner(uid) && isValidStudent(incoming(), uid);
-      allow update: if (isActiveAdmin() || isOwner(uid)) && isValidStudent(incoming(), uid);
-      allow delete: if isActiveAdmin() || isOwner(uid);
+      allow update: if (isFullAdmin() || isOwner(uid)) && isValidStudent(incoming(), uid);
+      allow delete: if isFullAdmin() || isOwner(uid);
     }
 
     // Admin Registry
     match /admins/{uid} {
       allow read: if isSignedIn(); // Allow all signed in users to check admin status
       // Bootstrap admin can create their own record, or active admins can create/manage others
-      allow create: if (isBootstrapAdmin() && isOwner(uid)) || isActiveAdmin();
-      allow update: if isActiveAdmin();
-      allow delete: if isActiveAdmin();
+      allow create: if (isBootstrapAdmin() && isOwner(uid)) || isFullAdmin();
+      allow update: if isFullAdmin();
+      allow delete: if isFullAdmin();
     }
 
     // Question bank
     match /questions/{questionId} {
       allow read: if isSignedIn();
-      allow create, update: if isActiveAdmin() && isValidQuestion(incoming());
-      allow delete: if isActiveAdmin();
+      allow create: if isActiveAdmin() && isValidQuestion(incoming());
+      allow update: if isFullAdmin() && isValidQuestion(incoming());
+      allow delete: if isFullAdmin();
     }
 
     // Exam Events
     match /events/{eventId} {
       allow read: if isSignedIn();
-      allow create, update: if isActiveAdmin() && isValidEvent(incoming());
-      allow delete: if isActiveAdmin();
+      allow create, update: if isFullAdmin() && isValidEvent(incoming());
+      allow delete: if isFullAdmin();
     }
 
     // Payments
     match /payments/{paymentId} {
       allow read: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn() && isValidPayment(incoming());
-      allow update: if isActiveAdmin();
-      allow delete: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isFullAdmin();
+      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
 
     // Exam Results
     match /results/{resultId} {
       allow read: if true;
       allow create: if isSignedIn() && isValidResult(incoming());
-      allow update: if isActiveAdmin();
-      allow delete: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isFullAdmin();
+      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
 
     // Feedback
     match /feedback/{feedbackId} {
       allow read: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn() && isValidFeedback(incoming());
-      allow update: if isActiveAdmin();
-      allow delete: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isFullAdmin();
+      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
 
     // Academic Resources
     match /resources/{resourceId} {
       allow read: if isSignedIn();
-      allow create, update: if isActiveAdmin() && isValidResource(incoming());
-      allow delete: if isActiveAdmin();
+      allow create, update: if isFullAdmin() && isValidResource(incoming());
+      allow delete: if isFullAdmin();
     }
 
     // Exam Submissions
     match /submissions/{submissionId} {
       allow read: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn() && isValidSubmission(incoming());
-      allow update: if isActiveAdmin();
-      allow delete: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isFullAdmin();
+      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
   }
 }
