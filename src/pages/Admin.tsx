@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where, increment, writeBatch, getDocs } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, signOut, getAuth, signOut as secondarySignOut } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser, signOut, getAuth, signOut as secondarySignOut } from 'firebase/auth';
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -1175,8 +1175,61 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
     } catch (err: any) {
       console.error("Error creating admin:", err);
       let msg = err.message || 'Something went wrong.';
-      if (err.code === 'auth/email-already-in-use') {
-        msg = 'An account with this email address already exists.';
+      if (err.code === 'auth/email-already-in-use' || err.message?.includes('EMAIL_EXISTS') || err.message?.includes('already exists')) {
+        try {
+          const studentQuery = await getDocs(query(collection(db, 'students'), where('email', '==', newAdminEmail)));
+          const adminQuery = await getDocs(query(collection(db, 'admins'), where('email', '==', newAdminEmail)));
+
+          if (!studentQuery.empty || !adminQuery.empty) {
+            msg = 'An account with this email address already exists.';
+          } else {
+            // Deleted account lingering in Firebase Auth - purge old record and re-provision
+            console.log("Email belongs to a deleted account. Purging old Auth record via secondary app...");
+            try {
+              const appName = 'SecondaryAdminProvisionApp';
+              const secondaryApp = getApps().find(a => a.name === appName) || initializeApp(firebaseConfig as any, appName);
+              const secondaryAuth = getAuth(secondaryApp);
+              
+              const oldCred = await signInWithEmailAndPassword(secondaryAuth, newAdminEmail, newAdminPassword);
+              await deleteUser(oldCred.user);
+
+              // Create fresh admin Auth user
+              const freshCred = await createUserWithEmailAndPassword(secondaryAuth, newAdminEmail, newAdminPassword);
+              const newUid = freshCred.user.uid;
+              const photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(newAdminName)}&background=random`;
+
+              const newProfile: UserProfile = {
+                uid: newUid,
+                email: newAdminEmail,
+                displayName: newAdminName,
+                photoURL,
+                role: 'admin',
+                adminType: newAdminType,
+                status: 'active',
+                createdAt: new Date().toISOString(),
+              };
+
+              await setDoc(doc(db, 'admins', newUid), newProfile);
+              try { await deleteDoc(doc(db, 'deleted_users', newUid)); } catch (dErr) {}
+              await secondarySignOut(secondaryAuth);
+
+              setFormSuccess('Admin created successfully.');
+              setNewAdminEmail('');
+              setNewAdminPassword('');
+              setNewAdminName('');
+              setNewAdminType('question_holder');
+              setShowAddForm(false);
+              setFormSubmitting(false);
+              return;
+            } catch (secErr) {
+              console.warn("Failed to auto-purge lingering admin account with provided password:", secErr);
+              msg = 'An old deleted account exists with this email address. Enter the previous password used for this email to reclaim it.';
+            }
+          }
+        } catch (checkErr) {
+          console.error("Error checking Firestore during admin creation:", checkErr);
+          msg = 'An account with this email address already exists.';
+        }
       } else if (err.code === 'auth/weak-password') {
         msg = 'Password should be at least 6 characters long.';
       } else if (err.code === 'auth/invalid-email') {

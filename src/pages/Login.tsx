@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup, deleteUser } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc, increment, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserRole, UserProfile } from '../types';
 import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -158,13 +158,17 @@ export default function Login() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Check if this user is marked as deleted by an admin
+        // Check if this user is marked as deleted or has no profile document in Firestore
         try {
           const deletedCheck = await getDoc(doc(db, 'deleted_users', user.uid));
-          if (deletedCheck.exists()) {
+          const studentDocCheck = await getDoc(doc(db, 'students', user.uid));
+          const adminDocCheck = await getDoc(doc(db, 'admins', user.uid));
+
+          if (deletedCheck.exists() || (!studentDocCheck.exists() && !adminDocCheck.exists() && user.email !== 'shahriarislam275@gmail.com')) {
             console.log(`Attempted login by deleted user ${user.uid}. Cleaning up Auth account...`);
             try {
-              await user.delete();
+              await deleteUser(user);
+              console.log(`Successfully purged deleted user ${user.uid} from Firebase Authentication.`);
             } catch (delErr) {
               console.error("Auth deletion failed:", delErr);
             }
@@ -174,12 +178,12 @@ export default function Login() {
               console.error("Registry document deletion failed:", dbDelErr);
             }
             await signOut(auth);
-            setError("Your account has been deleted by an administrator.");
+            setError("This account was previously deleted. The authentication record has now been removed so you can create a new account.");
             setLoading(false);
             return;
           }
         } catch (checkErr) {
-          console.error("Error checking deleted_users registry:", checkErr);
+          console.error("Error checking deleted status:", checkErr);
         }
 
         const collectionName = selectedRole === 'admin' ? 'admins' : 'students';
@@ -230,14 +234,67 @@ export default function Login() {
           return;
         }
 
-
-
         navigate('/dashboard');
       }
     } catch (err: any) {
       console.error("Auth error:", err);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('The email is already in use. If you remember your password, try logging in directly to automatically recover your profile.');
+      if (err.code === 'auth/email-already-in-use' || err.message?.includes('EMAIL_EXISTS') || err.message?.includes('already exists')) {
+        try {
+          const studentQuery = await getDocs(query(collection(db, 'students'), where('email', '==', email)));
+          const adminQuery = await getDocs(query(collection(db, 'admins'), where('email', '==', email)));
+
+          if (!studentQuery.empty || !adminQuery.empty) {
+            setError("An account with this email address already exists. Please log in.");
+          } else {
+            // Deleted account lingering in Firebase Auth - attempt auto-recovery/purge
+            console.log("Email belongs to a deleted account lingering in Auth. Purging old Auth record...");
+            try {
+              const oldCred = await signInWithEmailAndPassword(auth, email, password);
+              const oldUser = oldCred.user;
+              await deleteUser(oldUser);
+              
+              // Now register as fresh user
+              const freshCred = await createUserWithEmailAndPassword(auth, email, password);
+              const freshUser = freshCred.user;
+
+              if (selectedRole === 'student') {
+                const newProfile: UserProfile = {
+                  uid: freshUser.uid,
+                  email: freshUser.email || email,
+                  displayName: displayName || freshUser.displayName || freshUser.email?.split('@')[0] || 'User',
+                  photoURL: getAvatar(freshUser.photoURL, displayName || freshUser.displayName || freshUser.email?.split('@')[0] || 'User'),
+                  role: 'student',
+                  status: 'pending',
+                  createdAt: new Date().toISOString(),
+                };
+                await setDoc(doc(db, 'students', freshUser.uid), newProfile);
+                try {
+                  await setDoc(doc(db, 'global_stats', 'counters'), { studentsCount: increment(1) }, { merge: true });
+                } catch (cErr) {}
+                navigate('/verify-email');
+              } else {
+                const newProfile: UserProfile = {
+                  uid: freshUser.uid,
+                  email: freshUser.email || email,
+                  displayName: displayName || freshUser.displayName || freshUser.email?.split('@')[0] || 'Admin',
+                  photoURL: getAvatar(freshUser.photoURL, displayName || freshUser.displayName || freshUser.email?.split('@')[0] || 'Admin'),
+                  role: 'admin',
+                  status: 'pending',
+                  createdAt: new Date().toISOString(),
+                };
+                await setDoc(doc(db, 'admins', freshUser.uid), newProfile);
+                navigate('/dashboard');
+              }
+              return;
+            } catch (signInErr: any) {
+              console.warn("Could not auto-purge deleted Auth record with provided password:", signInErr);
+              setError("An old deleted account exists with this email address. Please enter your previous password to reactivate and register this email, or log in.");
+            }
+          }
+        } catch (checkErr) {
+          console.error("Error checking Firestore during registration failure:", checkErr);
+          setError("An account with this email address already exists.");
+        }
       } else {
         setError(getAuthErrorMessage(err.code));
       }

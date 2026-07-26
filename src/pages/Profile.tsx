@@ -243,28 +243,24 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
           await batch.commit();
           console.log('Client-side fallback Firestore cleanup succeeded.');
         }
-
-        // Try direct auth user deletion
-        try {
-          if (auth.currentUser) {
-            await deleteUser(auth.currentUser);
-            console.log('Client-side Auth user deletion succeeded.');
-          } else {
-            throw new Error('No current authenticated auth user available for fallback deletion.');
-          }
-        } catch (authClientErr: any) {
-          console.error('Client-side Auth user deletion failed:', authClientErr);
-          if (authClientErr.code === 'auth/requires-recent-login') {
-            throw new Error('For security reasons, you must re-authenticate (log out and log back in) before deleting your account.');
-          } else {
-            throw new Error('Failed to delete account. Please try again.');
-          }
-        }
       } else {
-        console.log('Secure server-side user deletion succeeded.');
+        console.log('Secure server-side database user deletion succeeded.');
+      }
+
+      // Always purge the current user's Auth account directly on the client side
+      try {
+        if (auth.currentUser) {
+          await deleteUser(auth.currentUser);
+          console.log('Client-side Auth user deletion succeeded.');
+        }
+      } catch (authClientErr: any) {
+        console.error('Client-side Auth user deletion failed or already deleted:', authClientErr);
+        if (authClientErr.code === 'auth/requires-recent-login') {
+          throw new Error('For security reasons, you must re-authenticate (log out and log back in) before deleting your account.');
+        }
       }
       
-      await signOut(auth);
+      await signOut(auth).catch(() => {});
       navigate('/');
     } catch (error: any) {
       console.error('Error deleting account:', error);
