@@ -148,7 +148,47 @@ async function startServer() {
 
     if (!signUpRes.ok) {
       const errData = await signUpRes.json();
-      throw new Error(errData.error?.message || "Failed to create authentication user");
+      const rawError = errData.error?.message || "Failed to create authentication user";
+      
+      if (rawError === 'EMAIL_EXISTS') {
+        // Try to re-authenticate with the provided password to reuse existing account
+        try {
+          const signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
+          const signInRes = await fetch(signInUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              password,
+              returnSecureToken: true
+            })
+          });
+          if (signInRes.ok) {
+            const signInData = await signInRes.json();
+            const uid = signInData.localId;
+            const idToken = signInData.idToken;
+
+            if (displayName) {
+              const updateUrl = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`;
+              await fetch(updateUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  idToken,
+                  displayName,
+                  returnSecureToken: true
+                })
+              });
+            }
+            console.log(`Re-used existing Firebase Auth account for UID: ${uid}`);
+            return uid;
+          }
+        } catch (signInErr) {
+          console.warn("Re-authentication check failed for existing account:", signInErr);
+        }
+      }
+
+      throw new Error(rawError);
     }
 
     const signUpData = await signUpRes.json();
@@ -405,8 +445,13 @@ async function startServer() {
 
       return res.status(200).json({ success: true, uid: userUid });
     } catch (error: any) {
+      const errMsg = error.message || "";
+      if (errMsg === 'EMAIL_EXISTS' || errMsg.includes('EMAIL_EXISTS')) {
+        console.warn(`Registration attempt for existing email: ${email}`);
+        return res.status(400).json({ error: "An account with this email address already exists." });
+      }
       console.error("Express registration endpoint failed:", error);
-      return res.status(500).json({ error: error.message || "Failed to create user backend profile" });
+      return res.status(500).json({ error: errMsg || "Failed to create user backend profile" });
     }
   });
 

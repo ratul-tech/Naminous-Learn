@@ -45,52 +45,114 @@ export default function Login() {
     setLoading(true);
 
     try {
-      if (authMode === 'register' && selectedRole === 'student') {
-        // Create student user client-side directly
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+      if (authMode === 'register') {
+        if (selectedRole === 'student') {
+          // Create student user client-side directly
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
 
-        // Send email link verification with action code settings to redirect back to the app, falling back if domain is not allowlisted
-        try {
-          const actionCodeSettings = {
-            url: `${window.location.origin}/verify-email`,
-            handleCodeInApp: true,
-          };
+          // Send email link verification with action code settings to redirect back to the app, falling back if domain is not allowlisted
           try {
-            await sendEmailVerification(user, actionCodeSettings);
-          } catch (domainErr: any) {
-            if (domainErr.code === 'auth/unauthorized-continue-uri') {
-              console.warn("Domain not allowlisted for continue-uri. Falling back to default verification email.");
-              await sendEmailVerification(user);
-            } else {
-              throw domainErr;
+            const actionCodeSettings = {
+              url: `${window.location.origin}/verify-email`,
+              handleCodeInApp: true,
+            };
+            try {
+              await sendEmailVerification(user, actionCodeSettings);
+            } catch (domainErr: any) {
+              if (domainErr.code === 'auth/unauthorized-continue-uri') {
+                console.warn("Domain not allowlisted for continue-uri. Falling back to default verification email.");
+                await sendEmailVerification(user);
+              } else {
+                throw domainErr;
+              }
             }
+          } catch (linkErr) {
+            console.error("Failed to send initial email verification:", linkErr);
           }
-        } catch (linkErr) {
-          console.error("Failed to send initial email verification:", linkErr);
-        }
 
-        const newProfile: UserProfile = {
-          uid: user.uid,
-          email: user.email || email,
-          displayName: displayName || user.displayName || user.email?.split('@')[0] || 'User',
-          photoURL: getAvatar(user.photoURL, displayName || user.displayName || user.email?.split('@')[0] || 'User'),
-          role: 'student',
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        };
+          const newProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || email,
+            displayName: displayName || user.displayName || user.email?.split('@')[0] || 'User',
+            photoURL: getAvatar(user.photoURL, displayName || user.displayName || user.email?.split('@')[0] || 'User'),
+            role: 'student',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          };
 
-        await setDoc(doc(db, 'students', user.uid), newProfile);
-        
-        try {
-          await setDoc(doc(db, 'global_stats', 'counters'), { 
-            studentsCount: increment(1) 
-          }, { merge: true });
-        } catch (counterErr) {
-          console.error("Failed to update student counter in stats:", counterErr);
+          await setDoc(doc(db, 'students', user.uid), newProfile);
+          
+          try {
+            await setDoc(doc(db, 'global_stats', 'counters'), { 
+              studentsCount: increment(1) 
+            }, { merge: true });
+          } catch (counterErr) {
+            console.error("Failed to update student counter in stats:", counterErr);
+          }
+          
+          navigate('/verify-email');
+        } else {
+          // Admin account registration (Server API with Client-Side Fallback)
+          let serverSuccess = false;
+          let serverErrMsg: string | null = null;
+
+          try {
+            const response = await fetch('/api/auth/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                password,
+                displayName: displayName || email.split('@')[0] || 'Admin',
+                role: 'admin',
+                status: 'pending'
+              })
+            });
+
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const regData = await response.json().catch(() => ({}));
+              if (response.ok) {
+                serverSuccess = true;
+              } else {
+                serverErrMsg = regData.error || "Failed to register admin account.";
+              }
+            } else {
+              console.warn("API returned non-JSON response during admin signup. Falling back to client-side auth...");
+            }
+          } catch (fetchErr) {
+            console.warn("Server endpoint unavailable during admin signup:", fetchErr);
+          }
+
+          if (serverErrMsg) {
+            throw new Error(serverErrMsg);
+          }
+
+          if (!serverSuccess) {
+            // Client-side fallback if server API is unavailable (e.g. static host like Vercel)
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const newProfile: UserProfile = {
+              uid: user.uid,
+              email: user.email || email,
+              displayName: displayName || user.displayName || user.email?.split('@')[0] || 'Admin',
+              photoURL: getAvatar(user.photoURL, displayName || user.displayName || user.email?.split('@')[0] || 'Admin'),
+              role: 'admin',
+              adminType: 'question_holder',
+              status: 'pending',
+              createdAt: new Date().toISOString(),
+            };
+
+            await setDoc(doc(db, 'admins', user.uid), newProfile);
+          } else {
+            // Log in with credentials created on server
+            await signInWithEmailAndPassword(auth, email, password);
+          }
+
+          navigate('/dashboard');
         }
-        
-        navigate('/verify-email');
       } else {
         // Login Flow
         const userCredential = await signInWithEmailAndPassword(auth, email, password);

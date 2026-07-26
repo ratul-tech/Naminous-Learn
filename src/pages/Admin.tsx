@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, where, increment, writeBatch, getDocs } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signOut, getAuth, signOut as secondarySignOut } from 'firebase/auth';
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { Question, UserProfile, Payment, ExamEvent, Feedback, MathEngine } from '../types';
@@ -161,8 +160,13 @@ export default function Admin({ profile }: AdminProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.warn('Auth deletion error:', errorData.error);
+        const contentType = response.headers.get('content-type');
+        let errStr = 'Unknown error';
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({}));
+          errStr = errorData.error || errStr;
+        }
+        console.warn('Auth deletion error (handled gracefully):', errStr);
         return false;
       }
       return true;
@@ -1095,26 +1099,71 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
     }
 
     try {
-      const idToken = await auth.currentUser?.getIdToken();
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
+      let serverSuccess = false;
+      let serverErrorMessage: string | null = null;
+
+      // 1. Attempt server API endpoint if available
+      try {
+        const idToken = await auth.currentUser?.getIdToken();
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            email: newAdminEmail,
+            password: newAdminPassword,
+            displayName: newAdminName,
+            role: 'admin',
+            adminType: newAdminType,
+            status: 'active'
+          })
+        });
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json().catch(() => ({}));
+          if (response.ok) {
+            serverSuccess = true;
+          } else {
+            serverErrorMessage = data.error || 'Failed to create admin.';
+          }
+        } else {
+          console.warn("API returned non-JSON response (e.g. static hosting). Falling back to client-side secondary auth...");
+        }
+      } catch (fetchErr) {
+        console.warn("Server endpoint call failed or unavailable, falling back to client-side admin creation:", fetchErr);
+      }
+
+      if (serverErrorMessage) {
+        throw new Error(serverErrorMessage);
+      }
+
+      // 2. If server API endpoint was not available (e.g. static deployment on Vercel), fall back to client-side Firebase Auth secondary app creation
+      if (!serverSuccess) {
+        console.log("Provisioning admin account via client-side secondary Firebase Auth app...");
+        const appName = 'SecondaryAdminProvisionApp';
+        const secondaryApp = getApps().find(a => a.name === appName) || initializeApp(firebaseConfig as any, appName);
+        const secondaryAuth = getAuth(secondaryApp);
+
+        const userCred = await createUserWithEmailAndPassword(secondaryAuth, newAdminEmail, newAdminPassword);
+        const newUid = userCred.user.uid;
+        const photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(newAdminName)}&background=random`;
+
+        const newProfile: UserProfile = {
+          uid: newUid,
           email: newAdminEmail,
-          password: newAdminPassword,
           displayName: newAdminName,
+          photoURL,
           role: 'admin',
           adminType: newAdminType,
-          status: 'active'
-        })
-      });
+          status: 'active',
+          createdAt: new Date().toISOString(),
+        };
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create admin.');
+        await setDoc(doc(db, 'admins', newUid), newProfile);
+        await secondarySignOut(secondaryAuth);
       }
 
       setFormSuccess('Admin created successfully.');
@@ -1124,7 +1173,16 @@ function AdminManager({ admins, questions, onDelete, onActivate, currentProfile 
       setNewAdminType('question_holder');
       setShowAddForm(false);
     } catch (err: any) {
-      setFormError(err.message || 'Something went wrong.');
+      console.error("Error creating admin:", err);
+      let msg = err.message || 'Something went wrong.';
+      if (err.code === 'auth/email-already-in-use') {
+        msg = 'An account with this email address already exists.';
+      } else if (err.code === 'auth/weak-password') {
+        msg = 'Password should be at least 6 characters long.';
+      } else if (err.code === 'auth/invalid-email') {
+        msg = 'Please enter a valid email address.';
+      }
+      setFormError(msg);
     } finally {
       setFormSubmitting(false);
     }
