@@ -151,7 +151,7 @@ async function startServer() {
       const rawError = errData.error?.message || "Failed to create authentication user";
       
       if (rawError === 'EMAIL_EXISTS') {
-        // Try to re-authenticate with the provided password to reuse existing account
+        // Try to purge lingering deleted account and re-register
         try {
           const signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
           const signInRes = await fetch(signInUrl, {
@@ -165,23 +165,47 @@ async function startServer() {
           });
           if (signInRes.ok) {
             const signInData = await signInRes.json();
-            const uid = signInData.localId;
             const idToken = signInData.idToken;
 
-            if (displayName) {
-              const updateUrl = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`;
-              await fetch(updateUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  idToken,
-                  displayName,
-                  returnSecureToken: true
-                })
-              });
+            // Purge lingering Auth record
+            const deleteAuthUrl = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`;
+            await fetch(deleteAuthUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken })
+            });
+            console.log(`Purged lingering Auth user for ${email}. Re-creating fresh Auth user...`);
+
+            // Now create fresh user
+            const freshSignUpRes = await fetch(signUpUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                password,
+                returnSecureToken: true
+              })
+            });
+
+            if (freshSignUpRes.ok) {
+              const freshData = await freshSignUpRes.json();
+              const freshUid = freshData.localId;
+              const freshToken = freshData.idToken;
+
+              if (displayName) {
+                const updateUrl = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`;
+                await fetch(updateUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    idToken: freshToken,
+                    displayName,
+                    returnSecureToken: true
+                  })
+                });
+              }
+              return freshUid;
             }
-            console.log(`Re-used existing Firebase Auth account for UID: ${uid}`);
-            return uid;
           }
         } catch (signInErr) {
           console.warn("Re-authentication check failed for existing account:", signInErr);

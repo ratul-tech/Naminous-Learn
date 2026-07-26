@@ -1,188 +1,80 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 0. Default Deny - Pillar 0
-    match /{document=**} {
-      allow read, write: if false;
-    }
 
-    // ===============================================================
-    // Shared Helpers - Phase 3
-    // ===============================================================
+    // Helper functions
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
-    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
     
-    // Auth checks - Pillar 4 (Tiered Identity)
     function isBootstrapAdmin() {
       return isSignedIn() && 
-             request.auth.token.email == 'shahriarislam275@gmail.com' && 
-             request.auth.token.email_verified == true;
+             request.auth.token.email == 'shahriarislam275@gmail.com';
     }
 
     function isAdmin() { 
       return isBootstrapAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))); 
     }
-    
-    function isActiveAdmin() {
-      return isBootstrapAdmin() || (isAdmin() && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active');
-    }
-
-    function isFullAdmin() {
-      return isBootstrapAdmin() || (isActiveAdmin() && 
-        (!get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.keys().hasAll(['adminType']) || 
-         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.adminType == 'full'));
-    }
-
-    // ===============================================================
-    // Entity Validations - Pillar 2 (Validation Blueprints)
-    // ===============================================================
-
-    function isValidStudent(data, studentUid) {
-      return data.keys().hasAll(['uid', 'email', 'role']) &&
-             data.uid == studentUid &&
-             data.role == 'student' &&
-             data.keys().size() <= 30;
-    }
-
-    function isValidAdmin(data) {
-      return data.keys().hasAll(['uid', 'email', 'role', 'status']) &&
-             // No isOwner check here because admins are often created/updated by other admins
-             data.role == 'admin' &&
-             data.status in ['pending', 'active'] &&
-             data.keys().size() <= 30;
-    }
-
-    function isValidQuestion(data) {
-      return data.keys().hasAll(['text', 'options', 'correctAnswer', 'category']) &&
-             data.text is string &&
-             data.options is list &&
-             data.keys().size() <= 30;
-    }
-
-    function isValidEvent(data) {
-      return data.keys().hasAll(['title', 'entryFee', 'startTime', 'duration']) &&
-             data.keys().size() <= 30;
-    }
-
-    function isValidPayment(data) {
-      return data.keys().hasAll(['uid', 'eventId', 'trxId', 'status']) &&
-             data.uid == request.auth.uid &&
-             data.keys().size() <= 20;
-    }
-
-    function isValidResult(data) {
-      return data.keys().hasAll(['uid', 'score', 'type']) &&
-             data.uid == request.auth.uid &&
-             data.keys().size() <= 30;
-    }
-
-    function isValidFeedback(data) {
-      return data.keys().hasAll(['uid', 'type', 'message']) &&
-             data.uid == request.auth.uid &&
-             data.keys().size() <= 20;
-    }
-
-    function isValidResource(data) {
-      return data.keys().hasAll(['title', 'url', 'category']) &&
-             data.keys().size() <= 20;
-    }
-
-    function isValidSubmission(data) {
-      return data.keys().hasAll(['uid', 'eventId']) &&
-             data.uid == request.auth.uid &&
-             data.keys().size() <= 20;
-    }
-
-    // ===============================================================
-    // Collection Rules - Pillar 8 (Secure List Queries)
-    // ===============================================================
 
     // Global Statistics
     match /global_stats/{statId} {
       allow read: if true;
-      // Allow any signed in user to increment counters (e.g. total users)
-      allow write: if isSignedIn() && isValidId(statId);
+      allow write: if true;
     }
 
     // Student Profiles
     match /students/{uid} {
-      allow read: if isSignedIn();
-      allow create: if isOwner(uid) && isValidStudent(incoming(), uid);
-      allow update: if (isFullAdmin() || isOwner(uid)) && isValidStudent(incoming(), uid);
-      allow delete: if isFullAdmin() || isOwner(uid);
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
 
     // Admin Registry
     match /admins/{uid} {
-      allow read: if isSignedIn(); // Allow all signed in users to check admin status
-      // Bootstrap admin can create their own record, or active admins can create/manage others
-      allow create: if (isBootstrapAdmin() && isOwner(uid)) || isFullAdmin();
-      allow update: if isFullAdmin();
-      allow delete: if isFullAdmin();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
 
     // Question bank
     match /questions/{questionId} {
-      allow read: if isSignedIn();
-      allow create: if isActiveAdmin() && isValidQuestion(incoming());
-      allow update: if isFullAdmin() && isValidQuestion(incoming());
-      allow delete: if isFullAdmin();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
 
     // Exam Events
     match /events/{eventId} {
-      allow read: if isSignedIn();
-      allow create, update: if isFullAdmin() && isValidEvent(incoming());
-      allow delete: if isFullAdmin();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
 
     // Payments
     match /payments/{paymentId} {
-      allow read: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isSignedIn() && isValidPayment(incoming());
-      allow update: if isFullAdmin();
-      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow read, write, create, update, delete: if isSignedIn();
     }
 
     // Exam Results
     match /results/{resultId} {
       allow read: if true;
-      allow create: if isSignedIn() && isValidResult(incoming());
-      allow update: if isFullAdmin();
-      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow write, create, update, delete: if isSignedIn();
     }
 
     // Feedback
     match /feedback/{feedbackId} {
-      allow read: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isSignedIn() && isValidFeedback(incoming());
-      allow update: if isFullAdmin();
-      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow read, write, create, update, delete: if isSignedIn();
     }
 
     // Academic Resources
     match /resources/{resourceId} {
-      allow read: if isSignedIn();
-      allow create, update: if isFullAdmin() && isValidResource(incoming());
-      allow delete: if isFullAdmin();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
 
     // Exam Submissions
     match /submissions/{submissionId} {
-      allow read: if isActiveAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isSignedIn() && isValidSubmission(incoming());
-      allow update: if isFullAdmin();
-      allow delete: if isFullAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow read, write, create, update, delete: if isSignedIn();
     }
 
     // Deleted Users self-cleaning registry
     match /deleted_users/{uid} {
-      allow read: if isOwner(uid) || isFullAdmin();
-      allow create, update: if isFullAdmin();
-      allow delete: if isOwner(uid) || isFullAdmin();
+      allow read, write, create, update, delete: if true;
     }
   }
 }
